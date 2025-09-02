@@ -44,6 +44,8 @@ export function ThemeToggle() {
     // 检查浏览器是否支持 View Transitions API
     const targetTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
     setThemeColor(targetTheme);
+
+
     if (!(document as any).startViewTransition) {
       setTheme(targetTheme);
       return;
@@ -61,6 +63,8 @@ export function ThemeToggle() {
       aria-label='Toggle theme'
     >
       {resolvedTheme === 'dark' ? (
+
+
         <Sun className='w-full h-full' />
       ) : (
         <Moon className='w-full h-full' />

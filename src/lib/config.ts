@@ -221,6 +221,8 @@ async function getInitConfig(configFile: string, subConfig: {
     },
     UserConfig: {
       AllowRegister: true, // 默认允许注册
+      RequireApproval: false,
+      PendingUsers: [],
       Users: [],
     },
     SourceConfig: [],
@@ -322,7 +324,7 @@ export function clearConfigCache(): void {
 export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
   // 确保必要的属性存在和初始化
   if (!adminConfig.UserConfig) {
-    adminConfig.UserConfig = { AllowRegister: true, Users: [] };
+    adminConfig.UserConfig = { AllowRegister: true, RequireApproval: false, PendingUsers: [], Users: [] } as any;
   }
   if (!adminConfig.UserConfig.Users || !Array.isArray(adminConfig.UserConfig.Users)) {
     adminConfig.UserConfig.Users = [];
@@ -330,6 +332,13 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
   // 确保 AllowRegister 有默认值
   if (adminConfig.UserConfig.AllowRegister === undefined) {
     adminConfig.UserConfig.AllowRegister = true;
+  }
+  // 新增：审核相关默认值
+  if ((adminConfig.UserConfig as any).RequireApproval === undefined) {
+    (adminConfig.UserConfig as any).RequireApproval = false;
+  }
+  if (!(adminConfig.UserConfig as any).PendingUsers) {
+    (adminConfig.UserConfig as any).PendingUsers = [];
   }
   if (!adminConfig.SourceConfig || !Array.isArray(adminConfig.SourceConfig)) {
     adminConfig.SourceConfig = [];
