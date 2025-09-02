@@ -948,8 +948,8 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
           <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300 mb-3'>
             注册审核
           </h4>
-          <div className='overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800'>
-            <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
+          <div className='rounded-lg border border-gray-200 dark:border-gray-800 overflow-x-auto md:overflow-visible max-h-[60vh] overflow-y-auto scrollbar-hide'>
+            <table className='min-w-[720px] md:min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
               <thead className='bg-gray-50 dark:bg-gray-900/40'>
                 <tr>
                   <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>用户名</th>
@@ -967,7 +967,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                   ((config as any).UserConfig.PendingUsers || []).map((p: any) => (
                     <tr key={p.username}>
                       <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100'>{p.username}</td>
-                      <td className='px-6 py-4 text-sm text-gray-600 dark:text-gray-300 break-words max-w-[24rem]'>{p.reason || '-'}</td>
+                      <td className='px-6 py-4 text-sm text-gray-600 dark:text-gray-300 break-words max-w-[28rem]'>{p.reason || '-'}</td>
                       <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400'>{new Date(p.appliedAt).toLocaleString()}</td>
                       <td className='px-6 py-4 whitespace-nowrap text-right text-sm'>
                         <button

@@ -124,13 +124,22 @@ export async function POST(req: NextRequest) {
     }
 
     // 数据库 / redis 模式——校验用户名并尝试连接数据库
-    const { username, password } = await req.json();
+    const body = await req.json();
+    const username = (body?.username ?? '').trim();
+    const password = body?.password;
 
     if (!username || typeof username !== 'string') {
       return NextResponse.json({ error: '用户名不能为空' }, { status: 400 });
     }
     if (!password || typeof password !== 'string') {
       return NextResponse.json({ error: '密码不能为空' }, { status: 400 });
+    }
+
+    // 先检查是否在待审核队列中
+    const config = await getConfig();
+    const pending = (config.UserConfig as any).PendingUsers?.find((u: any) => u.username === username);
+    if (pending) {
+      return NextResponse.json({ error: '您的注册申请正在审核中' }, { status: 401 });
     }
 
     // 可能是站长，直接读环境变量
@@ -162,12 +171,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 });
     }
 
-    const config = await getConfig();
     const user = config.UserConfig.Users.find((u) => u.username === username);
-    const pending = (config.UserConfig as any).PendingUsers?.find((u: any) => u.username === username);
-    if (pending) {
-      return NextResponse.json({ error: '您的注册申请正在审核中' }, { status: 401 });
-    }
     if (user && user.banned) {
       return NextResponse.json({ error: '用户被封禁' }, { status: 401 });
     }
