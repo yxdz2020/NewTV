@@ -170,15 +170,41 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      if (!actualSource || !actualId) return;
+      
+      console.log('收藏操作开始:', {
+        from,
+        actualSource,
+        actualId,
+        source,
+        id,
+        title: actualTitle
+      });
+      
+      let finalSource = actualSource;
+      let finalId = actualId;
+      
+      if (!finalSource || !finalId) {
+        console.log('缺少必要参数，尝试自动解析');
+        // 尝试自动解析源和ID
+        const resolved = await resolveBestSourceAndId();
+        if (!resolved?.source || !resolved?.id) {
+          console.log('自动解析失败，无法执行收藏操作');
+          return;
+        }
+        console.log('自动解析成功:', resolved);
+        finalSource = resolved.source;
+        finalId = resolved.id;
+      }
 
       try {
         // 确定当前收藏状态
         const currentFavorited = from === 'search' ? searchFavorited : favorited;
+        console.log('当前收藏状态:', currentFavorited);
 
         if (currentFavorited) {
           // 如果已收藏，删除收藏
-          await deleteFavorite(actualSource, actualId);
+          console.log('删除收藏');
+          await deleteFavorite(finalSource, finalId);
           // 统一更新状态
           setFavorited(false);
           if (from === 'search') {
@@ -186,6 +212,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
           }
         } else {
           // 如果未收藏，添加收藏
+          console.log('添加收藏');
           const favoriteData: Favorite = {
             title: actualTitle,
             source_name: source_name || '',
@@ -197,13 +224,15 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             origin: origin as 'vod' | 'live',
           };
           
-          await saveFavorite(actualSource, actualId, favoriteData);
+          console.log('收藏数据:', favoriteData);
+          await saveFavorite(finalSource, finalId, favoriteData);
           // 统一更新状态
           setFavorited(true);
           if (from === 'search') {
             setSearchFavorited(true);
           }
         }
+        console.log('收藏操作成功');
       } catch (err) {
         console.error('收藏操作失败:', err);
         // 操作失败时恢复状态
@@ -218,13 +247,17 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       from,
       actualSource,
       actualId,
+      source,
+      id,
       actualTitle,
       source_name,
       actualYear,
       actualPoster,
       actualEpisodes,
+      origin,
       favorited,
       searchFavorited,
+      resolveBestSourceAndId,
     ]
   );
 
@@ -461,8 +494,9 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     // 聚合源信息 - 直接在菜单中展示，不需要单独的操作项
 
     // 收藏/取消收藏操作
-    if (config.showHeart && (actualSource && actualId)) {
-      const currentFavorited = from === 'search' ? searchFavorited : favorited;
+    if (config.showHeart) {
+      if (actualSource && actualId) {
+        const currentFavorited = from === 'search' ? searchFavorited : favorited;
 
       if (from === 'search') {
         // 搜索结果：根据加载状态显示不同的选项
@@ -514,16 +548,16 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
           },
           color: currentFavorited ? ('danger' as const) : ('default' as const),
         });
+      } else {
+        // 无明确来源时提供"自动匹配源后收藏"
+        actions.push({
+          id: 'favorite-auto',
+          label: '添加收藏',
+          icon: <Heart size={20} className="fill-transparent stroke-red-500" />,
+          onClick: () => { handleResolveAndFavorite(); },
+          color: 'default' as const,
+        });
       }
-    } else if (config.showHeart && (!actualSource || !actualId)) {
-      // 无明确来源时提供“自动匹配源后收藏”
-      actions.push({
-        id: 'favorite-auto',
-        label: '添加收藏',
-        icon: <Heart size={20} className="fill-transparent stroke-red-500" />,
-        onClick: () => { handleResolveAndFavorite(); },
-        color: 'default' as const,
-      });
     }
 
     // 删除播放记录操作
@@ -574,6 +608,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     handleClick,
     handleToggleFavorite,
     handleDeleteRecord,
+    handleResolveAndFavorite,
   ]);
 
   return (
