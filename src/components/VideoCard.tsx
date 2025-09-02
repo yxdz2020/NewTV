@@ -159,7 +159,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      if (from === 'douban' || !actualSource || !actualId) return;
+      if (!actualSource || !actualId) return;
 
       try {
         // 确定当前收藏状态
@@ -225,7 +225,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const handleClick = useCallback(() => {
     // 构建豆瓣ID参数
     const doubanIdParam = actualDoubanId && actualDoubanId > 0 ? `&douban_id=${actualDoubanId}` : '';
-    
+
     if (origin === 'live' && actualSource && actualId) {
       // 直播内容跳转到直播页面
       const url = `/live?source=${actualSource.replace('live_', '')}&id=${actualId.replace('live_', '')}`;
@@ -260,7 +260,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const handlePlayInNewTab = useCallback(() => {
     // 构建豆瓣ID参数
     const doubanIdParam = actualDoubanId && actualDoubanId > 0 ? `&douban_id=${actualDoubanId}` : '';
-    
+
     if (origin === 'live' && actualSource && actualId) {
       // 直播内容跳转到直播页面
       const url = `/live?source=${actualSource.replace('live_', '')}&id=${actualId.replace('live_', '')}`;
@@ -357,7 +357,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         showSourceName: false,
         showProgress: false,
         showPlayButton: true,
-        showHeart: false,
+        showHeart: true, // 允许豆瓣页面长按也显示收藏
         showCheckCircle: false,
         showDoubanLink: true,
         showRating: !!rate,
@@ -380,21 +380,12 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         onClick: handleClick,
         color: 'primary' as const,
       });
-
-      // 新标签页播放
-      actions.push({
-        id: 'play-new-tab',
-        label: origin === 'live' ? '新标签页观看' : '新标签页播放',
-        icon: <ExternalLink size={20} />,
-        onClick: handlePlayInNewTab,
-        color: 'default' as const,
-      });
     }
 
     // 聚合源信息 - 直接在菜单中展示，不需要单独的操作项
 
     // 收藏/取消收藏操作
-    if (config.showHeart && from !== 'douban' && actualSource && actualId) {
+    if (config.showHeart && actualSource && actualId) {
       const currentFavorited = from === 'search' ? searchFavorited : favorited;
 
       if (from === 'search') {
