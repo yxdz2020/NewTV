@@ -2,14 +2,14 @@
 
 'use client';
 
-import { Moon, Sun, Monitor } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
 export function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
-  const { setTheme, resolvedTheme, theme, systemTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
   const pathname = usePathname();
 
   const setThemeColor = (theme?: string) => {
@@ -41,18 +41,18 @@ export function ThemeToggle() {
   }
 
   const toggleTheme = () => {
-    // 循环切换 system -> light -> dark -> system
-    const nextTheme = theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system';
-    const nextResolved = nextTheme === 'system' ? (systemTheme ?? resolvedTheme) : (nextTheme as 'light' | 'dark');
+    // 检查浏览器是否支持 View Transitions API
+    const targetTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
+    setThemeColor(targetTheme);
 
-    setThemeColor(nextResolved);
+
     if (!(document as any).startViewTransition) {
-      setTheme(nextTheme);
+      setTheme(targetTheme);
       return;
     }
 
     (document as any).startViewTransition(() => {
-      setTheme(nextTheme);
+      setTheme(targetTheme);
     });
   };
 
@@ -62,9 +62,9 @@ export function ThemeToggle() {
       className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors'
       aria-label='Toggle theme'
     >
-      {theme === 'system' ? (
-        <Monitor className='w-full h-full' />
-      ) : resolvedTheme === 'dark' ? (
+      {resolvedTheme === 'dark' ? (
+
+
         <Sun className='w-full h-full' />
       ) : (
         <Moon className='w-full h-full' />
