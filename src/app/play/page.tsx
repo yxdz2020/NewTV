@@ -10,7 +10,7 @@ import artplayerPluginDanmuku from 'artplayer-plugin-danmuku';
 import Hls from 'hls.js';
 import { Heart } from 'lucide-react';
 
-import artplayerPluginChromecast from '@/lib/artplayer-plugin-chromecast';
+// import artplayerPluginChromecast from '@/lib/artplayer-plugin-chromecast';
 
 
 import {
@@ -1730,8 +1730,8 @@ function PlayPageClient() {
       isWebKit,
       isChrome,
       'AirPlay按钮': isIOS || isSafari ? '✅ 显示' : '❌ 隐藏',
-      'Chromecast按钮': isChrome && !isIOS ? '✅ 显示' : '❌ 隐藏',
-      '投屏策略': isIOS || isSafari ? '🍎 AirPlay (WebKit)' : isChrome ? '📺 Chromecast (Cast API)' : '❌ 不支持投屏'
+      'Chromecast按钮': '❌ 已移除',
+      '投屏策略': isIOS || isSafari ? '🍎 AirPlay (WebKit)' : '❌ Chromecast已移除'
     });
 
     // 优先使用ArtPlayer的switch方法，避免重建播放器
@@ -2227,26 +2227,27 @@ function PlayPageClient() {
             
             return config
           })()),
-          // Chromecast 插件加载策略：
-          // 只在 Chrome 浏览器中显示 Chromecast（排除 iOS Chrome）
-          // Safari 和 iOS：不显示 Chromecast（用原生 AirPlay）
-          // 其他浏览器：不显示 Chromecast（不支持 Cast API）
-          ...(isChrome && !isIOS ? [
-            artplayerPluginChromecast({
-              onStateChange: (state) => {
-                console.log('Chromecast state changed:', state);
-              },
-              onCastAvailable: (available) => {
-                console.log('Chromecast available:', available);
-              },
-              onCastStart: () => {
-                console.log('Chromecast started');
-              },
-              onError: (error) => {
-                console.error('Chromecast error:', error);
-              }
-            })
-          ] : []),
+          // Chromecast功能已移除
+          // // Chromecast 插件加载策略：
+          // // 只在 Chrome 浏览器中显示 Chromecast（排除 iOS Chrome）
+          // // Safari 和 iOS：不显示 Chromecast（用原生 AirPlay）
+          // // 其他浏览器：不显示 Chromecast（不支持 Cast API）
+          // ...(isChrome && !isIOS ? [
+          //   artplayerPluginChromecast({
+          //     onStateChange: (state) => {
+          //       console.log('Chromecast state changed:', state);
+          //     },
+          //     onCastAvailable: (available) => {
+          //       console.log('Chromecast available:', available);
+          //     },
+          //     onCastStart: () => {
+          //       console.log('Chromecast started');
+          //     },
+          //     onError: (error) => {
+          //       console.error('Chromecast error:', error);
+          //     }
+          //   })
+          // ] : []),
         ],
       });
 
