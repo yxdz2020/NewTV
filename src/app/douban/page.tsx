@@ -691,7 +691,7 @@ function DoubanPageClient() {
           ? '动漫'
           : type === 'show'
             ? '综艺'
-            : '自定义';
+            : '纪录片';
   };
 
   const getPageDescription = () => {
