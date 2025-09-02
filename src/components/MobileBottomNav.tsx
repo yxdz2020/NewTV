@@ -141,7 +141,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                   className='flex-1 p-3 flex items-center justify-center gap-2 text-sm text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
                   onClick={() => setShowMore(false)}
                 >
-                  <Star className='h-5 w-5' /> 自定义
+                  <Star className='h-5 w-5' /> 纪录片
                 </Link>
               )}
             </div>
