@@ -2,7 +2,7 @@
 
 'use client';
 
-import { Cat, Clover, Film, Home, Radio, Star, Tv } from 'lucide-react';
+import { Cat, Clover, Ellipsis, Film, Home, Radio, Star, Tv } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -22,45 +22,18 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
 
   const [navItems, setNavItems] = useState([
     { icon: Home, label: '首页', href: '/' },
-    {
-      icon: Film,
-      label: '电影',
-      href: '/douban?type=movie',
-    },
-    {
-      icon: Tv,
-      label: '剧集',
-      href: '/douban?type=tv',
-    },
-    {
-      icon: Cat,
-      label: '动漫',
-      href: '/douban?type=anime',
-    },
-    {
-      icon: Clover,
-      label: '综艺',
-      href: '/douban?type=show',
-    },
-    {
-      icon: Radio,
-      label: '直播',
-      href: '/live',
-    },
+    { icon: Film, label: '电影', href: '/douban?type=movie' },
+    { icon: Tv, label: '剧集', href: '/douban?type=tv' },
+    { icon: Radio, label: '直播', href: '/live' },
+    { icon: Ellipsis, label: '更多', href: '#more' },
   ]);
+
+  const [showMore, setShowMore] = useState(false);
+  const [hasCustom, setHasCustom] = useState(false);
 
   useEffect(() => {
     const runtimeConfig = (window as any).RUNTIME_CONFIG;
-    if (runtimeConfig?.CUSTOM_CATEGORIES?.length > 0) {
-      setNavItems((prevItems) => [
-        ...prevItems,
-        {
-          icon: Star,
-          label: '自定义',
-          href: '/douban?type=custom',
-        },
-      ]);
-    }
+    setHasCustom(!!(runtimeConfig?.CUSTOM_CATEGORIES?.length > 0));
   }, []);
 
   const isActive = (href: string) => {
@@ -76,6 +49,11 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
         decodedActive.includes(`type=${typeMatch}`))
     );
   };
+
+  const moreActive =
+    currentActive.includes('type=anime') ||
+    currentActive.includes('type=show') ||
+    currentActive.includes('type=custom');
 
   return (
     <nav
@@ -96,30 +74,80 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
               className='flex-shrink-0'
               style={{ width: '20vw', minWidth: '20vw' }}
             >
-              <Link
-                href={item.href}
-                className='flex flex-col items-center justify-center w-full h-14 gap-1 text-xs'
-              >
-                <item.icon
-                  className={`h-6 w-6 ${active
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-gray-500 dark:text-gray-400'
-                    }`}
-                />
-                <span
-                  className={
-                    active
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-gray-600 dark:text-gray-300'
-                  }
+              {item.label !== '更多' ? (
+                <Link
+                  href={item.href}
+                  className='flex flex-col items-center justify-center w-full h-14 gap-1 text-xs'
                 >
-                  {item.label}
-                </span>
-              </Link>
+                  <item.icon
+                    className={`h-6 w-6 ${active
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-gray-500 dark:text-gray-400'
+                      }`}
+                  />
+                  <span
+                    className={
+                      active
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-gray-600 dark:text-gray-300'
+                    }
+                  >
+                    {item.label}
+                  </span>
+                </Link>
+              ) : (
+                <button
+                  type='button'
+                  onClick={() => setShowMore((v) => !v)}
+                  className='flex flex-col items-center justify-center w-full h-14 gap-1 text-xs'
+                >
+                  <item.icon
+                    className={`h-6 w-6 ${moreActive
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-gray-500 dark:text-gray-400'
+                      }`}
+                  />
+                  <span className={moreActive ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-300'}>
+                    更多
+                  </span>
+                </button>
+              )}
             </li>
           );
         })}
       </ul>
+
+      {showMore && (
+        <div className='absolute bottom-[calc(3.5rem+env(safe-area-inset-bottom)+0.5rem)] left-0 right-0 z-[650] px-4'>
+          <div className='mx-auto max-w-sm rounded-xl border border-gray-200/60 bg-white/95 dark:border-gray-700/60 dark:bg-gray-900/95 shadow-lg backdrop-blur-xl'>
+            <div className='flex divide-x divide-gray-200/60 dark:divide-gray-700/60'>
+              <Link
+                href='/douban?type=anime'
+                className='flex-1 p-3 flex items-center justify-center gap-2 text-sm text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
+                onClick={() => setShowMore(false)}
+              >
+                <Cat className='h-5 w-5' /> 动漫
+              </Link>
+              <Link
+                href='/douban?type=show'
+                className='flex-1 p-3 flex items-center justify-center gap-2 text-sm text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
+                onClick={() => setShowMore(false)}
+              >
+                <Clover className='h-5 w-5' /> 综艺
+              </Link>
+              {hasCustom && (
+                <Link
+                  href='/douban?type=custom'
+                  className='flex-1 p-3 flex items-center justify-center gap-2 text-sm text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
+                  onClick={() => setShowMore(false)}
+                >
+                  <Star className='h-5 w-5' /> 自定义
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
