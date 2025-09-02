@@ -137,7 +137,9 @@ export async function POST(req: NextRequest) {
 
     // 先检查是否在待审核队列中
     const config = await getConfig();
-    const pending = (config.UserConfig as any).PendingUsers?.find((u: any) => u.username === username);
+    const pending = (config.UserConfig as any).PendingUsers?.find(
+      (u: any) => (u.username || '').trim().toLowerCase() === username.toLowerCase()
+    );
     if (pending) {
       return NextResponse.json({ error: '您的注册申请正在审核中' }, { status: 401 });
     }
