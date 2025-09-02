@@ -80,6 +80,7 @@ function RegisterPageClient() {
   const [registrationDisabled, setRegistrationDisabled] = useState(false);
   const [disabledReason, setDisabledReason] = useState('');
   const [reason, setReason] = useState('');
+  const [pending, setPending] = useState(false);
 
   const { siteName } = useSite();
 
@@ -149,6 +150,7 @@ function RegisterPageClient() {
         // 显示成功消息，稍等一下再跳转
         setError(null);
         if (data?.pending) {
+          setPending(true);
           setSuccess('已提交注册申请，等待管理员审核');
         } else {
           setSuccess('注册成功！正在跳转...');
@@ -297,7 +299,13 @@ function RegisterPageClient() {
             disabled={!username || !password || !confirmPassword || loading || !!success}
             className='inline-flex w-full justify-center rounded-lg bg-green-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-50'
           >
-            {loading ? '注册中...' : success ? '注册成功，正在跳转...' : '注册'}
+            {loading
+              ? '注册中...'
+              : pending
+                ? '已提交审核'
+                : success
+                  ? '注册成功，正在跳转...'
+                  : '注册'}
           </button>
 
           <div className='text-center'>

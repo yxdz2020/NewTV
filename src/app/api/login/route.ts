@@ -164,6 +164,10 @@ export async function POST(req: NextRequest) {
 
     const config = await getConfig();
     const user = config.UserConfig.Users.find((u) => u.username === username);
+    const pending = (config.UserConfig as any).PendingUsers?.find((u: any) => u.username === username);
+    if (pending) {
+      return NextResponse.json({ error: '您的注册申请正在审核中' }, { status: 401 });
+    }
     if (user && user.banned) {
       return NextResponse.json({ error: '用户被封禁' }, { status: 401 });
     }
