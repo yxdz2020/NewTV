@@ -21,6 +21,7 @@ import {
   saveFavorite,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
+import { Favorite } from '@/lib/types';
 import { processImageUrl } from '@/lib/utils';
 import { useLongPress } from '@/hooks/useLongPress';
 
@@ -128,16 +129,20 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     ? (actualEpisodes && actualEpisodes === 1 ? 'movie' : 'tv')
     : type;
 
-  // 获取收藏状态（搜索结果页面不检查）
+  // 获取收藏状态
   useEffect(() => {
-    if (from === 'douban' || from === 'search' || !actualSource || !actualId) return;
+    if (from === 'douban' || !actualSource || !actualId) return;
 
     const fetchFavoriteStatus = async () => {
       try {
         const fav = await isFavorited(actualSource, actualId);
         setFavorited(fav);
+        // 对于搜索页面，同时更新搜索收藏状态
+        if (from === 'search') {
+          setSearchFavorited(fav);
+        }
       } catch (err) {
-        throw new Error('检查收藏状态失败');
+        console.error('检查收藏状态失败:', err);
       }
     };
 
@@ -151,6 +156,10 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         // 检查当前项目是否在新的收藏列表中
         const isNowFavorited = !!newFavorites[storageKey];
         setFavorited(isNowFavorited);
+        // 对于搜索页面，同时更新搜索收藏状态
+        if (from === 'search') {
+          setSearchFavorited(isNowFavorited);
+        }
       }
     );
 
@@ -170,29 +179,39 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         if (currentFavorited) {
           // 如果已收藏，删除收藏
           await deleteFavorite(actualSource, actualId);
+          // 统一更新状态
+          setFavorited(false);
           if (from === 'search') {
             setSearchFavorited(false);
-          } else {
-            setFavorited(false);
           }
         } else {
           // 如果未收藏，添加收藏
-          await saveFavorite(actualSource, actualId, {
+          const favoriteData: Favorite = {
             title: actualTitle,
             source_name: source_name || '',
             year: actualYear || '',
-            cover: actualPoster,
+            cover: actualPoster || '',
             total_episodes: actualEpisodes ?? 1,
             save_time: Date.now(),
-          });
+            search_title: actualTitle,
+            origin: origin as 'vod' | 'live',
+          };
+          
+          await saveFavorite(actualSource, actualId, favoriteData);
+          // 统一更新状态
+          setFavorited(true);
           if (from === 'search') {
             setSearchFavorited(true);
-          } else {
-            setFavorited(true);
           }
         }
       } catch (err) {
-        throw new Error('切换收藏状态失败');
+        console.error('收藏操作失败:', err);
+        // 操作失败时恢复状态
+        const currentFavorited = from === 'search' ? searchFavorited : favorited;
+        setFavorited(!!currentFavorited);
+        if (from === 'search') {
+          setSearchFavorited(currentFavorited);
+        }
       }
     },
     [
