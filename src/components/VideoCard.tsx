@@ -21,7 +21,6 @@ import {
   saveFavorite,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
-import { Favorite } from '@/lib/types';
 import { processImageUrl } from '@/lib/utils';
 import { useLongPress } from '@/hooks/useLongPress';
 
@@ -85,8 +84,6 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const [isLoading, setIsLoading] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
   const [searchFavorited, setSearchFavorited] = useState<boolean | null>(null); // 搜索结果的收藏状态
-  const [resolvedSource, setResolvedSource] = useState<string | undefined>(undefined);
-  const [resolvedId, setResolvedId] = useState<string | undefined>(undefined);
 
   // 可外部修改的可控字段
   const [dynamicEpisodes, setDynamicEpisodes] = useState<number | undefined>(
@@ -119,8 +116,8 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
 
   const actualTitle = title;
   const actualPoster = poster;
-  const actualSource = source || resolvedSource;
-  const actualId = id || resolvedId;
+  const actualSource = source;
+  const actualId = id;
   const actualDoubanId = dynamicDoubanId;
   const actualEpisodes = dynamicEpisodes;
   const actualYear = year;
@@ -129,20 +126,16 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     ? (actualEpisodes && actualEpisodes === 1 ? 'movie' : 'tv')
     : type;
 
-  // 获取收藏状态
+  // 获取收藏状态（搜索结果页面不检查）
   useEffect(() => {
-    if (from === 'douban' || !actualSource || !actualId) return;
+    if (from === 'douban' || from === 'search' || !actualSource || !actualId) return;
 
     const fetchFavoriteStatus = async () => {
       try {
         const fav = await isFavorited(actualSource, actualId);
         setFavorited(fav);
-        // 对于搜索页面，同时更新搜索收藏状态
-        if (from === 'search') {
-          setSearchFavorited(fav);
-        }
       } catch (err) {
-        console.error('检查收藏状态失败:', err);
+        throw new Error('检查收藏状态失败');
       }
     };
 
@@ -156,10 +149,6 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         // 检查当前项目是否在新的收藏列表中
         const isNowFavorited = !!newFavorites[storageKey];
         setFavorited(isNowFavorited);
-        // 对于搜索页面，同时更新搜索收藏状态
-        if (from === 'search') {
-          setSearchFavorited(isNowFavorited);
-        }
       }
     );
 
@@ -170,151 +159,53 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      
-      console.log('收藏操作开始:', {
-        from,
-        actualSource,
-        actualId,
-        source,
-        id,
-        title: actualTitle
-      });
-      
-      let finalSource = actualSource;
-      let finalId = actualId;
-      
-      if (!finalSource || !finalId) {
-        console.log('缺少必要参数，尝试自动解析');
-        // 尝试自动解析源和ID
-        const resolved = await resolveBestSourceAndId();
-        if (!resolved?.source || !resolved?.id) {
-          console.log('自动解析失败，无法执行收藏操作');
-          return;
-        }
-        console.log('自动解析成功:', resolved);
-        finalSource = resolved.source;
-        finalId = resolved.id;
-      }
+      if (from === 'douban' || !actualSource || !actualId) return;
 
       try {
         // 确定当前收藏状态
         const currentFavorited = from === 'search' ? searchFavorited : favorited;
-        console.log('当前收藏状态:', currentFavorited);
 
         if (currentFavorited) {
           // 如果已收藏，删除收藏
-          console.log('删除收藏');
-          await deleteFavorite(finalSource, finalId);
-          // 统一更新状态
-          setFavorited(false);
+          await deleteFavorite(actualSource, actualId);
           if (from === 'search') {
             setSearchFavorited(false);
+          } else {
+            setFavorited(false);
           }
         } else {
           // 如果未收藏，添加收藏
-          console.log('添加收藏');
-          const favoriteData: Favorite = {
+          await saveFavorite(actualSource, actualId, {
             title: actualTitle,
             source_name: source_name || '',
             year: actualYear || '',
-            cover: actualPoster || '',
+            cover: actualPoster,
             total_episodes: actualEpisodes ?? 1,
             save_time: Date.now(),
-            search_title: actualTitle,
-            origin: origin as 'vod' | 'live',
-          };
-          
-          console.log('收藏数据:', favoriteData);
-          await saveFavorite(finalSource, finalId, favoriteData);
-          // 统一更新状态
-          setFavorited(true);
+          });
           if (from === 'search') {
             setSearchFavorited(true);
+          } else {
+            setFavorited(true);
           }
         }
-        console.log('收藏操作成功');
       } catch (err) {
-        console.error('收藏操作失败:', err);
-        // 操作失败时恢复状态
-        const currentFavorited = from === 'search' ? searchFavorited : favorited;
-        setFavorited(!!currentFavorited);
-        if (from === 'search') {
-          setSearchFavorited(currentFavorited);
-        }
+        throw new Error('切换收藏状态失败');
       }
     },
     [
       from,
       actualSource,
       actualId,
-      source,
-      id,
       actualTitle,
       source_name,
       actualYear,
       actualPoster,
       actualEpisodes,
-      origin,
       favorited,
       searchFavorited,
-      resolveBestSourceAndId,
     ]
   );
-
-  // 当没有明确的 source/id 时，尝试通过搜索解析一个最佳来源
-  const resolveBestSourceAndId = useCallback(async (): Promise<{ source?: string; id?: string } | null> => {
-    try {
-      // 优先用标题；附带年份提高准确度（在客户端过滤）
-      const queryTitle = (actualTitle || '').trim();
-      if (!queryTitle) return null;
-      const res = await fetch(`/api/search?q=${encodeURIComponent(queryTitle)}`);
-      if (!res.ok) return null;
-      const data = await res.json();
-      const results = Array.isArray(data.results) ? data.results : [];
-      if (results.length === 0) return null;
-      // 规则：标题完全匹配优先；同名时按年份接近 actualYear；电影/剧集按 episodes 判断
-      const isMovieDesired = actualSearchType === 'movie' || (!!actualEpisodes && actualEpisodes === 1);
-      const exact = results.filter((r: any) => (r.title || '').trim() === queryTitle);
-      const candidates = (exact.length > 0 ? exact : results).filter((r: any) => {
-        const epCount = (r.episodes || []).length;
-        if (isMovieDesired) {
-          return epCount <= 1; // 电影
-        }
-        return epCount > 1; // 剧集
-      });
-      if (candidates.length === 0) return null;
-      const pick = candidates.sort((a: any, b: any) => {
-        const ya = parseInt(a.year || '0', 10);
-        const yb = parseInt(b.year || '0', 10);
-        const yt = parseInt(actualYear || '0', 10);
-        const da = Math.abs((isNaN(yt) ? 0 : yt) - (isNaN(ya) ? 0 : ya));
-        const db = Math.abs((isNaN(yt) ? 0 : yt) - (isNaN(yb) ? 0 : yb));
-        return da - db;
-      })[0];
-      if (pick && pick.source && pick.id) {
-        setResolvedSource(pick.source);
-        setResolvedId(pick.id);
-        return { source: pick.source, id: pick.id };
-      }
-      return null;
-    } catch {
-      return null;
-    }
-  }, [actualTitle, actualYear, actualEpisodes, actualSearchType]);
-
-  const handleResolveAndFavorite = useCallback(async () => {
-    // 若已有明确来源，直接走收藏
-    if (actualSource && actualId) {
-      const mockEvent = { preventDefault: () => { }, stopPropagation: () => { } } as React.MouseEvent;
-      await handleToggleFavorite(mockEvent);
-      return;
-    }
-    const resolved = await resolveBestSourceAndId();
-    if (resolved?.source && resolved?.id) {
-      const mockEvent = { preventDefault: () => { }, stopPropagation: () => { } } as React.MouseEvent;
-      await handleToggleFavorite(mockEvent);
-    }
-  }, [actualSource, actualId, handleToggleFavorite, resolveBestSourceAndId]);
 
   const handleDeleteRecord = useCallback(
     async (e: React.MouseEvent) => {
@@ -334,7 +225,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const handleClick = useCallback(() => {
     // 构建豆瓣ID参数
     const doubanIdParam = actualDoubanId && actualDoubanId > 0 ? `&douban_id=${actualDoubanId}` : '';
-
+    
     if (origin === 'live' && actualSource && actualId) {
       // 直播内容跳转到直播页面
       const url = `/live?source=${actualSource.replace('live_', '')}&id=${actualId.replace('live_', '')}`;
@@ -369,7 +260,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const handlePlayInNewTab = useCallback(() => {
     // 构建豆瓣ID参数
     const doubanIdParam = actualDoubanId && actualDoubanId > 0 ? `&douban_id=${actualDoubanId}` : '';
-
+    
     if (origin === 'live' && actualSource && actualId) {
       // 直播内容跳转到直播页面
       const url = `/live?source=${actualSource.replace('live_', '')}&id=${actualId.replace('live_', '')}`;
@@ -466,7 +357,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         showSourceName: false,
         showProgress: false,
         showPlayButton: true,
-        showHeart: true, // 允许豆瓣页面长按也显示收藏
+        showHeart: false,
         showCheckCircle: false,
         showDoubanLink: true,
         showRating: !!rate,
@@ -489,14 +380,22 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         onClick: handleClick,
         color: 'primary' as const,
       });
+
+      // 新标签页播放
+      actions.push({
+        id: 'play-new-tab',
+        label: origin === 'live' ? '新标签页观看' : '新标签页播放',
+        icon: <ExternalLink size={20} />,
+        onClick: handlePlayInNewTab,
+        color: 'default' as const,
+      });
     }
 
     // 聚合源信息 - 直接在菜单中展示，不需要单独的操作项
 
     // 收藏/取消收藏操作
-    if (config.showHeart) {
-      if (actualSource && actualId) {
-        const currentFavorited = from === 'search' ? searchFavorited : favorited;
+    if (config.showHeart && from !== 'douban' && actualSource && actualId) {
+      const currentFavorited = from === 'search' ? searchFavorited : favorited;
 
       if (from === 'search') {
         // 搜索结果：根据加载状态显示不同的选项
@@ -547,15 +446,6 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             handleToggleFavorite(mockEvent);
           },
           color: currentFavorited ? ('danger' as const) : ('default' as const),
-        });
-      } else {
-        // 无明确来源时提供"自动匹配源后收藏"
-        actions.push({
-          id: 'favorite-auto',
-          label: '添加收藏',
-          icon: <Heart size={20} className="fill-transparent stroke-red-500" />,
-          onClick: () => { handleResolveAndFavorite(); },
-          color: 'default' as const,
         });
       }
     }
@@ -608,7 +498,6 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     handleClick,
     handleToggleFavorite,
     handleDeleteRecord,
-    handleResolveAndFavorite,
   ]);
 
   return (
