@@ -3628,7 +3628,6 @@ const SiteConfigComponent = ({ config, refreshConfig }: { config: AdminConfig | 
       label: '豆瓣 CDN By CMLiussss（腾讯云）',
     },
     { value: 'cmliussss-cdn-ali', label: '豆瓣 CDN By CMLiussss（阿里云）' },
-    { value: 'newtv-overseas-cdn', label: 'NewTV-海外CDN' },
     { value: 'custom', label: '自定义代理' },
   ];
 
@@ -3658,11 +3657,6 @@ const SiteConfigComponent = ({ config, refreshConfig }: { config: AdminConfig | 
         return {
           text: 'Thanks to @CMLiussss',
           url: 'https://github.com/cmliu',
-        };
-      case 'newtv-overseas-cdn':
-        return {
-          text: 'Thanks to @joyce677',
-          url: 'https://github.com/joyce677',
         };
       default:
         return null;
