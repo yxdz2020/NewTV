@@ -2,7 +2,7 @@
 
 'use client';
 
-import { Cat, Clover, Ellipsis, Film, Home, Radio, Star, Tv } from 'lucide-react';
+import { Cat, Clapperboard, Clover, Ellipsis, Film, Home, Radio, Star, Tv } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -53,6 +53,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
   const moreActive =
     currentActive.includes('type=anime') ||
     currentActive.includes('type=show') ||
+    currentActive.includes('type=short-drama') ||
     currentActive.includes('type=custom');
 
   return (
@@ -121,6 +122,13 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
         <div className='absolute bottom-[calc(3.5rem+env(safe-area-inset-bottom)+0.5rem)] left-0 right-0 z-[650] px-4'>
           <div className='mx-auto max-w-sm rounded-xl border border-gray-200/60 bg-white/95 dark:border-gray-700/60 dark:bg-gray-900/95 shadow-lg backdrop-blur-xl'>
             <div className='flex divide-x divide-gray-200/60 dark:divide-gray-700/60'>
+              <Link
+                href='/douban?type=short-drama'
+                className='flex-1 p-3 flex items-center justify-center gap-2 text-sm text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
+                onClick={() => setShowMore(false)}
+              >
+                <Clapperboard className='h-5 w-5' /> 短剧
+              </Link>
               <Link
                 href='/douban?type=anime'
                 className='flex-1 p-3 flex items-center justify-center gap-2 text-sm text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
