@@ -101,22 +101,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
     { label: '剧场版', value: '剧场版' },
   ];
 
-  // 短剧一级选择器选项
-  const shortDramaPrimaryOptions: SelectorOption[] = [
-    { label: '全部', value: '全部' },
-    { label: '热门', value: '热门' },
-    { label: '最新', value: '最新' },
-  ];
 
-  // 短剧二级选择器选项
-  const shortDramaSecondaryOptions: SelectorOption[] = [
-    { label: '全部', value: '全部' },
-    { label: '爱情', value: '爱情' },
-    { label: '家庭', value: '家庭' },
-    { label: '现代', value: '现代' },
-    { label: '都市', value: '都市' },
-    { label: '古装', value: '古装' },
-  ];
 
   // 处理多级选择器变化
   const handleMultiLevelChange = (values: Record<string, string>) => {
@@ -201,16 +186,6 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
         primaryButtonRefs,
         setPrimaryIndicatorStyle
       );
-    } else if (type === 'short-drama') {
-      const activeIndex = shortDramaPrimaryOptions.findIndex(
-        (opt) => opt.value === (primarySelection || shortDramaPrimaryOptions[1].value)
-      );
-      updateIndicatorPosition(
-        activeIndex,
-        primaryContainerRef,
-        primaryButtonRefs,
-        setPrimaryIndicatorStyle
-      );
     }
 
     // 副选择器初始位置
@@ -229,11 +204,6 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
       secondaryActiveIndex = showSecondaryOptions.findIndex(
         (opt) =>
           opt.value === (secondarySelection || showSecondaryOptions[0].value)
-      );
-    } else if (type === 'short-drama') {
-      secondaryActiveIndex = shortDramaSecondaryOptions.findIndex(
-        (opt) =>
-          opt.value === (secondarySelection || shortDramaSecondaryOptions[0].value)
       );
     }
 
@@ -293,17 +263,6 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
         setPrimaryIndicatorStyle
       );
       return cleanup;
-    } else if (type === 'short-drama') {
-      const activeIndex = shortDramaPrimaryOptions.findIndex(
-        (opt) => opt.value === primarySelection
-      );
-      const cleanup = updateIndicatorPosition(
-        activeIndex,
-        primaryContainerRef,
-        primaryButtonRefs,
-        setPrimaryIndicatorStyle
-      );
-      return cleanup;
     }
   }, [primarySelection]);
 
@@ -327,11 +286,6 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
         (opt) => opt.value === secondarySelection
       );
       options = showSecondaryOptions;
-    } else if (type === 'short-drama') {
-      activeIndex = shortDramaSecondaryOptions.findIndex(
-        (opt) => opt.value === secondarySelection
-      );
-      options = shortDramaSecondaryOptions;
     }
 
     if (options.length > 0) {
@@ -609,57 +563,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
         </div>
       )}
 
-      {/* 短剧类型 - 显示两级选择器 */}
-      {type === 'short-drama' && (
-        <div className='space-y-3 sm:space-y-4'>
-          {/* 一级选择器 */}
-          <div className='flex flex-col sm:flex-row sm:items-center gap-2'>
-            <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
-              分类
-            </span>
-            <div className='overflow-x-auto'>
-              {renderCapsuleSelector(
-                shortDramaPrimaryOptions,
-                primarySelection || shortDramaPrimaryOptions[1].value,
-                onPrimaryChange,
-                true
-              )}
-            </div>
-          </div>
 
-          {/* 二级选择器 - 只在选中"热门"或"最新"时显示，选中"全部"时显示多级选择器 */}
-          {(primarySelection || shortDramaPrimaryOptions[1].value) === '热门' ||
-          (primarySelection || shortDramaPrimaryOptions[1].value) === '最新' ? (
-            <div className='flex flex-col sm:flex-row sm:items-center gap-2'>
-              <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
-                类型
-              </span>
-              <div className='overflow-x-auto'>
-                {renderCapsuleSelector(
-                  shortDramaSecondaryOptions,
-                  secondarySelection || shortDramaSecondaryOptions[0].value,
-                  onSecondaryChange,
-                  false
-                )}
-              </div>
-            </div>
-          ) : (primarySelection || shortDramaPrimaryOptions[1].value) === '全部' ? (
-            /* 多级选择器 - 只在选中"全部"时显示 */
-            <div className='flex flex-col sm:flex-row sm:items-center gap-2'>
-              <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
-                筛选
-              </span>
-              <div className='overflow-x-auto'>
-                <MultiLevelSelector
-                  key={`${type}-${primarySelection}`}
-                  onChange={handleMultiLevelChange}
-                  contentType='short-drama'
-                />
-              </div>
-            </div>
-          ) : null}
-        </div>
-      )}
     </div>
   );
 };

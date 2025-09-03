@@ -743,7 +743,7 @@ function DoubanPageClient() {
             ? '综艺'
             : type === 'short-drama'
               ? '短剧'
-              : '纪录片';
+              : '纪录';
   };
 
   const getPageDescription = () => {

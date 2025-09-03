@@ -164,7 +164,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
         ...prevItems,
         {
           icon: Star,
-          label: '纪录片',
+          label: '纪录',
           href: '/douban?type=custom',
         },
       ]);

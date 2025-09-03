@@ -63,7 +63,7 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
           { label: '情色', value: 'erotic' },
           { label: '灾难', value: 'disaster' },
           { label: '西部', value: 'western' },
-          { label: '纪录片', value: 'documentary' },
+          { label: '纪录', value: 'documentary' },
           { label: '短片', value: 'short' },
         ];
       case 'tv':
