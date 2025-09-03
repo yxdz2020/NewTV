@@ -1074,7 +1074,6 @@ function PlayPageClient() {
             if (externalDanmu.length > 0) {
               console.log('向播放器插件重新加载弹幕数据:', externalDanmu.length, '条');
               artPlayerRef.current.plugins.artplayerPluginDanmuku.load(externalDanmu);
-              artPlayerRef.current.notice.show = `已加载 ${externalDanmu.length} 条弹幕`;
             } else {
               console.log('集数变化后没有弹幕数据可加载');
               // 不要自动load([])，保持当前状态
@@ -1765,7 +1764,6 @@ function PlayPageClient() {
               if (externalDanmu.length > 0) {
                 console.log('切换后向播放器插件加载弹幕数据:', externalDanmu.length, '条');
                 artPlayerRef.current.plugins.artplayerPluginDanmuku.load(externalDanmu);
-                artPlayerRef.current.notice.show = `已加载 ${externalDanmu.length} 条弹幕`;
               } else {
                 console.log('切换后没有弹幕数据可加载');
                 artPlayerRef.current.notice.show = '暂无弹幕数据';
@@ -1960,11 +1958,8 @@ function PlayPageClient() {
                         plugin.load(externalDanmu);
                         plugin.show();
                         console.log('外部弹幕已加载:', externalDanmu.length, '条');
-                        // 显示弹幕加载提示
                         if (artPlayerRef.current) {
-                          if (externalDanmu.length > 0) {
-                            artPlayerRef.current.notice.show = `已加载 ${externalDanmu.length} 条弹幕`;
-                          } else {
+                          if (externalDanmu.length === 0) {
                             artPlayerRef.current.notice.show = '暂无弹幕数据';
                           }
                         }
@@ -2411,7 +2406,6 @@ function PlayPageClient() {
               if (externalDanmu.length > 0) {
                 console.log('向播放器插件加载弹幕数据:', externalDanmu.length, '条');
                 artPlayerRef.current.plugins.artplayerPluginDanmuku.load(externalDanmu);
-                artPlayerRef.current.notice.show = `已加载 ${externalDanmu.length} 条弹幕`;
               } else {
                 console.log('没有弹幕数据可加载');
                 artPlayerRef.current.notice.show = '暂无弹幕数据';
