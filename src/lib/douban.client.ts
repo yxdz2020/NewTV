@@ -232,6 +232,7 @@ function getDoubanProxyConfig(): {
   | 'cors-proxy-zwei'
   | 'cmliussss-cdn-tencent'
   | 'cmliussss-cdn-ali'
+  | 'newtv-overseas-cdn'
   | 'cors-anywhere'
   | 'custom';
   proxyUrl: string;
@@ -257,7 +258,8 @@ export async function fetchDoubanCategories(
   params: DoubanCategoriesParams,
   proxyUrl: string,
   useTencentCDN = false,
-  useAliCDN = false
+  useAliCDN = false,
+  useNewTVCDN = false
 ): Promise<DoubanResult> {
   const { kind, category, type, pageLimit = 20, pageStart = 0 } = params;
 
@@ -282,12 +284,14 @@ export async function fetchDoubanCategories(
     ? `https://m.douban.cmliussss.net/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${category}&type=${type}`
     : useAliCDN
       ? `https://m.douban.cmliussss.com/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${category}&type=${type}`
-      : `https://m.douban.com/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${category}&type=${type}`;
+      : useNewTVCDN
+        ? `https://joyce.deno.dev/https://m.douban.com/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${category}&type=${type}`
+        : `https://m.douban.com/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${category}&type=${type}`;
 
   try {
     const response = await fetchWithTimeout(
       target,
-      useTencentCDN || useAliCDN ? '' : proxyUrl
+      useTencentCDN || useAliCDN || useNewTVCDN ? '' : proxyUrl
     );
 
     if (!response.ok) {
@@ -347,10 +351,13 @@ export async function getDoubanCategories(
       result = await fetchDoubanCategories(params, 'https://ciao-cors.is-an.org/');
       break;
     case 'cmliussss-cdn-tencent':
-      result = await fetchDoubanCategories(params, '', true, false);
+      result = await fetchDoubanCategories(params, '', true, false, false);
       break;
     case 'cmliussss-cdn-ali':
-      result = await fetchDoubanCategories(params, '', false, true);
+      result = await fetchDoubanCategories(params, '', false, true, false);
+      break;
+    case 'newtv-overseas-cdn':
+      result = await fetchDoubanCategories(params, '', false, false, true);
       break;
     case 'cors-anywhere':
       result = await fetchDoubanCategories(params, 'https://cors-anywhere.com/');
@@ -404,10 +411,13 @@ export async function getDoubanList(
       result = await fetchDoubanList(params, 'https://ciao-cors.is-an.org/');
       break;
     case 'cmliussss-cdn-tencent':
-      result = await fetchDoubanList(params, '', true, false);
+      result = await fetchDoubanList(params, '', true, false, false);
       break;
     case 'cmliussss-cdn-ali':
-      result = await fetchDoubanList(params, '', false, true);
+      result = await fetchDoubanList(params, '', false, true, false);
+      break;
+    case 'newtv-overseas-cdn':
+      result = await fetchDoubanList(params, '', false, false, true);
       break;
     case 'cors-anywhere':
       result = await fetchDoubanList(params, 'https://cors-anywhere.com/');
@@ -437,7 +447,8 @@ export async function fetchDoubanList(
   params: DoubanListParams,
   proxyUrl: string,
   useTencentCDN = false,
-  useAliCDN = false
+  useAliCDN = false,
+  useNewTVCDN = false
 ): Promise<DoubanResult> {
   const { tag, type, pageLimit = 20, pageStart = 0 } = params;
 
@@ -462,12 +473,14 @@ export async function fetchDoubanList(
     ? `https://movie.douban.cmliussss.net/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`
     : useAliCDN
       ? `https://movie.douban.cmliussss.com/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`
-      : `https://movie.douban.com/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`;
+      : useNewTVCDN
+        ? `https://joyce.deno.dev/https://movie.douban.com/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`
+        : `https://movie.douban.com/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`;
 
   try {
     const response = await fetchWithTimeout(
       target,
-      useTencentCDN || useAliCDN ? '' : proxyUrl
+      useTencentCDN || useAliCDN || useNewTVCDN ? '' : proxyUrl
     );
 
     if (!response.ok) {
@@ -550,10 +563,13 @@ export async function getDoubanRecommends(
       result = await fetchDoubanRecommends(params, 'https://ciao-cors.is-an.org/');
       break;
     case 'cmliussss-cdn-tencent':
-      result = await fetchDoubanRecommends(params, '', true, false);
+      result = await fetchDoubanRecommends(params, '', true, false, false);
       break;
     case 'cmliussss-cdn-ali':
-      result = await fetchDoubanRecommends(params, '', false, true);
+      result = await fetchDoubanRecommends(params, '', false, true, false);
+      break;
+    case 'newtv-overseas-cdn':
+      result = await fetchDoubanRecommends(params, '', false, false, true);
       break;
     case 'cors-anywhere':
       result = await fetchDoubanRecommends(params, 'https://cors-anywhere.com/');
@@ -639,7 +655,8 @@ async function fetchDoubanRecommends(
   params: DoubanRecommendsParams,
   proxyUrl: string,
   useTencentCDN = false,
-  useAliCDN = false
+  useAliCDN = false,
+  useNewTVCDN = false
 ): Promise<DoubanResult> {
   const { kind, pageLimit = 20, pageStart = 0 } = params;
   let { category, format, region, year, platform, sort, label } = params;
@@ -697,7 +714,9 @@ async function fetchDoubanRecommends(
     ? `https://m.douban.cmliussss.net/rexxar/api/v2/${kind}/recommend`
     : useAliCDN
       ? `https://m.douban.cmliussss.com/rexxar/api/v2/${kind}/recommend`
-      : `https://m.douban.com/rexxar/api/v2/${kind}/recommend`;
+      : useNewTVCDN
+        ? `https://joyce.deno.dev/https://m.douban.com/rexxar/api/v2/${kind}/recommend`
+        : `https://m.douban.com/rexxar/api/v2/${kind}/recommend`;
   const reqParams = new URLSearchParams();
   reqParams.append('refresh', '0');
   reqParams.append('start', pageStart.toString());
@@ -714,7 +733,7 @@ async function fetchDoubanRecommends(
   try {
     const response = await fetchWithTimeout(
       target,
-      useTencentCDN || useAliCDN ? '' : proxyUrl
+      useTencentCDN || useAliCDN || useNewTVCDN ? '' : proxyUrl
     );
 
     if (!response.ok) {
