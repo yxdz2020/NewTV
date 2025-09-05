@@ -118,7 +118,21 @@ async function searchWithCache(
     });
 
     // 过滤掉集数为 0 的结果
-    const results = allResults.filter((result: SearchResult) => result.episodes.length > 0);
+    let results = allResults.filter((result: SearchResult) => result.episodes.length > 0);
+    
+    // 在每个API站点返回的数据中也进行去重处理
+    const seenTitles = new Set<string>();
+    const uniqueResults: SearchResult[] = [];
+    
+    for (const result of results) {
+      // 使用标题作为唯一标识进行去重
+      if (!seenTitles.has(result.title)) {
+        seenTitles.add(result.title);
+        uniqueResults.push(result);
+      }
+    }
+    
+    results = uniqueResults;
 
     const pageCount = page === 1 ? data.pagecount || 1 : undefined;
     // 写入缓存（成功）
