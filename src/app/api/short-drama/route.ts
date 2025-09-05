@@ -10,6 +10,8 @@ import { isShortDrama } from '@/lib/utils';
 import { yellowWords } from '@/lib/yellow';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 /**
  * 短剧专用API接口
@@ -32,15 +34,8 @@ export async function GET(request: NextRequest) {
   const apiSites = await getAvailableApiSites(authInfo.username);
 
   try {
-    // 短剧相关的搜索关键词
-    const shortDramaKeywords = [
-      '短剧',
-      '微电影', 
-      '微剧',
-      '竖屏剧',
-      '小剧场',
-      '网络微电影'
-    ];
+    // 简化短剧相关的搜索关键词，只使用"短剧"这一个词
+    const shortDramaKeywords = ['短剧'];
 
     let allResults: SearchResult[] = [];
 
@@ -114,15 +109,17 @@ export async function GET(request: NextRequest) {
       .map((result) => (result as PromiseFulfilledResult<SearchResult[]>).value)
       .flat();
 
-    // 去重 (基于 title + source)
-    const uniqueResults = allResults.reduce((acc: SearchResult[], current) => {
-      const key = `${current.title}-${current.source}`;
-      const existing = acc.find(item => `${item.title}-${item.source}` === key);
-      if (!existing) {
-        acc.push(current);
+    // 改进去重机制，使用更高效的Set方式去重
+    const seenTitles = new Set<string>();
+    const uniqueResults: SearchResult[] = [];
+    
+    for (const result of allResults) {
+      // 使用标题作为唯一标识进行去重
+      if (!seenTitles.has(result.title)) {
+        seenTitles.add(result.title);
+        uniqueResults.push(result);
       }
-      return acc;
-    }, []);
+    }
 
     // 按年份和热度排序
     const sortedResults = uniqueResults.sort((a, b) => {
