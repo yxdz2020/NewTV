@@ -3637,11 +3637,11 @@ const CloudDiskConfigComponent = ({ config, refreshConfig }: { config: AdminConf
           throw new Error(errorData.error || '保存失败');
         }
 
-        showAlert('success', '保存成功', '网盘配置已更新');
+        showAlert({ type: 'success', title: '保存成功', message: '网盘配置已更新' });
         await refreshConfig();
       } catch (error) {
         console.error('保存网盘配置失败:', error);
-        showAlert('error', '保存失败', (error as Error).message);
+        showAlert({ type: 'error', title: '保存失败', message: (error as Error).message });
       }
     });
   };
