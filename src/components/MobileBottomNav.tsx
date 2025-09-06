@@ -31,11 +31,15 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
   const [showMore, setShowMore] = useState(false);
   const [hasCustom, setHasCustom] = useState(false);
   const [hasCloudDisk, setHasCloudDisk] = useState(false);
+  const [cloudDiskName, setCloudDiskName] = useState('网盘');
 
   useEffect(() => {
     const runtimeConfig = (window as any).RUNTIME_CONFIG;
     setHasCustom(!!(runtimeConfig?.CUSTOM_CATEGORIES?.length > 0));
     setHasCloudDisk(!!(runtimeConfig?.CLOUD_DISK_CONFIG?.enabled));
+    if (runtimeConfig?.CLOUD_DISK_CONFIG?.name) {
+      setCloudDiskName(runtimeConfig.CLOUD_DISK_CONFIG.name);
+    }
   }, []);
 
   const isActive = (href: string) => {
@@ -161,7 +165,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                   className='flex-1 px-2 py-3 flex items-center justify-center gap-1 text-xs text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
                   onClick={() => setShowMore(false)}
                 >
-                  <Cloud className='h-4 w-4' /> 网盘
+                  <Cloud className='h-4 w-4' /> {cloudDiskName}
                 </Link>
               )}
             </div>
