@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Cloud, ExternalLink, Copy, Check } from 'lucide-react';
+import { Search, Cloud, ExternalLink, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
@@ -31,6 +31,8 @@ export default function CloudDiskPage() {
   const [results, setResults] = useState<CloudDiskResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [quarkCollapsed, setQuarkCollapsed] = useState(false);
+  const [baiduCollapsed, setBaiduCollapsed] = useState(false);
 
   const handleSearch = async () => {
     if (!keyword.trim()) return;
@@ -38,6 +40,9 @@ export default function CloudDiskPage() {
     setLoading(true);
     setError(null);
     setResults(null);
+    // 重置折叠状态
+    setQuarkCollapsed(false);
+    setBaiduCollapsed(false);
 
     try {
       const response = await fetch(`/api/cloud-disk/search?kw=${encodeURIComponent(keyword)}`);
@@ -64,6 +69,18 @@ export default function CloudDiskPage() {
           }
         }
       };
+
+      // 如果夸克网盘结果超过10个，自动折叠百度网盘结果
+      const quarkResults = validatedData.data.merged_by_type.quark || [];
+      const baiduResults = validatedData.data.merged_by_type.baidu || [];
+      
+      if (quarkResults.length > 10 && baiduResults.length > 0) {
+        setBaiduCollapsed(true);
+      }
+      // 如果百度网盘结果超过10个且夸克网盘结果少，自动折叠夸克网盘结果
+      else if (baiduResults.length > 10 && quarkResults.length > 0 && quarkResults.length < baiduResults.length) {
+        setQuarkCollapsed(true);
+      }
 
       setResults(validatedData);
     } catch (err) {
@@ -158,10 +175,23 @@ export default function CloudDiskPage() {
                 {/* 夸克网盘结果 - 优先展示 */}
                 {results.data.merged_by_type.quark && results.data.merged_by_type.quark.length > 0 && (
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                      夸克网盘 ({results.data.merged_by_type.quark.length})
-                    </h2>
-                    <div className="grid gap-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 
+                        className="text-xl font-semibold text-gray-900 dark:text-white cursor-pointer hover:text-green-600 dark:hover:text-green-400 transition-colors flex items-center"
+                        onClick={() => setQuarkCollapsed(!quarkCollapsed)}
+                      >
+                        夸克网盘 ({results.data.merged_by_type.quark.length})
+                        {quarkCollapsed ? <ChevronDown className="w-4 h-4 ml-2" /> : <ChevronUp className="w-4 h-4 ml-2" />}
+                      </h2>
+                      <button 
+                        onClick={() => setQuarkCollapsed(!quarkCollapsed)}
+                        className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-colors flex items-center gap-1"
+                      >
+                        {quarkCollapsed ? '展开' : '折叠'}
+                        {quarkCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <div className={`grid gap-4 ${quarkCollapsed ? 'hidden' : ''}`}>
                       {results.data.merged_by_type.quark.map((item, index) => (
                         <div
                           key={index}
@@ -215,10 +245,23 @@ export default function CloudDiskPage() {
                 {/* 百度网盘结果 */}
                 {results.data.merged_by_type.baidu && results.data.merged_by_type.baidu.length > 0 && (
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                      百度网盘 ({results.data.merged_by_type.baidu.length})
-                    </h2>
-                    <div className="grid gap-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 
+                        className="text-xl font-semibold text-gray-900 dark:text-white cursor-pointer hover:text-green-600 dark:hover:text-green-400 transition-colors flex items-center"
+                        onClick={() => setBaiduCollapsed(!baiduCollapsed)}
+                      >
+                        百度网盘 ({results.data.merged_by_type.baidu.length})
+                        {baiduCollapsed ? <ChevronDown className="w-4 h-4 ml-2" /> : <ChevronUp className="w-4 h-4 ml-2" />}
+                      </h2>
+                      <button 
+                        onClick={() => setBaiduCollapsed(!baiduCollapsed)}
+                        className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-colors flex items-center gap-1"
+                      >
+                        {baiduCollapsed ? '展开' : '折叠'}
+                        {baiduCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <div className={`grid gap-4 ${baiduCollapsed ? 'hidden' : ''}`}>
                       {results.data.merged_by_type.baidu.map((item, index) => (
                         <div
                           key={index}
