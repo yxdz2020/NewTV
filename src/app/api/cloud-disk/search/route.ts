@@ -43,7 +43,25 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json();
     
-    return NextResponse.json(data, {
+    // 验证响应数据结构
+    if (!data || typeof data !== 'object') {
+      throw new Error('外部API返回了无效的数据格式');
+    }
+
+    // 确保返回的数据结构正确
+    const validatedData = {
+      code: data.code || 0,
+      message: data.message || 'success',
+      data: {
+        total: data.data?.total || 0,
+        merged_by_type: {
+          baidu: Array.isArray(data.data?.merged_by_type?.baidu) ? data.data.merged_by_type.baidu : [],
+          quark: Array.isArray(data.data?.merged_by_type?.quark) ? data.data.merged_by_type.quark : []
+        }
+      }
+    };
+    
+    return NextResponse.json(validatedData, {
       headers: {
         'Cache-Control': 'public, max-age=300', // 缓存5分钟
       },

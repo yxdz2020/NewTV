@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Search, Cloud, ExternalLink, Copy, Check } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 interface CloudDiskResult {
   url: string;
@@ -46,8 +47,27 @@ export default function CloudDiskPage() {
         throw new Error(data.error || '搜索失败');
       }
 
-      setResults(data);
+      // 验证响应数据结构
+      if (!data || typeof data !== 'object') {
+        throw new Error('服务器返回了无效的数据格式');
+      }
+
+      // 确保数据结构正确
+      const validatedData = {
+        code: data.code || 0,
+        message: data.message || '',
+        data: {
+          total: data.data?.total || 0,
+          merged_by_type: {
+            baidu: Array.isArray(data.data?.merged_by_type?.baidu) ? data.data.merged_by_type.baidu : [],
+            quark: Array.isArray(data.data?.merged_by_type?.quark) ? data.data.merged_by_type.quark : []
+          }
+        }
+      };
+
+      setResults(validatedData);
     } catch (err) {
+      console.error('网盘搜索错误:', err);
       setError((err as Error).message);
     } finally {
       setLoading(false);
@@ -79,9 +99,10 @@ export default function CloudDiskPage() {
   };
 
   return (
-    <PageLayout activePath="/cloud-disk">
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="container mx-auto px-4 py-6">
+    <ErrorBoundary>
+      <PageLayout activePath="/cloud-disk">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+          <div className="container mx-auto px-4 py-6">
           {/* 页面标题 */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -252,7 +273,13 @@ export default function CloudDiskPage() {
               {results.data.total === 0 && (
                 <div className="text-center py-12">
                   <Cloud className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 dark:text-gray-400">未找到相关资源</p>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">未找到相关资源</h3>
+                  <p className="text-gray-500 dark:text-gray-400 mb-4">
+                    尝试使用不同的关键词或检查拼写
+                  </p>
+                  <div className="text-sm text-gray-400">
+                    搜索关键词: <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{keyword}</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -260,5 +287,6 @@ export default function CloudDiskPage() {
         </div>
       </div>
     </PageLayout>
+    </ErrorBoundary>
   );
 }
