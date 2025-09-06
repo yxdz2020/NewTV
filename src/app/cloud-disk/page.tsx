@@ -134,14 +134,14 @@ export default function CloudDiskPage() {
                 </p>
               </div>
 
-              {/* 百度网盘结果 */}
-              {results.data.merged_by_type.baidu && results.data.merged_by_type.baidu.length > 0 && (
+              {/* 夸克网盘结果 - 优先展示 */}
+              {results.data.merged_by_type.quark && results.data.merged_by_type.quark.length > 0 && (
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                    百度网盘 ({results.data.merged_by_type.baidu.length})
+                    夸克网盘 ({results.data.merged_by_type.quark.length})
                   </h2>
                   <div className="grid gap-4">
-                    {results.data.merged_by_type.baidu.map((item, index) => (
+                    {results.data.merged_by_type.quark.map((item, index) => (
                       <div
                         key={index}
                         className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700"
@@ -191,14 +191,14 @@ export default function CloudDiskPage() {
                 </div>
               )}
 
-              {/* 夸克网盘结果 */}
-              {results.data.merged_by_type.quark && results.data.merged_by_type.quark.length > 0 && (
+              {/* 百度网盘结果 */}
+              {results.data.merged_by_type.baidu && results.data.merged_by_type.baidu.length > 0 && (
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                    夸克网盘 ({results.data.merged_by_type.quark.length})
+                    百度网盘 ({results.data.merged_by_type.baidu.length})
                   </h2>
                   <div className="grid gap-4">
-                    {results.data.merged_by_type.quark.map((item, index) => (
+                    {results.data.merged_by_type.baidu.map((item, index) => (
                       <div
                         key={index}
                         className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700"

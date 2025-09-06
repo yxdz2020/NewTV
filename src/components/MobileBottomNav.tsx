@@ -127,41 +127,41 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
             <div className='flex divide-x divide-gray-200/60 dark:divide-gray-700/60'>
               <Link
                 href='/douban?type=short-drama'
-                className='flex-1 p-3 flex items-center justify-center gap-2 text-sm text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
+                className='flex-1 px-2 py-3 flex items-center justify-center gap-1 text-xs text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
                 onClick={() => setShowMore(false)}
               >
-                <Clapperboard className='h-5 w-5' /> 短剧
+                <Clapperboard className='h-4 w-4' /> 短剧
               </Link>
               <Link
                 href='/douban?type=anime'
-                className='flex-1 p-3 flex items-center justify-center gap-2 text-sm text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
+                className='flex-1 px-2 py-3 flex items-center justify-center gap-1 text-xs text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
                 onClick={() => setShowMore(false)}
               >
-                <Cat className='h-5 w-5' /> 动漫
+                <Cat className='h-4 w-4' /> 动漫
               </Link>
               <Link
                 href='/douban?type=show'
-                className='flex-1 p-3 flex items-center justify-center gap-2 text-sm text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
+                className='flex-1 px-2 py-3 flex items-center justify-center gap-1 text-xs text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
                 onClick={() => setShowMore(false)}
               >
-                <Clover className='h-5 w-5' /> 综艺
+                <Clover className='h-4 w-4' /> 综艺
               </Link>
               {hasCustom && (
                 <Link
                   href='/douban?type=custom'
-                  className='flex-1 p-3 flex items-center justify-center gap-2 text-sm text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
+                  className='flex-1 px-2 py-3 flex items-center justify-center gap-1 text-xs text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
                   onClick={() => setShowMore(false)}
                 >
-                  <Star className='h-5 w-5' /> 纪录
+                  <Star className='h-4 w-4' /> 纪录
                 </Link>
               )}
               {hasCloudDisk && (
                 <Link
                   href='/cloud-disk'
-                  className='flex-1 p-3 flex items-center justify-center gap-2 text-sm text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
+                  className='flex-1 px-2 py-3 flex items-center justify-center gap-1 text-xs text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
                   onClick={() => setShowMore(false)}
                 >
-                  <Cloud className='h-5 w-5' /> 网盘
+                  <Cloud className='h-4 w-4' /> 网盘
                 </Link>
               )}
             </div>
