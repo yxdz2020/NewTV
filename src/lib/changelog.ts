@@ -17,7 +17,7 @@ export const changelog: ChangelogEntry[] = [
       "无新增内容"
     ],
     "changed": [
-      "无变更内容"
+      "🎯 搜索结果支持折叠"
     ],
     "fixed": [
       "🎨 修复了网盘搜索页面背景颜色与应用主题不一致的问题，确保视觉统一。",
