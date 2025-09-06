@@ -164,7 +164,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
       label: string;
       href: string;
     }> = [];
-    
+
     if (runtimeConfig?.CUSTOM_CATEGORIES?.length > 0) {
       newItems.push({
         icon: Star,
@@ -172,7 +172,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
         href: '/douban?type=custom',
       });
     }
-    
+
     if (runtimeConfig?.CLOUD_DISK_CONFIG?.enabled) {
       newItems.push({
         icon: Cloud,
@@ -180,7 +180,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
         href: '/cloud-disk',
       });
     }
-    
+
     if (newItems.length > 0) {
       setMenuItems((prevItems) => [...prevItems, ...newItems]);
     }
