@@ -3667,14 +3667,12 @@ const CloudDiskConfigComponent = ({ config, refreshConfig }: { config: AdminConf
             <button
               type='button'
               onClick={() => setCloudDiskSettings(prev => ({ ...prev, enabled: !prev.enabled }))}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
-                cloudDiskSettings.enabled ? buttonStyles.toggleOn : buttonStyles.toggleOff
-              }`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${cloudDiskSettings.enabled ? buttonStyles.toggleOn : buttonStyles.toggleOff
+                }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  cloudDiskSettings.enabled ? buttonStyles.toggleThumbOn : buttonStyles.toggleThumbOff
-                }`}
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${cloudDiskSettings.enabled ? buttonStyles.toggleThumbOn : buttonStyles.toggleThumbOff
+                  }`}
               />
             </button>
           </div>
@@ -3738,7 +3736,6 @@ const CloudDiskConfigComponent = ({ config, refreshConfig }: { config: AdminConf
         message={alertModal.message}
         timer={alertModal.timer}
         showConfirm={alertModal.showConfirm}
-        onConfirm={alertModal.onConfirm}
       />
     </div>
   );
