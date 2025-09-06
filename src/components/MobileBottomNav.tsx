@@ -2,7 +2,7 @@
 
 'use client';
 
-import { Cat, Clapperboard, Clover, Ellipsis, Film, Home, Radio, Star, Tv } from 'lucide-react';
+import { Cat, Clapperboard, Clover, Cloud, Ellipsis, Film, Home, Radio, Star, Tv } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -30,10 +30,12 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
 
   const [showMore, setShowMore] = useState(false);
   const [hasCustom, setHasCustom] = useState(false);
+  const [hasCloudDisk, setHasCloudDisk] = useState(false);
 
   useEffect(() => {
     const runtimeConfig = (window as any).RUNTIME_CONFIG;
     setHasCustom(!!(runtimeConfig?.CUSTOM_CATEGORIES?.length > 0));
+    setHasCloudDisk(!!(runtimeConfig?.CLOUD_DISK_CONFIG?.enabled));
   }, []);
 
   const isActive = (href: string) => {
@@ -54,7 +56,8 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
     currentActive.includes('type=anime') ||
     currentActive.includes('type=show') ||
     currentActive.includes('type=short-drama') ||
-    currentActive.includes('type=custom');
+    currentActive.includes('type=custom') ||
+    currentActive.includes('/cloud-disk');
 
   return (
     <nav
@@ -150,6 +153,15 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                   onClick={() => setShowMore(false)}
                 >
                   <Star className='h-5 w-5' /> 纪录
+                </Link>
+              )}
+              {hasCloudDisk && (
+                <Link
+                  href='/cloud-disk'
+                  className='flex-1 p-3 flex items-center justify-center gap-2 text-sm text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
+                  onClick={() => setShowMore(false)}
+                >
+                  <Cloud className='h-5 w-5' /> 网盘
                 </Link>
               )}
             </div>

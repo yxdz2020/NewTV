@@ -28,6 +28,7 @@ import {
   CheckCircle,
   ChevronDown,
   ChevronUp,
+  Cloud,
   Database,
   ExternalLink,
   FileText,
@@ -3597,6 +3598,152 @@ const ConfigFileComponent = ({ config, refreshConfig }: { config: AdminConfig | 
   );
 };
 
+// 网盘配置组件
+const CloudDiskConfigComponent = ({ config, refreshConfig }: { config: AdminConfig | null; refreshConfig: () => Promise<void> }) => {
+  const { alertModal, showAlert, hideAlert } = useAlertModal();
+  const { isLoading, withLoading } = useLoadingState();
+  const [cloudDiskSettings, setCloudDiskSettings] = useState({
+    enabled: false,
+    apiUrl: '',
+    name: '网盘',
+  });
+
+  // 初始化配置
+  useEffect(() => {
+    if (config?.CloudDiskConfig) {
+      setCloudDiskSettings({
+        enabled: config.CloudDiskConfig.enabled || false,
+        apiUrl: config.CloudDiskConfig.apiUrl || '',
+        name: config.CloudDiskConfig.name || '网盘',
+      });
+    }
+  }, [config]);
+
+  // 保存网盘配置
+  const handleSave = async () => {
+    await withLoading('saveCloudDiskConfig', async () => {
+      try {
+        const resp = await fetch('/api/admin/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...config,
+            CloudDiskConfig: cloudDiskSettings,
+          }),
+        });
+
+        if (!resp.ok) {
+          const errorData = await resp.json();
+          throw new Error(errorData.error || '保存失败');
+        }
+
+        showAlert('success', '保存成功', '网盘配置已更新');
+        await refreshConfig();
+      } catch (error) {
+        console.error('保存网盘配置失败:', error);
+        showAlert('error', '保存失败', (error as Error).message);
+      }
+    });
+  };
+
+  return (
+    <div className='space-y-6'>
+      <div className='bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700'>
+        <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-6'>
+          网盘功能配置
+        </h3>
+
+        <div className='space-y-6'>
+          {/* 启用开关 */}
+          <div className='flex items-center justify-between'>
+            <div>
+              <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+                启用网盘功能
+              </label>
+              <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+                启用后用户可以在底部导航栏的"更多"菜单中看到网盘入口
+              </p>
+            </div>
+            <button
+              type='button'
+              onClick={() => setCloudDiskSettings(prev => ({ ...prev, enabled: !prev.enabled }))}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                cloudDiskSettings.enabled ? buttonStyles.toggleOn : buttonStyles.toggleOff
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  cloudDiskSettings.enabled ? buttonStyles.toggleThumbOn : buttonStyles.toggleThumbOff
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* API地址配置 */}
+          <div>
+            <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+              网盘API地址
+            </label>
+            <input
+              type='url'
+              value={cloudDiskSettings.apiUrl}
+              onChange={(e) => setCloudDiskSettings(prev => ({ ...prev, apiUrl: e.target.value }))}
+              placeholder='https://pan.1995101.xyz'
+              className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
+            />
+            <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+              网盘搜索API的完整地址，例如：https://pan.1995101.xyz
+            </p>
+          </div>
+
+          {/* 显示名称 */}
+          <div>
+            <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+              显示名称
+            </label>
+            <input
+              type='text'
+              value={cloudDiskSettings.name}
+              onChange={(e) => setCloudDiskSettings(prev => ({ ...prev, name: e.target.value }))}
+              placeholder='网盘'
+              className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
+            />
+            <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+              在导航栏中显示的名称
+            </p>
+          </div>
+        </div>
+
+        {/* 操作按钮 */}
+        <div className='flex justify-end mt-6'>
+          <button
+            onClick={handleSave}
+            disabled={isLoading('saveCloudDiskConfig')}
+            className={`px-4 py-2 ${isLoading('saveCloudDiskConfig')
+              ? buttonStyles.disabled
+              : buttonStyles.success
+              } rounded-lg transition-colors`}
+          >
+            {isLoading('saveCloudDiskConfig') ? '保存中…' : '保存'}
+          </button>
+        </div>
+      </div>
+
+      {/* 通用弹窗组件 */}
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        onClose={hideAlert}
+        type={alertModal.type}
+        title={alertModal.title}
+        message={alertModal.message}
+        timer={alertModal.timer}
+        showConfirm={alertModal.showConfirm}
+        onConfirm={alertModal.onConfirm}
+      />
+    </div>
+  );
+};
+
 // 新增站点配置组件
 const SiteConfigComponent = ({ config, refreshConfig }: { config: AdminConfig | null; refreshConfig: () => Promise<void> }) => {
   const { alertModal, showAlert, hideAlert } = useAlertModal();
@@ -4722,6 +4869,7 @@ function AdminPageClient() {
     liveSource: false,
     siteConfig: false,
     categoryConfig: false,
+    cloudDiskConfig: false,
     configFile: false,
     dataMigration: false,
   });
@@ -4922,6 +5070,21 @@ function AdminPageClient() {
               onToggle={() => toggleTab('categoryConfig')}
             >
               <CategoryConfig config={config} refreshConfig={fetchConfig} />
+            </CollapsibleTab>
+
+            {/* 网盘配置标签 */}
+            <CollapsibleTab
+              title='网盘配置'
+              icon={
+                <Cloud
+                  size={20}
+                  className='text-gray-600 dark:text-gray-400'
+                />
+              }
+              isExpanded={expandedTabs.cloudDiskConfig}
+              onToggle={() => toggleTab('cloudDiskConfig')}
+            >
+              <CloudDiskConfigComponent config={config} refreshConfig={fetchConfig} />
             </CollapsibleTab>
 
             {/* 数据迁移标签 - 仅站长可见 */}

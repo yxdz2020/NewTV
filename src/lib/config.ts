@@ -228,6 +228,11 @@ async function getInitConfig(configFile: string, subConfig: {
     SourceConfig: [],
     CustomCategories: [],
     LiveConfig: [],
+    CloudDiskConfig: {
+      enabled: false,
+      apiUrl: '',
+      name: '网盘',
+    },
   };
 
   // 补充用户信息
@@ -348,6 +353,13 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
   }
   if (!adminConfig.LiveConfig || !Array.isArray(adminConfig.LiveConfig)) {
     adminConfig.LiveConfig = [];
+  }
+  if (!adminConfig.CloudDiskConfig) {
+    adminConfig.CloudDiskConfig = {
+      enabled: false,
+      apiUrl: '',
+      name: '网盘',
+    };
   }
 
   // 站长变更自检
