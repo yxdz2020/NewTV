@@ -3,7 +3,7 @@
 'use client';
 
 import { Suspense, useEffect, useRef, useState } from 'react';
-import Artplayer from 'artplayer';
+
 import Hls from 'hls.js';
 import { Heart, Radio, Search, Tv, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -468,6 +468,10 @@ function LivePageClient() {
     // 重置不支持的类型状态
     setUnsupportedType(null);
 
+    // 重置错误计数器
+    keyLoadErrorCount = 0;
+    lastErrorTime = 0;
+
     setCurrentChannel(channel);
     setVideoUrl(channel.url);
 
@@ -834,6 +838,12 @@ function LivePageClient() {
     }
   }
 
+  // 错误重试状态管理
+  let keyLoadErrorCount = 0;
+  let lastErrorTime = 0;
+  const MAX_KEY_ERRORS = 3;
+  const ERROR_TIMEOUT = 10000; // 10秒内超过3次keyLoadError就认为频道不可用
+
   function m3u8Loader(video: HTMLVideoElement, url: string) {
     if (!Hls) {
       console.error('HLS.js 未加载');
@@ -867,15 +877,53 @@ function LivePageClient() {
     hls.on(Hls.Events.ERROR, function (event: any, data: any) {
       console.error('HLS Error:', event, data);
 
+      // 特殊处理keyLoadError - 防止无限重试导致页面卡住
+      if (data.details === 'keyLoadError') {
+        const currentTime = Date.now();
+
+        // 重置计数器（如果距离上次错误超过10秒）
+        if (currentTime - lastErrorTime > ERROR_TIMEOUT) {
+          keyLoadErrorCount = 0;
+        }
+
+        keyLoadErrorCount++;
+        lastErrorTime = currentTime;
+
+        console.warn(`KeyLoadError count: ${keyLoadErrorCount}/${MAX_KEY_ERRORS}`);
+
+        // 如果短时间内keyLoadError次数过多，认为这个频道不可用
+        if (keyLoadErrorCount >= MAX_KEY_ERRORS) {
+          console.error('Too many keyLoadErrors, marking channel as unavailable');
+          setUnsupportedType('channel-unavailable');
+          setIsVideoLoading(false);
+          hls.destroy();
+          return;
+        }
+
+        // 前几次错误仍然尝试重新加载，但不做fatal处理
+        return;
+      }
+
       if (data.fatal) {
         switch (data.type) {
           case Hls.ErrorTypes.NETWORK_ERROR:
-            hls.startLoad();
+            console.log('Network error, attempting to recover...');
+            try {
+              hls.startLoad();
+            } catch (e) {
+              console.error('Failed to restart after network error:', e);
+            }
             break;
           case Hls.ErrorTypes.MEDIA_ERROR:
-            // hls.recoverMediaError();
+            console.log('Media error, attempting to recover...');
+            try {
+              hls.recoverMediaError();
+            } catch (e) {
+              console.error('Failed to recover from media error:', e);
+            }
             break;
           default:
+            console.log('Fatal error, destroying HLS instance');
             hls.destroy();
             break;
         }
@@ -885,9 +933,9 @@ function LivePageClient() {
 
   // 播放器初始化
   useEffect(() => {
-    const preload = async () => {
+    // 异步初始化播放器，避免SSR问题
+    const initPlayer = async () => {
       if (
-        !Artplayer ||
         !Hls ||
         !videoUrl ||
         !artRef.current ||
@@ -929,6 +977,9 @@ function LivePageClient() {
       const customType = { m3u8: m3u8Loader };
       const targetUrl = `/api/proxy/m3u8?url=${encodeURIComponent(videoUrl)}&moontv-source=${currentSourceRef.current?.key || ''}`;
       try {
+        // 使用动态导入的 Artplayer
+        const Artplayer = (window as any).DynamicArtplayer;
+
         // 创建新的播放器实例
         Artplayer.USE_RAF = true;
 
@@ -1013,9 +1064,25 @@ function LivePageClient() {
         console.error('创建播放器失败:', err);
         // 不设置错误，只记录日志
       }
-    }
-    preload();
-  }, [Artplayer, Hls, videoUrl, currentChannel, loading]);
+    }; // 结束 initPlayer 函数
+
+    // 动态导入 ArtPlayer 并初始化
+    const loadAndInit = async () => {
+      try {
+        const { default: Artplayer } = await import('artplayer');
+
+        // 将导入的模块设置为全局变量供 initPlayer 使用
+        (window as any).DynamicArtplayer = Artplayer;
+
+        await initPlayer();
+      } catch (error) {
+        console.error('动态导入 ArtPlayer 失败:', error);
+        // 不设置错误，只记录日志
+      }
+    };
+
+    loadAndInit();
+  }, [Hls, videoUrl, currentChannel, loading]);
 
   // 清理播放器资源
   useEffect(() => {
@@ -1297,14 +1364,20 @@ function LivePageClient() {
                       </div>
                       <div className='space-y-4'>
                         <h3 className='text-xl font-semibold text-white'>
-                          暂不支持的直播流类型
+                          {unsupportedType === 'channel-unavailable' ? '该频道暂时不可用' : '暂不支持的直播流类型'}
                         </h3>
                         <div className='bg-orange-500/20 border border-orange-500/30 rounded-lg p-4'>
                           <p className='text-orange-300 font-medium'>
-                            当前频道直播流类型：<span className='text-white font-bold'>{unsupportedType.toUpperCase()}</span>
+                            {unsupportedType === 'channel-unavailable'
+                              ? '频道可能需要特殊访问权限或链接已过期'
+                              : `当前频道直播流类型：${unsupportedType.toUpperCase()}`
+                            }
                           </p>
                           <p className='text-sm text-orange-200 mt-2'>
-                            目前仅支持 M3U8 格式的直播流
+                            {unsupportedType === 'channel-unavailable'
+                              ? '请联系IPTV提供商或尝试其他频道'
+                              : '目前仅支持 M3U8 格式的直播流'
+                            }
                           </p>
                         </div>
                         <p className='text-sm text-gray-300'>
