@@ -3,7 +3,7 @@
 'use client';
 
 import { Suspense, useEffect, useRef, useState } from 'react';
-import Artplayer from 'artplayer';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Hls from 'hls.js';
 import { Heart } from 'lucide-react';
 
