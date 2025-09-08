@@ -38,13 +38,41 @@ const AIChatPage = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  useEffect(() => {
+    try {
+      const cachedMessages = localStorage.getItem('ai-chat-messages');
+      if (cachedMessages) {
+        const { messages: storedMessages, timestamp } = JSON.parse(cachedMessages);
+        const now = new Date().getTime();
+        // 30 minutes cache
+        if (now - timestamp < 30 * 60 * 1000) {
+          setMessages(storedMessages.map((msg: Message) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          })));
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load messages from cache", error);
+    }
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
+    try {
+      const cache = {
+        messages,
+        timestamp: new Date().getTime()
+      };
+      localStorage.setItem('ai-chat-messages', JSON.stringify(cache));
+    } catch (error) {
+      console.error("Failed to save messages to cache", error);
+    }
   }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
