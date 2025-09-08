@@ -94,9 +94,9 @@ export default function AIConfigComponent() {
           const data = await response.json();
           const modelValue = data.Config?.AIConfig?.model || 'gpt-3.5-turbo';
           const isKnownModel = knownModels.includes(modelValue);
-          
+
           const customModelValue = data.Config?.AIConfig?.customModel || (isKnownModel ? '' : modelValue);
-          
+
           setConfig({
             enabled: data.Config?.AIConfig?.enabled || false,
             api_url: data.Config?.AIConfig?.apiUrl || '',
@@ -104,7 +104,7 @@ export default function AIConfigComponent() {
             model: isKnownModel ? modelValue : 'custom',
             customModel: customModelValue
           });
-          
+
           // 同时更新自定义模型输入框的值
           setCustomModelInput(customModelValue);
         }
@@ -247,9 +247,8 @@ export default function AIConfigComponent() {
             {/* 下拉箭头 */}
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <ChevronDown
-                className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${
-                  isModelDropdownOpen ? 'rotate-180' : ''
-                }`}
+                className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${isModelDropdownOpen ? 'rotate-180' : ''
+                  }`}
               />
             </div>
 
@@ -260,7 +259,7 @@ export default function AIConfigComponent() {
                 {['OpenAI', 'Anthropic', '阿里云', '百度', '智谱AI', '其他'].map((group) => {
                   const groupOptions = aiModelOptions.filter(option => option.group === group);
                   if (groupOptions.length === 0) return null;
-                  
+
                   return (
                     <div key={group}>
                       <div className="px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50">
@@ -271,11 +270,10 @@ export default function AIConfigComponent() {
                           key={option.value}
                           type="button"
                           onClick={() => handleModelChange(option.value)}
-                          className={`w-full px-3 py-2.5 text-left text-sm transition-colors duration-150 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                            config.model === option.value
-                              ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                              : 'text-gray-900 dark:text-gray-100'
-                          }`}
+                          className={`w-full px-3 py-2.5 text-left text-sm transition-colors duration-150 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 ${config.model === option.value
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                            : 'text-gray-900 dark:text-gray-100'
+                            }`}
                         >
                           <span className="truncate">{option.label}</span>
                           {config.model === option.value && (
@@ -316,8 +314,8 @@ export default function AIConfigComponent() {
       {/* 消息提示 */}
       {message && (
         <div className={`flex items-center space-x-2 p-3 rounded-md ${message.type === 'success'
-            ? 'bg-green-50 text-green-800 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
-            : 'bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
+          ? 'bg-green-50 text-green-800 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
+          : 'bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
           }`}>
           {message.type === 'success' ? (
             <Check className="w-4 h-4" />
@@ -345,7 +343,7 @@ export default function AIConfigComponent() {
         <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">使用说明</h4>
         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
           <li>• 启用后，用户可以在移动端看到AI推荐图标</li>
-          <li>• 支持OpenAI、Claude、通义千问等兼容API</li>
+          <li>• 支持OpenAI兼容的API模型</li>
           <li>• API地址示例：https://api.openai.com/v1</li>
           <li>• 选择合适的AI模型，不同模型效果和费用不同</li>
           <li>• 确保API密钥有足够的调用额度</li>
