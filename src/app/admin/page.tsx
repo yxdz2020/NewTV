@@ -48,6 +48,7 @@ import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 
 import DataMigration from '@/components/DataMigration';
 import PageLayout from '@/components/PageLayout';
+import ExternalAIConfigComponent from '@/components/AIConfigComponent';
 
 // 统一按钮样式系统
 const buttonStyles = {
@@ -3754,214 +3755,7 @@ const CloudDiskConfigComponent = ({ config, refreshConfig }: { config: AdminConf
   );
 };
 
-// AI配置组件
-const AIConfigComponent = ({ config, refreshConfig }: { config: AdminConfig | null; refreshConfig: () => Promise<void> }) => {
-  const { alertModal, showAlert, hideAlert } = useAlertModal();
-  const { isLoading, withLoading } = useLoadingState();
-  const [aiSettings, setAiSettings] = useState({
-    enabled: false,
-    apiUrl: '',
-    apiKey: '',
-    model: 'gpt-3.5-turbo'
-  });
 
-  useEffect(() => {
-    if (config?.AIConfig) {
-      setAiSettings({
-        enabled: config.AIConfig.enabled || false,
-        apiUrl: config.AIConfig.apiUrl || '',
-        apiKey: config.AIConfig.apiKey || '',
-        model: config.AIConfig.model || 'gpt-3.5-turbo'
-      });
-    }
-  }, [config]);
-
-  // 保存AI配置
-  const handleSave = async () => {
-    await withLoading('saveAIConfig', async () => {
-      try {
-        const resp = await fetch('/api/admin/config', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            AIConfig: {
-              enabled: aiSettings.enabled,
-              apiUrl: aiSettings.apiUrl,
-              apiKey: aiSettings.apiKey,
-              model: aiSettings.model
-            }
-          }),
-        });
-
-        if (!resp.ok) {
-          const data = await resp.json().catch(() => ({}));
-          throw new Error(data.error || `保存失败: ${resp.status}`);
-        }
-
-        showSuccess('保存成功', showAlert);
-        await refreshConfig();
-      } catch (err) {
-        showError(err instanceof Error ? err.message : '保存失败', showAlert);
-        throw err;
-      }
-    });
-  };
-
-  if (!config) {
-    return (
-      <div className='text-center text-gray-500 dark:text-gray-400'>
-        加载中...
-      </div>
-    );
-  }
-
-  return (
-    <div className='space-y-6'>
-      {/* 启用AI推荐 */}
-      <div className='flex items-center justify-between'>
-        <div>
-          <h3 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-            启用AI推荐功能
-          </h3>
-          <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-            开启后，移动端搜索按钮旁将显示AI推荐图标
-          </p>
-        </div>
-        <button
-          onClick={() => setAiSettings(prev => ({ ...prev, enabled: !prev.enabled }))}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
-            aiSettings.enabled ? 'bg-green-600' : 'bg-gray-200 dark:bg-gray-700'
-          }`}
-        >
-          <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-              aiSettings.enabled ? 'translate-x-6' : 'translate-x-1'
-            }`}
-          />
-        </button>
-      </div>
-
-      {/* API URL */}
-      <div>
-        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-          API地址
-        </label>
-        <input
-          type='text'
-          value={aiSettings.apiUrl}
-          onChange={(e) => setAiSettings(prev => ({ ...prev, apiUrl: e.target.value }))}
-          placeholder='https://api.example.com/v1'
-          className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
-        />
-        <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-          输入AI服务的基础地址，系统会自动添加/chat/completions
-        </p>
-      </div>
-
-      {/* API Key */}
-      <div>
-        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-          API密钥
-        </label>
-        <input
-          type='password'
-          value={aiSettings.apiKey}
-          onChange={(e) => setAiSettings(prev => ({ ...prev, apiKey: e.target.value }))}
-          placeholder='sk-...'
-          className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
-        />
-        <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-          用于访问AI服务的密钥
-        </p>
-      </div>
-
-      {/* AI Model */}
-      <div>
-        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-          AI模型
-        </label>
-        <select
-          value={aiSettings.model}
-          onChange={(e) => setAiSettings(prev => ({ ...prev, model: e.target.value }))}
-          className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
-        >
-          <optgroup label="OpenAI">
-            <option value="gpt-4o">GPT-4o</option>
-            <option value="gpt-4o-mini">GPT-4o Mini</option>
-            <option value="gpt-4-turbo">GPT-4 Turbo</option>
-            <option value="gpt-4">GPT-4</option>
-            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-          </optgroup>
-          <optgroup label="Anthropic">
-            <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
-            <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
-            <option value="claude-3-opus-20240229">Claude 3 Opus</option>
-          </optgroup>
-          <optgroup label="阿里云">
-            <option value="qwen-turbo">通义千问 Turbo</option>
-            <option value="qwen-plus">通义千问 Plus</option>
-            <option value="qwen-max">通义千问 Max</option>
-          </optgroup>
-          <optgroup label="百度">
-            <option value="ernie-4.0-8k">文心一言 4.0</option>
-            <option value="ernie-3.5-8k">文心一言 3.5</option>
-          </optgroup>
-          <optgroup label="智谱AI">
-            <option value="glm-4">GLM-4</option>
-            <option value="glm-3-turbo">GLM-3 Turbo</option>
-          </optgroup>
-          <optgroup label="其他">
-            <option value="custom">自定义模型</option>
-          </optgroup>
-        </select>
-        <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-           选择要使用的AI模型，确保API支持所选模型
-         </p>
-       </div>
-
-       {/* 自定义模型输入 */}
-       {aiSettings.model === 'custom' && (
-         <div>
-           <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-             自定义模型名称
-           </label>
-           <input
-             type='text'
-             placeholder='输入自定义模型名称'
-             onChange={(e) => setAiSettings(prev => ({ ...prev, model: e.target.value }))}
-             className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
-           />
-         </div>
-       )}
-
-      {/* 操作按钮 */}
-      <div className='flex justify-end mt-6'>
-        <button
-          onClick={handleSave}
-          disabled={isLoading('saveAIConfig')}
-          className={`px-4 py-2 ${
-            isLoading('saveAIConfig')
-              ? buttonStyles.disabled
-              : buttonStyles.success
-          } rounded-lg transition-colors`}
-        >
-          {isLoading('saveAIConfig') ? '保存中…' : '保存'}
-        </button>
-      </div>
-
-      {/* 通用弹窗组件 */}
-      <AlertModal
-        isOpen={alertModal.isOpen}
-        onClose={hideAlert}
-        type={alertModal.type}
-        title={alertModal.title}
-        message={alertModal.message}
-        timer={alertModal.timer}
-        showConfirm={alertModal.showConfirm}
-      />
-    </div>
-  );
-};
 
 // 新增站点配置组件
 const SiteConfigComponent = ({ config, refreshConfig }: { config: AdminConfig | null; refreshConfig: () => Promise<void> }) => {
@@ -5248,7 +5042,7 @@ function AdminPageClient() {
             isExpanded={expandedTabs.aiConfig}
             onToggle={() => toggleTab('aiConfig')}
           >
-            <AIConfigComponent config={config} refreshConfig={fetchConfig} />
+            <ExternalAIConfigComponent />
           </CollapsibleTab>
 
           <div className='space-y-4'>
