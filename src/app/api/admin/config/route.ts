@@ -80,20 +80,35 @@ export async function POST(request: NextRequest) {
   }
   const username = authInfo.username;
 
-  // 只有站长可以修改配置
-  if (username !== process.env.USERNAME) {
-    return NextResponse.json(
-      { error: '只有站长可以修改配置' },
-      { status: 403 }
-    );
-  }
-
   try {
-    const newConfig: AdminConfig = await request.json();
-    
+    const currentConfig = await getConfig();
+
+    // 只有站长或管理员可以修改配置
+    const isOwner = username === process.env.USERNAME;
+    const user = currentConfig.UserConfig.Users.find((u) => u.username === username);
+    const isAdmin = user && user.role === 'admin' && !user.banned;
+
+    if (!isOwner && !isAdmin) {
+      return NextResponse.json(
+        { error: '只有站长或管理员可以修改配置' },
+        { status: 403 }
+      );
+    }
+
+    const partialConfig = await request.json();
+
+    // Safely deep merge AIConfig
+    const newConfig: AdminConfig = {
+      ...currentConfig,
+      AIConfig: {
+        ...(currentConfig.AIConfig || {}),
+        ...(partialConfig.AIConfig || {}),
+      },
+    };
+
     // 保存新配置
     await db.saveAdminConfig(newConfig);
-    
+
     // 清除缓存，强制下次重新从数据库读取
     clearConfigCache();
     

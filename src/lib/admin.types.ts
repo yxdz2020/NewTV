@@ -69,6 +69,13 @@ export interface AdminConfig {
     apiUrl: string;
     name: string;
   };
+  AIConfig?: {
+    enabled: boolean;
+    apiUrl: string;
+    apiKey: string;
+    model: string;
+    customModel?: string;
+  };
 }
 
 export interface AdminConfigResult {

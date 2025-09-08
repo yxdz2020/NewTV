@@ -313,11 +313,16 @@ export async function getConfig(): Promise<AdminConfig> {
 
   // db 中无配置，执行一次初始化
   if (!adminConfig) {
-    adminConfig = await getInitConfig("");
+    adminConfig = await getInitConfig('');
+    adminConfig = configSelfCheck(adminConfig);
+    // 只有在初始化时才保存
+    await db.saveAdminConfig(adminConfig);
+  } else {
+    // 对现有配置进行检查，但不立即保存
+    adminConfig = configSelfCheck(adminConfig);
   }
-  adminConfig = configSelfCheck(adminConfig);
+
   cachedConfig = adminConfig;
-  db.saveAdminConfig(cachedConfig);
   return cachedConfig;
 }
 
@@ -359,6 +364,15 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
       enabled: false,
       apiUrl: '',
       name: '网盘',
+    };
+  }
+  if (!adminConfig.AIConfig) {
+    adminConfig.AIConfig = {
+      enabled: false,
+      apiUrl: '',
+      apiKey: '',
+      model: 'gpt-3.5-turbo',
+      customModel: '',
     };
   }
 
