@@ -44,9 +44,9 @@ function SearchPageClient() {
   const [useVirtualization, setUseVirtualization] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('useVirtualization');
-      return saved !== null ? JSON.parse(saved) : true; // 默认启用
+      return saved !== null ? JSON.parse(saved) : false; // 默认禁用
     }
-    return true;
+    return false;
   });
   // 聚合卡片 refs 与聚合统计缓存
   const groupRefs = useRef<Map<string, React.RefObject<VideoCardHandle>>>(new Map());
