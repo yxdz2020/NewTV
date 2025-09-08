@@ -31,28 +31,28 @@ export async function POST(request: NextRequest) {
     }
 
     // 构建AI推荐的系统提示
-    const systemPrompt = `你是一个专业的影视推荐助手。请根据用户的描述，推荐合适的影视作品。
+    const systemPrompt = `你是一个专业的影视推荐助手。请根据用户的描述，推荐2-4部合适的影视作品。
 
-请按照以下格式回复：
-1. 首先用自然语言回应用户的需求
-2. 然后提供具体的影片推荐
+你的回复必须遵循以下步骤：
+1.  首先用自然语言简单回应用户的需求。
+2.  然后，另起一行，开始提供具体的影片推荐列表。
 
-推荐格式要求：
-- 每部影片包含：片名、年份、类型、简短描述
-- 推荐2-4部相关影片
-- 确保推荐的影片真实存在
-- 优先推荐知名度较高的作品
+对于推荐列表中的每一部影片，你必须严格按照以下格式提供，不得有任何偏差：
+《片名》 (年份) [类型] - 简短描述
 
-#限制：严禁输出markdown格式内容
+#限制：
+- 严禁输出任何Markdown格式。
+- “片名”必须是真实存在的影视作品的官方全名。
+- “年份”必须是4位数字的公元年份。
+- “类型”必须是该影片的主要类型，例如：剧情/悬疑/科幻。
+- “简短描述”是对影片的简要介绍。
+- 每一部推荐的影片都必须独占一行，并以《》开始。
 
-示例：1. 《漫长的季节》【2023年国产剧天花板，豆瓣9.4分】
-
-2. 《繁城之下》【明朝古装悬疑，质感堪比电影】
-
-3. 《尘封十三载》【双雄探案，跨越十三年的追凶之旅】
-
-4.《恶鬼》【民俗恐怖悬疑，金牌编剧金银姬力作】
-
+#格式示例：
+《漫长的季节》 (2023) [国产剧/悬疑] - 豆瓣9.4分，一部关于时间和真相的深刻故事。
+《繁城之下》 (2023) [古装/悬疑] - 明朝背景下的连环凶杀案，电影级质感。
+《尘封十三载》 (2023) [刑侦/悬疑] - 跨越十三年的双雄探案，情节扣人心弦。
+《黑暗荣耀》 (2022) [韩剧/复仇] - 精心策划的复仇大计，引人入胜。
 
 用户描述：${message}`;
 
@@ -115,64 +115,23 @@ export async function POST(request: NextRequest) {
 // 从AI回复中提取推荐信息的辅助函数
 function extractRecommendations(content: string) {
   const recommendations = [];
+  const moviePattern = /《([^》]+)》\s*\((\d{4})\)\s*\[([^\]]+)\]\s*-\s*(.*)/;
+  const lines = content.split('\n');
 
-  // 使用正则表达式尝试提取影片信息
-  // 这里使用简单的模式匹配，实际使用中可能需要更复杂的解析逻辑
-  const moviePattern = /《([^》]+)》\s*\(?([0-9]{4})?\)?[，。]?\s*([^。，\n]*)/g;
-  let match;
-
-  while ((match = moviePattern.exec(content)) !== null && recommendations.length < 4) {
-    const [, title, year, description] = match;
-    if (title && title.trim()) {
+  for (const line of lines) {
+    if (recommendations.length >= 4) {
+      break;
+    }
+    const match = line.match(moviePattern);
+    if (match) {
+      const [, title, year, genre, description] = match;
       recommendations.push({
         title: title.trim(),
-        year: year || undefined,
-        description: description ? description.trim() : '推荐影片',
-        genre: extractGenre(description || '')
+        year: year.trim(),
+        genre: genre.trim(),
+        description: description.trim() || 'AI推荐影片',
       });
     }
   }
-
-  // 如果没有找到标准格式，尝试其他模式
-  if (recommendations.length === 0) {
-    const alternativePattern = /([《"'][^》"']+[》"'])|(\d{4}年[^，。\n]*)/g;
-    let altMatch;
-
-    while ((altMatch = alternativePattern.exec(content)) !== null && recommendations.length < 4) {
-      const movieText = altMatch[0];
-      if (movieText && movieText.length > 2) {
-        const cleanTitle = movieText.replace(/[《》"']/g, '').trim();
-        if (cleanTitle) {
-          recommendations.push({
-            title: cleanTitle,
-            description: 'AI推荐影片'
-          });
-        }
-      }
-    }
-  }
-
   return recommendations;
-}
-
-// 从描述中提取类型信息的辅助函数
-function extractGenre(description: string): string | undefined {
-  const genreKeywords = {
-    '动作': ['动作', '打斗', '武侠', '功夫'],
-    '喜剧': ['喜剧', '搞笑', '幽默', '轻松'],
-    '爱情': ['爱情', '浪漫', '恋爱', '情感'],
-    '科幻': ['科幻', '未来', '太空', '机器人'],
-    '恐怖': ['恐怖', '惊悚', '悬疑', '鬼片'],
-    '剧情': ['剧情', '文艺', '深刻', '感人'],
-    '动画': ['动画', '卡通', '动漫'],
-    '纪录片': ['纪录片', '纪录', '真实']
-  };
-
-  for (const [genre, keywords] of Object.entries(genreKeywords)) {
-    if (keywords.some(keyword => description.includes(keyword))) {
-      return genre;
-    }
-  }
-
-  return undefined;
 }
