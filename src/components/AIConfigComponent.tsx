@@ -28,11 +28,21 @@ export default function AIConfigComponent() {
 
   // 稳定的自定义模型输入处理函数
   const handleCustomModelChange = useCallback((value: string) => {
-    setConfig(prev => ({ ...prev, customModel: value }));
+    console.log('Custom model input changed:', value);
+    setConfig(prev => {
+      console.log('Previous config:', prev);
+      const newConfig = { ...prev, customModel: value };
+      console.log('New config after change:', newConfig);
+      return newConfig;
+    });
   }, []);
 
   // 稳定的条件渲染判断
-  const showCustomModelInput = useMemo(() => config.model === 'custom', [config.model]);
+  const showCustomModelInput = useMemo(() => {
+    const shouldShow = config.model === 'custom';
+    console.log('showCustomModelInput recalculated:', shouldShow, 'model:', config.model);
+    return shouldShow;
+  }, [config.model]);
 
   // 加载配置
   useEffect(() => {
@@ -173,10 +183,12 @@ export default function AIConfigComponent() {
             id="ai-model"
             value={config.model}
             onChange={(e) => {
+              const newModel = e.target.value;
               setConfig(prev => ({
                 ...prev,
-                model: e.target.value,
-                customModel: e.target.value === 'custom' ? prev.customModel : ''
+                model: newModel,
+                // 只有当从custom切换到其他模型时才清空customModel
+                customModel: prev.model === 'custom' && newModel !== 'custom' ? '' : prev.customModel
               }));
             }}
             className="w-full max-w-md px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500"
