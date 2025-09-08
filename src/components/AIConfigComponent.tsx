@@ -160,10 +160,11 @@ export default function AIConfigComponent() {
             id="ai-model"
             value={config.model}
             onChange={(e) => {
+              console.log('Model select changed:', e.target.value);
               if (e.target.value === 'custom') {
-                setConfig({ ...config, model: 'custom', customModel: '' });
+                setConfig(prev => ({ ...prev, model: 'custom' }));
               } else {
-                setConfig({ ...config, model: e.target.value, customModel: '' });
+                setConfig(prev => ({ ...prev, model: e.target.value, customModel: '' }));
               }
             }}
             className="w-full max-w-md px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500"
@@ -204,16 +205,20 @@ export default function AIConfigComponent() {
 
         {/* 自定义模型输入 */}
         {config.model === 'custom' && (
-          <div>
+          <div key="custom-model-section">
             <label htmlFor="custom-model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               自定义模型名称
             </label>
             <input
+              key="custom-model-input"
               type="text"
               id="custom-model"
               value={config.customModel || ''}
-              placeholder="输入自定义模型名称，如：gpt-4-turbo-preview"
-              onChange={(e) => setConfig({ ...config, customModel: e.target.value })}
+              placeholder="输入自定义模型名称，如：gemini-2.5-pro"
+              onChange={(e) => {
+                console.log('Custom model input changed:', e.target.value);
+                setConfig(prev => ({ ...prev, customModel: e.target.value }));
+              }}
               className="w-full max-w-md px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500"
             />
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -225,11 +230,10 @@ export default function AIConfigComponent() {
 
       {/* 消息提示 */}
       {message && (
-        <div className={`flex items-center space-x-2 p-3 rounded-md ${
-          message.type === 'success' 
+        <div className={`flex items-center space-x-2 p-3 rounded-md ${message.type === 'success'
             ? 'bg-green-50 text-green-800 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
             : 'bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
-        }`}>
+          }`}>
           {message.type === 'success' ? (
             <Check className="w-4 h-4" />
           ) : (
