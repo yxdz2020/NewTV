@@ -89,10 +89,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const newConfig: AdminConfig = await request.json();
+    const partialConfig = await request.json();
+    
+    // 获取现有配置
+    const currentConfig = await getConfig();
+    
+    // 合并配置，只更新传入的部分
+    const updatedConfig: AdminConfig = {
+      ...currentConfig,
+      ...partialConfig
+    };
     
     // 保存新配置
-    await db.saveAdminConfig(newConfig);
+    await db.saveAdminConfig(updatedConfig);
     
     // 清除缓存，强制下次重新从数据库读取
     clearConfigCache();

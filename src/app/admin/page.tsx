@@ -24,6 +24,7 @@ import { CSS } from '@dnd-kit/utilities';
 import {
   AlertCircle,
   AlertTriangle,
+  Bot,
   Check,
   CheckCircle,
   ChevronDown,
@@ -3753,6 +3754,147 @@ const CloudDiskConfigComponent = ({ config, refreshConfig }: { config: AdminConf
   );
 };
 
+// AI配置组件
+const AIConfigComponent = ({ config, refreshConfig }: { config: AdminConfig | null; refreshConfig: () => Promise<void> }) => {
+  const { alertModal, showAlert, hideAlert } = useAlertModal();
+  const { isLoading, withLoading } = useLoadingState();
+  const [aiSettings, setAiSettings] = useState({
+    enabled: false,
+    apiUrl: '',
+    apiKey: ''
+  });
+
+  useEffect(() => {
+    if (config?.AIConfig) {
+      setAiSettings({
+        enabled: config.AIConfig.enabled || false,
+        apiUrl: config.AIConfig.apiUrl || '',
+        apiKey: config.AIConfig.apiKey || ''
+      });
+    }
+  }, [config]);
+
+  // 保存AI配置
+  const handleSave = async () => {
+    await withLoading('saveAIConfig', async () => {
+      try {
+        const resp = await fetch('/api/admin/ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...aiSettings }),
+        });
+
+        if (!resp.ok) {
+          const data = await resp.json().catch(() => ({}));
+          throw new Error(data.error || `保存失败: ${resp.status}`);
+        }
+
+        showSuccess('保存成功', showAlert);
+        await refreshConfig();
+      } catch (err) {
+        showError(err instanceof Error ? err.message : '保存失败', showAlert);
+        throw err;
+      }
+    });
+  };
+
+  if (!config) {
+    return (
+      <div className='text-center text-gray-500 dark:text-gray-400'>
+        加载中...
+      </div>
+    );
+  }
+
+  return (
+    <div className='space-y-6'>
+      {/* 启用AI推荐 */}
+      <div className='flex items-center justify-between'>
+        <div>
+          <h3 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+            启用AI推荐功能
+          </h3>
+          <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+            开启后，移动端搜索按钮旁将显示AI推荐图标
+          </p>
+        </div>
+        <button
+          onClick={() => setAiSettings(prev => ({ ...prev, enabled: !prev.enabled }))}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+            aiSettings.enabled ? 'bg-green-600' : 'bg-gray-200 dark:bg-gray-700'
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              aiSettings.enabled ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* API URL */}
+      <div>
+        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+          API地址
+        </label>
+        <input
+          type='text'
+          value={aiSettings.apiUrl}
+          onChange={(e) => setAiSettings(prev => ({ ...prev, apiUrl: e.target.value }))}
+          placeholder='https://api.example.com/v1/chat/completions'
+          className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
+        />
+        <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+          AI服务的API接口地址
+        </p>
+      </div>
+
+      {/* API Key */}
+      <div>
+        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+          API密钥
+        </label>
+        <input
+          type='password'
+          value={aiSettings.apiKey}
+          onChange={(e) => setAiSettings(prev => ({ ...prev, apiKey: e.target.value }))}
+          placeholder='sk-...'
+          className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
+        />
+        <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+          用于访问AI服务的密钥
+        </p>
+      </div>
+
+      {/* 操作按钮 */}
+      <div className='flex justify-end mt-6'>
+        <button
+          onClick={handleSave}
+          disabled={isLoading('saveAIConfig')}
+          className={`px-4 py-2 ${
+            isLoading('saveAIConfig')
+              ? buttonStyles.disabled
+              : buttonStyles.success
+          } rounded-lg transition-colors`}
+        >
+          {isLoading('saveAIConfig') ? '保存中…' : '保存'}
+        </button>
+      </div>
+
+      {/* 通用弹窗组件 */}
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        onClose={hideAlert}
+        type={alertModal.type}
+        title={alertModal.title}
+        message={alertModal.message}
+        timer={alertModal.timer}
+        showConfirm={alertModal.showConfirm}
+      />
+    </div>
+  );
+};
+
 // 新增站点配置组件
 const SiteConfigComponent = ({ config, refreshConfig }: { config: AdminConfig | null; refreshConfig: () => Promise<void> }) => {
   const { alertModal, showAlert, hideAlert } = useAlertModal();
@@ -4877,6 +5019,7 @@ function AdminPageClient() {
     videoSource: false,
     liveSource: false,
     siteConfig: false,
+    aiConfig: false,
     categoryConfig: false,
     cloudDiskConfig: false,
     configFile: false,
@@ -5023,6 +5166,21 @@ function AdminPageClient() {
             onToggle={() => toggleTab('siteConfig')}
           >
             <SiteConfigComponent config={config} refreshConfig={fetchConfig} />
+          </CollapsibleTab>
+
+          {/* AI配置标签 */}
+          <CollapsibleTab
+            title='AI推荐配置'
+            icon={
+              <Bot
+                size={20}
+                className='text-gray-600 dark:text-gray-400'
+              />
+            }
+            isExpanded={expandedTabs.aiConfig}
+            onToggle={() => toggleTab('aiConfig')}
+          >
+            <AIConfigComponent config={config} refreshConfig={fetchConfig} />
           </CollapsibleTab>
 
           <div className='space-y-4'>

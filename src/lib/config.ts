@@ -361,6 +361,13 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
       name: '网盘',
     };
   }
+  if (!adminConfig.AIConfig) {
+    adminConfig.AIConfig = {
+      enabled: false,
+      apiUrl: '',
+      apiKey: '',
+    };
+  }
 
   // 站长变更自检
   const ownerUser = process.env.USERNAME;
