@@ -366,6 +366,7 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
       enabled: false,
       apiUrl: '',
       apiKey: '',
+      model: 'gemini-2.5-flash',
     };
   }
 
