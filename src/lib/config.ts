@@ -366,7 +366,7 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
       enabled: false,
       apiUrl: '',
       apiKey: '',
-      model: 'gemini-2.5-flash',
+      model: 'gpt-3.5-turbo',
     };
   }
 

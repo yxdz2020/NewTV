@@ -3850,7 +3850,7 @@ const AIConfigComponent = ({ config, refreshConfig }: { config: AdminConfig | nu
           type='text'
           value={aiSettings.apiUrl}
           onChange={(e) => setAiSettings(prev => ({ ...prev, apiUrl: e.target.value }))}
-          placeholder='https://fengpt.eu.org/v1'
+          placeholder='https://api.example.com/v1'
           className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
         />
         <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
