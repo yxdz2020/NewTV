@@ -1,7 +1,7 @@
 'use client';
 
 import { AlertCircle, Check, Save } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 interface AIConfig {
   enabled: boolean;
@@ -25,6 +25,14 @@ export default function AIConfigComponent() {
 
   // 预设模型列表
   const knownModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229', 'qwen-turbo', 'qwen-plus', 'qwen-max', 'ernie-4.0-8k', 'ernie-3.5-8k', 'glm-4', 'glm-3-turbo'];
+
+  // 稳定的自定义模型输入处理函数
+  const handleCustomModelChange = useCallback((value: string) => {
+    setConfig(prev => ({ ...prev, customModel: value }));
+  }, []);
+
+  // 稳定的条件渲染判断
+  const showCustomModelInput = useMemo(() => config.model === 'custom', [config.model]);
 
   // 加载配置
   useEffect(() => {
@@ -208,7 +216,7 @@ export default function AIConfigComponent() {
         </div>
 
         {/* 自定义模型输入 */}
-        {config.model === 'custom' && (
+        {showCustomModelInput && (
           <div key="custom-model-section">
             <label htmlFor="custom-model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               自定义模型名称
@@ -220,7 +228,7 @@ export default function AIConfigComponent() {
               value={config.customModel || ''}
               placeholder="输入自定义模型名称，如：gemini-2.5-pro"
               onChange={(e) => {
-                setConfig(prev => ({ ...prev, customModel: e.target.value }));
+                handleCustomModelChange(e.target.value);
               }}
               className="w-full max-w-md px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500"
             />
