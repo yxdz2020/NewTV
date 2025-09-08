@@ -1,7 +1,7 @@
 'use client';
 
-import { AlertCircle, Check, Save } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AlertCircle, Check, ChevronDown, Save } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface AIConfig {
   enabled: boolean;
@@ -22,27 +22,68 @@ export default function AIConfigComponent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  const [customModelInput, setCustomModelInput] = useState('');
 
-  // 预设模型列表
-  const knownModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229', 'qwen-turbo', 'qwen-plus', 'qwen-max', 'ernie-4.0-8k', 'ernie-3.5-8k', 'glm-4', 'glm-3-turbo'];
+  // AI模型选项
+  const aiModelOptions = [
+    { value: 'gpt-4o', label: 'GPT-4o', group: 'OpenAI' },
+    { value: 'gpt-4o-mini', label: 'GPT-4o Mini', group: 'OpenAI' },
+    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo', group: 'OpenAI' },
+    { value: 'gpt-4', label: 'GPT-4', group: 'OpenAI' },
+    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', group: 'OpenAI' },
+    { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet', group: 'Anthropic' },
+    { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku', group: 'Anthropic' },
+    { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus', group: 'Anthropic' },
+    { value: 'qwen-turbo', label: '通义千问 Turbo', group: '阿里云' },
+    { value: 'qwen-plus', label: '通义千问 Plus', group: '阿里云' },
+    { value: 'qwen-max', label: '通义千问 Max', group: '阿里云' },
+    { value: 'ernie-4.0-8k', label: '文心一言 4.0', group: '百度' },
+    { value: 'ernie-3.5-8k', label: '文心一言 3.5', group: '百度' },
+    { value: 'glm-4', label: 'GLM-4', group: '智谱AI' },
+    { value: 'glm-3-turbo', label: 'GLM-3 Turbo', group: '智谱AI' },
+    { value: 'custom', label: '自定义模型', group: '其他' }
+  ];
 
-  // 稳定的自定义模型输入处理函数
-  const handleCustomModelChange = useCallback((value: string) => {
-    console.log('Custom model input changed:', value);
-    setConfig(prev => {
-      console.log('Previous config:', prev);
-      const newConfig = { ...prev, customModel: value };
-      console.log('New config after change:', newConfig);
-      return newConfig;
-    });
-  }, []);
+  // 预设模型列表（用于判断是否为已知模型）
+  const knownModels = aiModelOptions.filter(option => option.value !== 'custom').map(option => option.value);
 
-  // 稳定的条件渲染判断
-  const showCustomModelInput = useMemo(() => {
-    const shouldShow = config.model === 'custom';
-    console.log('showCustomModelInput recalculated:', shouldShow, 'model:', config.model);
-    return shouldShow;
+  // 处理模型选择
+  const handleModelChange = useCallback((value: string) => {
+    setConfig(prev => ({
+      ...prev,
+      model: value,
+      // 如果选择自定义模型，使用当前输入的值；否则清空customModel
+      customModel: value === 'custom' ? customModelInput : ''
+    }));
+    setIsModelDropdownOpen(false);
+  }, [customModelInput]);
+
+  // 处理自定义模型输入
+  const handleCustomModelInputChange = useCallback((value: string) => {
+    setCustomModelInput(value);
+    // 如果当前选择的是自定义模型，同时更新config
+    if (config.model === 'custom') {
+      setConfig(prev => ({ ...prev, customModel: value }));
+    }
   }, [config.model]);
+
+  // 点击外部区域关闭下拉框
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isModelDropdownOpen) {
+        const target = event.target as Element;
+        if (!target.closest('[data-dropdown="ai-model"]')) {
+          setIsModelDropdownOpen(false);
+        }
+      }
+    };
+
+    if (isModelDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isModelDropdownOpen]);
 
   // 加载配置
   useEffect(() => {
@@ -54,13 +95,18 @@ export default function AIConfigComponent() {
           const modelValue = data.Config?.AIConfig?.model || 'gpt-3.5-turbo';
           const isKnownModel = knownModels.includes(modelValue);
           
+          const customModelValue = data.Config?.AIConfig?.customModel || (isKnownModel ? '' : modelValue);
+          
           setConfig({
             enabled: data.Config?.AIConfig?.enabled || false,
             api_url: data.Config?.AIConfig?.apiUrl || '',
             api_key: data.Config?.AIConfig?.apiKey || '',
             model: isKnownModel ? modelValue : 'custom',
-            customModel: data.Config?.AIConfig?.customModel || (isKnownModel ? '' : modelValue)
+            customModel: customModelValue
           });
+          
+          // 同时更新自定义模型输入框的值
+          setCustomModelInput(customModelValue);
         }
       } catch (error) {
         console.error('Failed to load AI config:', error);
@@ -175,78 +221,94 @@ export default function AIConfigComponent() {
         </div>
 
         {/* AI Model */}
-        <div>
-          <label htmlFor="ai-model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            AI模型
-          </label>
-          <select
-            id="ai-model"
-            value={config.model}
-            onChange={(e) => {
-              const newModel = e.target.value;
-              setConfig(prev => ({
-                ...prev,
-                model: newModel,
-                // 只有当从custom切换到其他模型时才清空customModel
-                customModel: prev.model === 'custom' && newModel !== 'custom' ? '' : prev.customModel
-              }));
-            }}
-            className="w-full max-w-md px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500"
-          >
-            <optgroup label="OpenAI">
-              <option value="gpt-4o">GPT-4o</option>
-              <option value="gpt-4o-mini">GPT-4o Mini</option>
-              <option value="gpt-4-turbo">GPT-4 Turbo</option>
-              <option value="gpt-4">GPT-4</option>
-              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-            </optgroup>
-            <optgroup label="Anthropic">
-              <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
-              <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
-              <option value="claude-3-opus-20240229">Claude 3 Opus</option>
-            </optgroup>
-            <optgroup label="阿里云">
-              <option value="qwen-turbo">通义千问 Turbo</option>
-              <option value="qwen-plus">通义千问 Plus</option>
-              <option value="qwen-max">通义千问 Max</option>
-            </optgroup>
-            <optgroup label="百度">
-              <option value="ernie-4.0-8k">文心一言 4.0</option>
-              <option value="ernie-3.5-8k">文心一言 3.5</option>
-            </optgroup>
-            <optgroup label="智谱AI">
-              <option value="glm-4">GLM-4</option>
-              <option value="glm-3-turbo">GLM-3 Turbo</option>
-            </optgroup>
-            <optgroup label="其他">
-              <option value="custom">自定义模型</option>
-            </optgroup>
-          </select>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            选择要使用的AI模型，确保API支持所选模型
-          </p>
+        <div className="space-y-3">
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              AI模型
+            </h4>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              选择要使用的AI模型
+            </p>
+          </div>
+          <div className="relative" data-dropdown="ai-model">
+            {/* 自定义下拉选择框 */}
+            <button
+              type="button"
+              onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+              className="w-full max-w-md px-3 py-2.5 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500 text-left"
+            >
+              {
+                aiModelOptions.find(
+                  (option) => option.value === config.model
+                )?.label || '选择模型'
+              }
+            </button>
+
+            {/* 下拉箭头 */}
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <ChevronDown
+                className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${
+                  isModelDropdownOpen ? 'rotate-180' : ''
+                }`}
+              />
+            </div>
+
+            {/* 下拉选项列表 */}
+            {isModelDropdownOpen && (
+              <div className="absolute z-50 w-full max-w-md mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-auto">
+                {/* 按组分类显示选项 */}
+                {['OpenAI', 'Anthropic', '阿里云', '百度', '智谱AI', '其他'].map((group) => {
+                  const groupOptions = aiModelOptions.filter(option => option.group === group);
+                  if (groupOptions.length === 0) return null;
+                  
+                  return (
+                    <div key={group}>
+                      <div className="px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50">
+                        {group}
+                      </div>
+                      {groupOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => handleModelChange(option.value)}
+                          className={`w-full px-3 py-2.5 text-left text-sm transition-colors duration-150 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                            config.model === option.value
+                              ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                              : 'text-gray-900 dark:text-gray-100'
+                          }`}
+                        >
+                          <span className="truncate">{option.label}</span>
+                          {config.model === option.value && (
+                            <Check className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0 ml-2" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* 自定义模型输入 */}
-        {showCustomModelInput && (
-          <div key="custom-model-section">
-            <label htmlFor="custom-model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              自定义模型名称
-            </label>
+        {/* 自定义模型输入 - 仅在选择自定义模型时显示 */}
+        {config.model === 'custom' && (
+          <div className="space-y-3">
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                自定义模型名称
+              </h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                输入完整的模型名称
+              </p>
+            </div>
             <input
-              key="custom-model-input"
               type="text"
-              id="custom-model"
-              value={config.customModel || ''}
-              placeholder="输入自定义模型名称，如：gemini-2.5-pro"
-              onChange={(e) => {
-                handleCustomModelChange(e.target.value);
-              }}
-              className="w-full max-w-md px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500"
+              className="w-full max-w-md px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 shadow-sm hover:border-gray-400 dark:hover:border-gray-500"
+              placeholder="例如: gemini-2.5-pro, claude-3-sonnet-20240229"
+              value={customModelInput}
+              onChange={(e) => handleCustomModelInputChange(e.target.value)}
             />
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              请输入完整的模型名称，确保API支持该模型
-            </p>
           </div>
         )}
       </div>
