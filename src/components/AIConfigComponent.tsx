@@ -345,7 +345,7 @@ export default function AIConfigComponent() {
           <li>• 启用后，用户可以在移动端看到AI荐片图标</li>
           <li>• 支持OpenAI兼容的API模型</li>
           <li>• API地址示例：https://api.openai.com/v1</li>
-          <li>• 选择合适的AI模型，不同模型效果不同</li>
+          <li>• 建议选择带联网搜索的模型</li>
           <li>• 确保API密钥有足够的调用额度</li>
         </ul>
       </div>
