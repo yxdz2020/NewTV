@@ -104,7 +104,6 @@ const AIChatPage = () => {
       }
 
       const data = await response.json();
-      
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
@@ -146,32 +145,30 @@ const AIChatPage = () => {
       <div className="flex flex-col h-full">
 
         {/* 消息列表 */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-28">
+        <div className="flex-1 overflow-y-auto px-4 pt-8 space-y-4 pb-28">
           {messages.map((message) => (
             <div
               key={message.id}
               className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {message.type === 'ai' && (
-                <div className="w-8 h-8 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center flex-shrink-0 self-start">
                   <Bot className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 </div>
               )}
-              
-              <div className={`max-w-[80%] ${message.type === 'user' ? 'order-first' : ''}`}>
+              <div className={`flex flex-col max-w-[80%] ${message.type === 'user' ? 'items-end' : 'items-start'}`}>
                 <div
-                  className={`p-3 rounded-2xl ${
-                    message.type === 'user'
-                      ? 'bg-blue-500 text-white ml-auto'
-                      : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
-                  }`}
+                  className={`p-3 rounded-2xl ${message.type === 'user'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                    }`}
                 >
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                 </div>
-                
+
                 {/* 推荐影片卡片 */}
                 {message.recommendations && message.recommendations.length > 0 && (
-                  <div className="mt-3 space-y-2">
+                  <div className="mt-3 space-y-2 self-stretch">
                     {message.recommendations.map((movie, index) => (
                       <div
                         key={index}
@@ -205,12 +202,12 @@ const AIChatPage = () => {
                     ))}
                   </div>
                 )}
-                
+
                 <p className="text-xs text-gray-400 mt-2">
                   {message.timestamp.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
-              
+
               {message.type === 'user' && (
                 <div className="w-8 h-8 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center flex-shrink-0">
                   <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
@@ -218,7 +215,7 @@ const AIChatPage = () => {
               )}
             </div>
           ))}
-          
+
           {isLoading && (
             <div className="flex gap-3 justify-start">
               <div className="w-8 h-8 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center flex-shrink-0">
@@ -233,7 +230,7 @@ const AIChatPage = () => {
               </div>
             </div>
           )}
-          
+
           <div ref={messagesEndRef} />
         </div>
 
