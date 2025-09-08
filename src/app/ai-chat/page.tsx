@@ -210,8 +210,8 @@ const AIChatPage = () => {
         </div>
 
         {/* 输入框 */}
-        <div className="fixed bottom-16 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700 md:relative md:bottom-auto">
-          <div className="flex gap-2 items-end">
+        <div className="fixed bottom-16 left-0 right-0 p-3 border-t border-gray-200 dark:border-gray-700 md:relative md:bottom-auto backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
+          <div className="flex gap-2 items-center max-w-4xl mx-auto">
             <div className="flex-1 relative">
               <input
                 ref={inputRef}
@@ -220,16 +220,16 @@ const AIChatPage = () => {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="描述你想看的影片类型或心情..."
-                className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none"
                 disabled={isLoading}
               />
             </div>
             <button
               onClick={handleSendMessage}
               disabled={!inputValue.trim() || isLoading}
-              className="w-12 h-12 rounded-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 flex items-center justify-center transition-colors flex-shrink-0"
+              className="w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 flex items-center justify-center transition-colors flex-shrink-0"
             >
-              <Send className="w-5 h-5 text-white" />
+              <Send className="w-4 h-4 text-white" />
             </button>
           </div>
         </div>
