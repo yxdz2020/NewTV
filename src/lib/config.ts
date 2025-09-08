@@ -367,6 +367,7 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
       apiUrl: '',
       apiKey: '',
       model: 'gpt-3.5-turbo',
+      customModel: '',
     };
   }
 
