@@ -158,15 +158,15 @@ export default function AIConfigComponent() {
           </label>
           <select
             id="ai-model"
-            value={config.model === 'custom' || !['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229', 'qwen-turbo', 'qwen-plus', 'qwen-max', 'ernie-4.0-8k', 'ernie-3.5-8k', 'glm-4', 'glm-3-turbo'].includes(config.model) ? 'custom' : config.model}
+            value={config.model}
             onChange={(e) => {
               if (e.target.value === 'custom') {
-                setConfig({ ...config, model: 'custom', customModel: config.model !== 'custom' ? '' : config.customModel || '' });
+                setConfig({ ...config, model: 'custom', customModel: '' });
               } else {
-                setConfig({ ...config, model: e.target.value });
+                setConfig({ ...config, model: e.target.value, customModel: '' });
               }
             }}
-            className="max-w-md px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            className="w-full max-w-md px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500"
           >
             <optgroup label="OpenAI">
               <option value="gpt-4o">GPT-4o</option>
@@ -203,7 +203,7 @@ export default function AIConfigComponent() {
         </div>
 
         {/* 自定义模型输入 */}
-        {(config.model === 'custom' || !['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229', 'qwen-turbo', 'qwen-plus', 'qwen-max', 'ernie-4.0-8k', 'ernie-3.5-8k', 'glm-4', 'glm-3-turbo'].includes(config.model)) && (
+        {config.model === 'custom' && (
           <div>
             <label htmlFor="custom-model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               自定义模型名称
@@ -211,11 +211,14 @@ export default function AIConfigComponent() {
             <input
               type="text"
               id="custom-model"
-              value={config.model === 'custom' ? (config.customModel || '') : config.model}
-              placeholder="输入自定义模型名称"
+              value={config.customModel || ''}
+              placeholder="输入自定义模型名称，如：gpt-4-turbo-preview"
               onChange={(e) => setConfig({ ...config, customModel: e.target.value })}
-              className="max-w-md px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className="w-full max-w-md px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500"
             />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              请输入完整的模型名称，确保API支持该模型
+            </p>
           </div>
         )}
       </div>
