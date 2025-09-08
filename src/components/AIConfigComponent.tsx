@@ -5,8 +5,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 interface AIConfig {
   enabled: boolean;
-  api_url: string;
-  api_key: string;
+  apiUrl: string;
+  apiKey: string;
   model: string;
   customModel?: string;
 }
@@ -14,8 +14,8 @@ interface AIConfig {
 export default function AIConfigComponent() {
   const [config, setConfig] = useState<AIConfig>({
     enabled: false,
-    api_url: '',
-    api_key: '',
+    apiUrl: '',
+    apiKey: '',
     model: 'gpt-3.5-turbo',
     customModel: ''
   });
@@ -99,8 +99,8 @@ export default function AIConfigComponent() {
 
           setConfig({
             enabled: data.Config?.AIConfig?.enabled || false,
-            api_url: data.Config?.AIConfig?.apiUrl || '',
-            api_key: data.Config?.AIConfig?.apiKey || '',
+            apiUrl: data.Config?.AIConfig?.apiUrl || '',
+            apiKey: data.Config?.AIConfig?.apiKey || '',
             model: isKnownModel ? modelValue : 'custom',
             customModel: customModelValue
           });
@@ -132,8 +132,8 @@ export default function AIConfigComponent() {
         body: JSON.stringify({
           AIConfig: {
             enabled: config.enabled,
-            apiUrl: config.api_url,
-            apiKey: config.api_key,
+            apiUrl: config.apiUrl,
+            apiKey: config.apiKey,
             model: config.model === 'custom' ? (config.customModel || '') : config.model,
             customModel: config.customModel || ''
           }
@@ -192,8 +192,8 @@ export default function AIConfigComponent() {
           <input
             type="url"
             id="api-url"
-            value={config.api_url}
-            onChange={(e) => setConfig({ ...config, api_url: e.target.value })}
+            value={config.apiUrl}
+            onChange={(e) => setConfig({ ...config, apiUrl: e.target.value })}
             placeholder="https://api.openai.com/v1"
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           />
@@ -210,8 +210,8 @@ export default function AIConfigComponent() {
           <input
             type="password"
             id="api-key"
-            value={config.api_key}
-            onChange={(e) => setConfig({ ...config, api_key: e.target.value })}
+            value={config.apiKey}
+            onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
             placeholder="sk-..."
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           />
