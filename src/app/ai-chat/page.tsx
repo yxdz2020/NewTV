@@ -118,7 +118,7 @@ const AIChatPage = () => {
       <div className="flex flex-col h-full">
 
         {/* 消息列表 */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-28">
           {messages.map((message) => (
             <div
               key={message.id}
@@ -210,7 +210,7 @@ const AIChatPage = () => {
         </div>
 
         {/* 输入框 */}
-        <div className="fixed bottom-16 left-0 right-0 p-3 border-t border-gray-200 dark:border-gray-700 md:relative md:bottom-auto backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
+        <div className="fixed bottom-14 left-0 right-0 p-3 border-t border-gray-200 dark:border-gray-700 md:relative md:bottom-auto backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
           <div className="flex gap-2 items-center max-w-4xl mx-auto">
             <div className="flex-1 relative">
               <input

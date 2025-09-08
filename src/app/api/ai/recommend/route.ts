@@ -4,7 +4,7 @@ import { getConfig } from '@/lib/config';
 export async function POST(request: NextRequest) {
   try {
     const { message } = await request.json();
-    
+
     if (!message || typeof message !== 'string') {
       return NextResponse.json(
         { error: '请提供有效的消息内容' },
@@ -43,6 +43,8 @@ export async function POST(request: NextRequest) {
 - 确保推荐的影片真实存在
 - 优先推荐知名度较高的作品
 
+#限制：严禁输出markdown格式内容
+
 示例：1. 《漫长的季节》【2023年国产剧天花板，豆瓣9.4分】
 
 2. 《繁城之下》【明朝古装悬疑，质感堪比电影】
@@ -55,10 +57,10 @@ export async function POST(request: NextRequest) {
 用户描述：${message}`;
 
     // 调用AI服务
-    const apiUrl = config.AIConfig.apiUrl.endsWith('/') 
+    const apiUrl = config.AIConfig.apiUrl.endsWith('/')
       ? config.AIConfig.apiUrl + 'chat/completions'
       : config.AIConfig.apiUrl + '/chat/completions';
-    
+
     const aiResponse = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -113,12 +115,12 @@ export async function POST(request: NextRequest) {
 // 从AI回复中提取推荐信息的辅助函数
 function extractRecommendations(content: string) {
   const recommendations = [];
-  
+
   // 使用正则表达式尝试提取影片信息
   // 这里使用简单的模式匹配，实际使用中可能需要更复杂的解析逻辑
   const moviePattern = /《([^》]+)》\s*\(?([0-9]{4})?\)?[，。]?\s*([^。，\n]*)/g;
   let match;
-  
+
   while ((match = moviePattern.exec(content)) !== null && recommendations.length < 4) {
     const [, title, year, description] = match;
     if (title && title.trim()) {
@@ -130,12 +132,12 @@ function extractRecommendations(content: string) {
       });
     }
   }
-  
+
   // 如果没有找到标准格式，尝试其他模式
   if (recommendations.length === 0) {
     const alternativePattern = /([《"'][^》"']+[》"'])|(\d{4}年[^，。\n]*)/g;
     let altMatch;
-    
+
     while ((altMatch = alternativePattern.exec(content)) !== null && recommendations.length < 4) {
       const movieText = altMatch[0];
       if (movieText && movieText.length > 2) {
@@ -149,7 +151,7 @@ function extractRecommendations(content: string) {
       }
     }
   }
-  
+
   return recommendations;
 }
 
@@ -165,12 +167,12 @@ function extractGenre(description: string): string | undefined {
     '动画': ['动画', '卡通', '动漫'],
     '纪录片': ['纪录片', '纪录', '真实']
   };
-  
+
   for (const [genre, keywords] of Object.entries(genreKeywords)) {
     if (keywords.some(keyword => description.includes(keyword))) {
       return genre;
     }
   }
-  
+
   return undefined;
 }
