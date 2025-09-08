@@ -40,10 +40,10 @@ const AIRecommendIcon = () => {
   return (
     <Link
       href="/ai-chat"
-      className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+      className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
       title="AI推荐影片"
     >
-      <Bot className="w-5 h-5 text-white" />
+      <Bot className="w-5 h-5 text-gray-600 dark:text-gray-400" />
     </Link>
   );
 };
