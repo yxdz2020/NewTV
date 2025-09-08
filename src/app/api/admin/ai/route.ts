@@ -15,13 +15,14 @@ export async function POST(request: NextRequest) {
     }
 
     const { username } = authInfo;
-    const { enabled, apiUrl, apiKey } = await request.json();
+    const { enabled, apiUrl, apiKey, model } = await request.json();
 
     // 参数验证
     if (
       typeof enabled !== 'boolean' ||
       typeof apiUrl !== 'string' ||
-      typeof apiKey !== 'string'
+      typeof apiKey !== 'string' ||
+      typeof model !== 'string'
     ) {
       return NextResponse.json({ error: '参数格式错误' }, { status: 400 });
     }
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
       enabled,
       apiUrl,
       apiKey,
+      model,
     };
 
     // 写入数据库
