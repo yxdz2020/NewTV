@@ -115,7 +115,7 @@ const AIChatPage = () => {
 
   return (
     <PageLayout>
-      <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+      <div className="flex flex-col h-full">
 
         {/* 消息列表 */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
@@ -210,7 +210,7 @@ const AIChatPage = () => {
         </div>
 
         {/* 输入框 */}
-        <div className="fixed bottom-16 left-0 right-0 p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 md:relative md:bottom-auto">
+        <div className="fixed bottom-16 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700 md:relative md:bottom-auto">
           <div className="flex gap-2 items-end">
             <div className="flex-1 relative">
               <input
