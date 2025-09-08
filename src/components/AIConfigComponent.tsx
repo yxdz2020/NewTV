@@ -8,6 +8,7 @@ interface AIConfig {
   api_url: string;
   api_key: string;
   model: string;
+  customModel?: string;
 }
 
 export default function AIConfigComponent() {
@@ -15,7 +16,8 @@ export default function AIConfigComponent() {
     enabled: false,
     api_url: '',
     api_key: '',
-    model: 'gpt-3.5-turbo'
+    model: 'gpt-3.5-turbo',
+    customModel: ''
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -28,11 +30,14 @@ export default function AIConfigComponent() {
         const response = await fetch('/api/admin/config');
         if (response.ok) {
           const data = await response.json();
+          const modelValue = data.Config?.AIConfig?.model || 'gpt-3.5-turbo';
+          const isKnownModel = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229', 'qwen-turbo', 'qwen-plus', 'qwen-max', 'ernie-4.0-8k', 'ernie-3.5-8k', 'glm-4', 'glm-3-turbo'].includes(modelValue);
           setConfig({
             enabled: data.Config?.AIConfig?.enabled || false,
             api_url: data.Config?.AIConfig?.apiUrl || '',
             api_key: data.Config?.AIConfig?.apiKey || '',
-            model: data.Config?.AIConfig?.model || 'gpt-3.5-turbo'
+            model: isKnownModel ? modelValue : 'custom',
+            customModel: isKnownModel ? '' : modelValue
           });
         }
       } catch (error) {
@@ -61,7 +66,7 @@ export default function AIConfigComponent() {
             enabled: config.enabled,
             apiUrl: config.api_url,
             apiKey: config.api_key,
-            model: config.model
+            model: config.model === 'custom' ? (config.customModel || '') : config.model
           }
         }),
       });
@@ -153,9 +158,15 @@ export default function AIConfigComponent() {
           </label>
           <select
             id="ai-model"
-            value={config.model}
-            onChange={(e) => setConfig({ ...config, model: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            value={config.model === 'custom' || !['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229', 'qwen-turbo', 'qwen-plus', 'qwen-max', 'ernie-4.0-8k', 'ernie-3.5-8k', 'glm-4', 'glm-3-turbo'].includes(config.model) ? 'custom' : config.model}
+            onChange={(e) => {
+              if (e.target.value === 'custom') {
+                setConfig({ ...config, model: 'custom', customModel: config.model !== 'custom' ? '' : config.customModel || '' });
+              } else {
+                setConfig({ ...config, model: e.target.value });
+              }
+            }}
+            className="max-w-md px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           >
             <optgroup label="OpenAI">
               <option value="gpt-4o">GPT-4o</option>
@@ -192,7 +203,7 @@ export default function AIConfigComponent() {
         </div>
 
         {/* 自定义模型输入 */}
-        {config.model === 'custom' && (
+        {(config.model === 'custom' || !['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229', 'qwen-turbo', 'qwen-plus', 'qwen-max', 'ernie-4.0-8k', 'ernie-3.5-8k', 'glm-4', 'glm-3-turbo'].includes(config.model)) && (
           <div>
             <label htmlFor="custom-model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               自定义模型名称
@@ -200,9 +211,10 @@ export default function AIConfigComponent() {
             <input
               type="text"
               id="custom-model"
+              value={config.model === 'custom' ? (config.customModel || '') : config.model}
               placeholder="输入自定义模型名称"
-              onChange={(e) => setConfig({ ...config, model: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              onChange={(e) => setConfig({ ...config, customModel: e.target.value })}
+              className="max-w-md px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
         )}
