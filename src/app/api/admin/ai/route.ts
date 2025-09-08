@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-console */
 
-// 从 next 包中导入 NextRequest 和 NextResponse 类型
-import type { NextRequest } from 'next';
-import { NextResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
 import { clearConfigCache, getConfig } from '@/lib/config';
