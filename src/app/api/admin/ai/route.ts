@@ -1,15 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-console */
 
-import { NextRequest, NextResponse } from 'next/server';
+// 从 next 包中导入 NextRequest 和 NextResponse 类型
+import type { NextRequest } from 'next';
+import { NextResponse } from 'next';
 
-import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
+import { getAuthInfoFromCookie } from '@/lib/auth';
 import { clearConfigCache, getConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
     // 身份验证
-    const authInfo = getAuthInfoFromBrowserCookie(request);
+    const authInfo = getAuthInfoFromCookie(request);
     if (!authInfo) {
       return NextResponse.json({ error: '未登录' }, { status: 401 });
     }
