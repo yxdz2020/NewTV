@@ -23,6 +23,9 @@ export default function AIConfigComponent() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // 预设模型列表
+  const knownModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229', 'qwen-turbo', 'qwen-plus', 'qwen-max', 'ernie-4.0-8k', 'ernie-3.5-8k', 'glm-4', 'glm-3-turbo'];
+
   // 加载配置
   useEffect(() => {
     const loadConfig = async () => {
@@ -31,13 +34,14 @@ export default function AIConfigComponent() {
         if (response.ok) {
           const data = await response.json();
           const modelValue = data.Config?.AIConfig?.model || 'gpt-3.5-turbo';
-          const isKnownModel = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229', 'qwen-turbo', 'qwen-plus', 'qwen-max', 'ernie-4.0-8k', 'ernie-3.5-8k', 'glm-4', 'glm-3-turbo'].includes(modelValue);
+          const isKnownModel = knownModels.includes(modelValue);
+          
           setConfig({
             enabled: data.Config?.AIConfig?.enabled || false,
             api_url: data.Config?.AIConfig?.apiUrl || '',
             api_key: data.Config?.AIConfig?.apiKey || '',
             model: isKnownModel ? modelValue : 'custom',
-            customModel: isKnownModel ? '' : modelValue
+            customModel: data.Config?.AIConfig?.customModel || (isKnownModel ? '' : modelValue)
           });
         }
       } catch (error) {
@@ -66,7 +70,8 @@ export default function AIConfigComponent() {
             enabled: config.enabled,
             apiUrl: config.api_url,
             apiKey: config.api_key,
-            model: config.model === 'custom' ? (config.customModel || '') : config.model
+            model: config.model === 'custom' ? (config.customModel || '') : config.model,
+            customModel: config.customModel || ''
           }
         }),
       });
@@ -160,12 +165,11 @@ export default function AIConfigComponent() {
             id="ai-model"
             value={config.model}
             onChange={(e) => {
-              console.log('Model select changed:', e.target.value);
-              if (e.target.value === 'custom') {
-                setConfig(prev => ({ ...prev, model: 'custom' }));
-              } else {
-                setConfig(prev => ({ ...prev, model: e.target.value, customModel: '' }));
-              }
+              setConfig(prev => ({
+                ...prev,
+                model: e.target.value,
+                customModel: e.target.value === 'custom' ? prev.customModel : ''
+              }));
             }}
             className="w-full max-w-md px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500"
           >
@@ -216,7 +220,6 @@ export default function AIConfigComponent() {
               value={config.customModel || ''}
               placeholder="输入自定义模型名称，如：gemini-2.5-pro"
               onChange={(e) => {
-                console.log('Custom model input changed:', e.target.value);
                 setConfig(prev => ({ ...prev, customModel: e.target.value }));
               }}
               className="w-full max-w-md px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500"
