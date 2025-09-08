@@ -3,9 +3,9 @@ import { getConfig } from '@/lib/config';
 
 export async function POST(request: NextRequest) {
   try {
-    const { message } = await request.json();
+    const { messages } = await request.json();
 
-    if (!message || typeof message !== 'string') {
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json(
         { error: '请提供有效的消息内容' },
         { status: 400 }
@@ -50,17 +50,26 @@ export async function POST(request: NextRequest) {
 - 每一部推荐的影片都必须独占一行，并以《》开始。
 
 #格式示例：
-《漫长的季节》 (2023) [国产剧/悬疑] - 豆瓣9.4分，一部关于时间和真相的深刻故事。
+《长长的季节》 (2023) [国产剧/悬疑] - 豆瓣9.4分，一部关于时间和真相的深刻故事。
 《繁城之下》 (2023) [古装/悬疑] - 明朝背景下的连环凶杀案，电影级质感。
 《尘封十三载》 (2023) [刑侦/悬疑] - 跨越十三年的双雄探案，情节扣人心弦。
-《黑暗荣耀》 (2022) [韩剧/复仇] - 精心策划的复仇大计，引人入胜。
-
-用户描述：${message}`;
+《黑暗荣耀》 (2022) [韩剧/复仇] - 精心策划的复仇大计，引人入胜。`;
 
     // 调用AI服务
     const apiUrl = config.AIConfig.apiUrl.endsWith('/')
       ? config.AIConfig.apiUrl + 'chat/completions'
       : config.AIConfig.apiUrl + '/chat/completions';
+
+    const apiMessages = [
+      {
+        role: 'system',
+        content: systemPrompt
+      },
+      ...messages.map((msg: { role: string, content: string }) => ({
+        role: msg.role === 'ai' ? 'assistant' : msg.role,
+        content: msg.content
+      }))
+    ];
 
     const aiResponse = await fetch(apiUrl, {
       method: 'POST',
@@ -70,16 +79,7 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         model: config.AIConfig.model,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: message
-          }
-        ],
+        messages: apiMessages,
         temperature: 0.7,
         max_tokens: 1000
       })
