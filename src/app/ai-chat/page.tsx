@@ -115,37 +115,18 @@ const AIChatPage = () => {
 
   return (
     <PageLayout>
-      <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-2rem)] bg-gray-50 dark:bg-gray-900">
-        {/* 头部 */}
-        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            </Link>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-                <Bot className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold text-gray-900 dark:text-white">AI影片推荐</h1>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
 
         {/* 消息列表 */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
           {messages.map((message) => (
             <div
               key={message.id}
               className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {message.type === 'ai' && (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 </div>
               )}
               
@@ -203,8 +184,8 @@ const AIChatPage = () => {
               </div>
               
               {message.type === 'user' && (
-                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
-                  <User className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center flex-shrink-0">
+                  <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 </div>
               )}
             </div>
@@ -212,8 +193,8 @@ const AIChatPage = () => {
           
           {isLoading && (
             <div className="flex gap-3 justify-start">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                <Bot className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center flex-shrink-0">
+                <Bot className="w-4 h-4 text-gray-600 dark:text-gray-400" />
               </div>
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3">
                 <div className="flex space-x-1">
@@ -229,7 +210,7 @@ const AIChatPage = () => {
         </div>
 
         {/* 输入框 */}
-        <div className="p-4 pb-20 md:pb-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+        <div className="fixed bottom-16 left-0 right-0 p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 md:relative md:bottom-auto">
           <div className="flex gap-2 items-end">
             <div className="flex-1 relative">
               <input
