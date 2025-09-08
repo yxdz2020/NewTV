@@ -84,9 +84,13 @@ const AIChatPage = () => {
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInputValue('');
     setIsLoading(true);
+
+    // Keep the last 4 rounds of conversation (4 user + 4 AI messages = 8 total)
+    const conversationHistory = updatedMessages.slice(-8);
 
     try {
       const response = await fetch('/api/ai/recommend', {
@@ -95,7 +99,7 @@ const AIChatPage = () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          message: userMessage.content
+          messages: conversationHistory.map(m => ({ role: m.type, content: m.content }))
         })
       });
 
