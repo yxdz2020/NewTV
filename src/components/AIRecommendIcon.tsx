@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 interface AIConfig {
   enabled: boolean;
   apiUrl: string;
-  apiKey: string;
+  hasApiKey: boolean;
 }
 
 const AIRecommendIcon = () => {
@@ -33,7 +33,7 @@ const AIRecommendIcon = () => {
   }, []);
 
   // 如果正在加载、配置不存在、或者AI功能未启用，则不显示图标
-  if (loading || !aiConfig || !aiConfig.enabled || !aiConfig.apiUrl || !aiConfig.apiKey) {
+  if (loading || !aiConfig || !aiConfig.enabled || !aiConfig.apiUrl || !aiConfig.hasApiKey) {
     return null;
   }
 
