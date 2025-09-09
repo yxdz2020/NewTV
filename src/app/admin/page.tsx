@@ -4882,6 +4882,7 @@ const YouTubeChannelConfig = ({
   const { isLoading, withLoading } = useLoadingState();
   const [channels, setChannels] = useState<{id: string; name: string; channelId: string; addedAt: string}[]>([]);
   const [newChannelId, setNewChannelId] = useState('');
+  const [newChannelName, setNewChannelName] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // 获取YouTube频道列表
@@ -4916,6 +4917,15 @@ const YouTubeChannelConfig = ({
       return;
     }
 
+    if (!newChannelName.trim()) {
+      showAlert({
+        type: 'warning',
+        title: '提示',
+        message: '请输入频道名称'
+      });
+      return;
+    }
+
     await withLoading('addChannel', async () => {
       try {
         const response = await fetch('/api/youtube-channels', {
@@ -4924,7 +4934,7 @@ const YouTubeChannelConfig = ({
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ 
-            name: `频道 ${newChannelId.trim()}`, 
+            name: newChannelName.trim(), 
             channelId: newChannelId.trim() 
           }),
         });
@@ -4935,6 +4945,7 @@ const YouTubeChannelConfig = ({
         }
 
         setNewChannelId('');
+        setNewChannelName('');
         await fetchChannels();
         showAlert({
             type: 'success',
@@ -4992,26 +5003,37 @@ const YouTubeChannelConfig = ({
         <h3 className='text-sm font-medium text-gray-900 dark:text-gray-100 mb-3'>
           添加YouTube频道
         </h3>
-        <div className='flex gap-2'>
-          <input
-            type='text'
-            value={newChannelId}
-            onChange={(e) => setNewChannelId(e.target.value)}
-            placeholder='输入YouTube频道ID'
-            className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400'
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                handleAddChannel();
-              }
-            }}
-          />
-          <button
-            onClick={handleAddChannel}
-            disabled={isLoading('addChannel')}
-            className='px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors'
-          >
-            {isLoading('addChannel') ? '添加中...' : '添加'}
-          </button>
+        <div className='space-y-3'>
+          <div className='flex gap-2'>
+            <input
+              type='text'
+              value={newChannelName}
+              onChange={(e) => setNewChannelName(e.target.value)}
+              placeholder='输入频道名称（如：我的频道）'
+              className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400'
+            />
+          </div>
+          <div className='flex gap-2'>
+            <input
+              type='text'
+              value={newChannelId}
+              onChange={(e) => setNewChannelId(e.target.value)}
+              placeholder='输入YouTube频道ID（如：UCq-Fj5jknLsUf-MWSy4_brA）'
+              className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400'
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleAddChannel();
+                }
+              }}
+            />
+             <button
+               onClick={handleAddChannel}
+               disabled={isLoading('addChannel')}
+               className='px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors'
+             >
+               {isLoading('addChannel') ? '添加中...' : '添加'}
+             </button>
+           </div>
         </div>
       </div>
 

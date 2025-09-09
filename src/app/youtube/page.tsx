@@ -71,14 +71,32 @@ const YouTubePage = () => {
           const channelsData = await channelsResponse.json();
           setChannels(channelsData.channels || []);
           
-          // 获取第一个频道的视频
+          // 获取所有频道的视频
           if (channelsData.channels && channelsData.channels.length > 0) {
             setLoadingVideos(true);
-            const videosResponse = await fetch(`/api/youtube-videos?channelId=${channelsData.channels[0].channelId}&maxResults=6`);
-            if (videosResponse.ok) {
-              const videosData = await videosResponse.json();
-              setVideos(videosData.videos || []);
-            }
+            const allVideos: YouTubeVideo[] = [];
+            
+            // 并行获取所有频道的视频
+            const videoPromises = channelsData.channels.map(async (channel: Channel) => {
+              try {
+                const videosResponse = await fetch(`/api/youtube-videos?channelId=${channel.channelId}&maxResults=6`);
+                if (videosResponse.ok) {
+                  const videosData = await videosResponse.json();
+                  return videosData.videos || [];
+                }
+              } catch (error) {
+                console.error(`获取频道 ${channel.name} 的视频失败:`, error);
+              }
+              return [];
+            });
+            
+            const videoResults = await Promise.all(videoPromises);
+            // 合并所有频道的视频
+            videoResults.forEach(videos => {
+              allVideos.push(...videos);
+            });
+            
+            setVideos(allVideos);
           }
         }
       } catch (error) {
