@@ -243,3 +243,6 @@ export class DbManager {
 
 // 导出默认实例
 export const db = new DbManager();
+
+// 导出getStorage函数
+export { getStorage };
