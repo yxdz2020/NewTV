@@ -1,6 +1,5 @@
 'use client';
 
-import { Menu, Search } from 'lucide-react';
 import Link from 'next/link';
 
 import AIChatEntry from './AIChatEntry';
@@ -39,7 +38,7 @@ const MobileHeader = ({ showBackButton = false }: MobileHeaderProps) => {
               />
             </svg>
           </Link>
-          <AIRecommendIcon />
+          <AIChatEntry />
           {showBackButton && <BackButton />}
         </div>
 
