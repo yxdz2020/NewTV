@@ -4903,7 +4903,7 @@ const YouTubeChannelConfig = ({
     } finally {
       setIsRefreshing(false);
     }
-  }, [showAlert]);
+  }, []);
 
   // 添加频道
   const handleAddChannel = async () => {
