@@ -29,6 +29,15 @@ const nextConfig = {
     ],
   },
 
+  async rewrites() {
+    return [
+      {
+        source: '/youtube-proxy/:path*',
+        destination: 'https://www.youtube.com/:path*',
+      },
+    ]
+  },
+
   webpack(config) {
     // Grab the existing rule that handles SVG imports
     const fileLoaderRule = config.module.rules.find((rule) =>
