@@ -1164,7 +1164,7 @@ function LivePageClient() {
 
   if (loading) {
     return (
-      <PageLayout activePath='/live'>
+      <PageLayout>
         <div className='flex items-center justify-center min-h-screen bg-transparent'>
           <div className='text-center max-w-md mx-auto px-6'>
             {/* 动画直播图标 */}
@@ -1232,7 +1232,7 @@ function LivePageClient() {
 
   if (error) {
     return (
-      <PageLayout activePath='/live'>
+      <PageLayout>
         <div className='flex items-center justify-center min-h-screen bg-transparent'>
           <div className='text-center max-w-md mx-auto px-6'>
             {/* 错误图标 */}
@@ -1275,7 +1275,7 @@ function LivePageClient() {
   }
 
   return (
-    <PageLayout activePath='/live'>
+    <PageLayout>
       <div className='flex flex-col gap-3 py-4 px-5 lg:px-[3rem] 2xl:px-20'>
         {/* 第一行：页面标题 */}
         <div className='py-1'>
@@ -1615,10 +1615,10 @@ function LivePageClient() {
                                 onClick={() => handleChannelChange(channel)}
                                 disabled={isSwitchingSource}
                                 className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${isSwitchingSource
-                                    ? 'opacity-50 cursor-not-allowed'
-                                    : isActive
-                                      ? 'bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700'
-                                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                                  ? 'opacity-50 cursor-not-allowed'
+                                  : isActive
+                                    ? 'bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700'
+                                    : 'hover:bg-gray-100 dark:hover:bg-gray-700'
                                   }`}
                               >
                                 <div className='flex items-center gap-3'>

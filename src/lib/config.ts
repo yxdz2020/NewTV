@@ -197,6 +197,10 @@ async function getInitConfig(configFile: string, subConfig: {
   } catch (e) {
     cfgFile = {} as ConfigFileStruct;
   }
+
+  // 在初始化之前，先获取旧的配置
+  const oldConfig = await db.getAdminConfig();
+
   const adminConfig: AdminConfig = {
     ConfigFile: configFile,
     ConfigSubscribtion: subConfig,
@@ -234,6 +238,11 @@ async function getInitConfig(configFile: string, subConfig: {
       name: '网盘',
     },
   };
+
+  // 如果旧配置中存在YouTubeChannels，则保留
+  if (oldConfig && (oldConfig as any).YouTubeChannels) {
+    (adminConfig as any).YouTubeChannels = (oldConfig as any).YouTubeChannels;
+  }
 
   // 补充用户信息
   let userNames: string[] = [];

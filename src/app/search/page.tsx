@@ -656,7 +656,7 @@ function SearchPageClient() {
   };
 
   return (
-    <PageLayout activePath='/search'>
+    <PageLayout>
       <div className='px-4 sm:px-10 py-4 sm:py-8 overflow-visible mb-10'>
         {/* 搜索框 */}
         <div className='mb-8'>
@@ -752,7 +752,7 @@ function SearchPageClient() {
                     />
                   )}
                 </div>
-                
+
                 {/* 开关控件行 */}
                 <div className='flex items-center justify-end gap-6'>
                   {/* 虚拟化开关 */}
@@ -769,7 +769,7 @@ function SearchPageClient() {
                       <div className='absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4'></div>
                     </div>
                   </label>
-                  
+
                   {/* 聚合开关 */}
                   <label className='flex items-center gap-2 cursor-pointer select-none shrink-0'>
                     <span className='text-xs sm:text-sm text-gray-700 dark:text-gray-300'>聚合</span>

@@ -35,9 +35,11 @@ import {
   FileText,
   FolderOpen,
   Settings,
+  Trash2,
   Tv,
   Users,
   Video,
+  Youtube,
 } from 'lucide-react';
 import { GripVertical } from 'lucide-react';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
@@ -4868,6 +4870,238 @@ const LiveSourceConfig = ({
   );
 };
 
+// YouTube频道配置组件
+const YouTubeChannelConfig = ({
+  config,
+  refreshConfig,
+}: {
+  config: AdminConfig | null;
+  refreshConfig: () => Promise<void>;
+}) => {
+  const { alertModal, showAlert, hideAlert } = useAlertModal();
+  const { isLoading, withLoading } = useLoadingState();
+  const [channels, setChannels] = useState<{ id: string; name: string; channelId: string; addedAt: string }[]>([]);
+  const [newChannelId, setNewChannelId] = useState('');
+  const [newChannelName, setNewChannelName] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // 获取YouTube频道列表
+  const fetchChannels = useCallback(async () => {
+    try {
+      setIsRefreshing(true);
+      const response = await fetch('/api/youtube-channels');
+      if (!response.ok) {
+        throw new Error('获取频道列表失败');
+      }
+      const data = await response.json();
+      setChannels(data.channels || []);
+    } catch (error) {
+      showAlert({
+        type: 'error',
+        title: '错误',
+        message: error instanceof Error ? error.message : '获取频道列表失败'
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  // 添加频道
+  const handleAddChannel = async () => {
+    if (!newChannelId.trim()) {
+      showAlert({
+        type: 'warning',
+        title: '提示',
+        message: '请输入频道ID'
+      });
+      return;
+    }
+
+    if (!newChannelName.trim()) {
+      showAlert({
+        type: 'warning',
+        title: '提示',
+        message: '请输入频道名称'
+      });
+      return;
+    }
+
+    await withLoading('addChannel', async () => {
+      try {
+        const response = await fetch('/api/youtube-channels', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: newChannelName.trim(),
+            channelId: newChannelId.trim()
+          }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || '添加频道失败');
+        }
+
+        setNewChannelId('');
+        setNewChannelName('');
+        await fetchChannels();
+        showAlert({
+          type: 'success',
+          title: '成功',
+          message: '频道添加成功'
+        });
+      } catch (error) {
+        showAlert({
+          type: 'error',
+          title: '错误',
+          message: error instanceof Error ? error.message : '添加频道失败'
+        });
+      }
+    });
+  };
+
+  // 删除频道
+  const handleDeleteChannel = async (channelId: string) => {
+    await withLoading('deleteChannel', async () => {
+      try {
+        const response = await fetch(`/api/youtube-channels?id=${channelId}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || '删除频道失败');
+        }
+
+        await fetchChannels();
+        showAlert({
+          type: 'success',
+          title: '成功',
+          message: '频道删除成功'
+        });
+      } catch (error) {
+        showAlert({
+          type: 'error',
+          title: '错误',
+          message: error instanceof Error ? error.message : '删除频道失败'
+        });
+      }
+    });
+  };
+
+  // 初始化加载
+  useEffect(() => {
+    fetchChannels();
+  }, [fetchChannels]);
+
+  return (
+    <div className='space-y-4'>
+      {/* 添加频道表单 */}
+      <div className='bg-gray-50 dark:bg-gray-800 p-4 rounded-lg'>
+        <h3 className='text-sm font-medium text-gray-900 dark:text-gray-100 mb-3'>
+          添加YouTube频道
+        </h3>
+        <div className='space-y-3'>
+          <div className='flex gap-2'>
+            <input
+              type='text'
+              value={newChannelName}
+              onChange={(e) => setNewChannelName(e.target.value)}
+              placeholder='输入频道名称'
+              className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400'
+            />
+          </div>
+          <div className='flex gap-2'>
+            <input
+              type='text'
+              value={newChannelId}
+              onChange={(e) => setNewChannelId(e.target.value)}
+              placeholder='输入YouTube频道ID'
+              className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400'
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleAddChannel();
+                }
+              }}
+            />
+            <button
+              onClick={handleAddChannel}
+              disabled={isLoading('addChannel')}
+              className='px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors'
+            >
+              {isLoading('addChannel') ? '添加中...' : '添加'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 频道列表 */}
+      <div className='space-y-2'>
+        <div className='flex items-center justify-between'>
+          <h3 className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+            已配置频道 ({channels.length})
+          </h3>
+          <button
+            onClick={fetchChannels}
+            disabled={isRefreshing}
+            className='text-sm text-blue-600 hover:text-blue-700 disabled:text-blue-400'
+          >
+            {isRefreshing ? '刷新中...' : '刷新'}
+          </button>
+        </div>
+
+        {channels.length === 0 ? (
+          <div className='text-center py-8 text-gray-500 dark:text-gray-400'>
+            暂无配置的YouTube频道
+          </div>
+        ) : (
+          <div className='space-y-2'>
+            {channels.map((channel) => (
+              <div
+                key={channel.id}
+                className='flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg'
+              >
+                <div className='flex items-center space-x-3'>
+                  <Youtube className='w-5 h-5 text-red-500' />
+                  <div>
+                    <div className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+                      {channel.name}
+                    </div>
+                    <div className='text-xs text-gray-500 dark:text-gray-400'>
+                      {channel.channelId}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleDeleteChannel(channel.id)}
+                  disabled={isLoading('deleteChannel')}
+                  className='text-red-600 hover:text-red-700 disabled:text-red-400 p-1'
+                  title='删除频道'
+                >
+                  <Trash2 className='w-4 h-4' />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 通用弹窗组件 */}
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        onClose={hideAlert}
+        type={alertModal.type}
+        title={alertModal.title}
+        message={alertModal.message}
+        timer={alertModal.timer}
+        showConfirm={alertModal.showConfirm}
+      />
+    </div>
+  );
+};
+
 function AdminPageClient() {
   const { alertModal, showAlert, hideAlert } = useAlertModal();
   const { isLoading, withLoading } = useLoadingState();
@@ -4884,6 +5118,7 @@ function AdminPageClient() {
     aiConfig: false,
     categoryConfig: false,
     cloudDiskConfig: false,
+    youtubeChannels: false,
     configFile: false,
     dataMigration: false,
   });
@@ -4954,7 +5189,7 @@ function AdminPageClient() {
 
   if (loading) {
     return (
-      <PageLayout activePath='/admin'>
+      <PageLayout>
         <div className='px-2 sm:px-10 py-4 sm:py-8'>
           <div className='max-w-[95%] mx-auto'>
             <h1 className='text-2xl font-bold text-gray-900 dark:text-gray-100 mb-8'>
@@ -4980,7 +5215,7 @@ function AdminPageClient() {
   }
 
   return (
-    <PageLayout activePath='/admin'>
+    <PageLayout>
       <div className='px-2 sm:px-10 py-4 sm:py-8'>
         <div className='max-w-[95%] mx-auto'>
           {/* 标题 + 重置配置按钮 */}
@@ -5114,6 +5349,21 @@ function AdminPageClient() {
               onToggle={() => toggleTab('cloudDiskConfig')}
             >
               <CloudDiskConfigComponent config={config} refreshConfig={fetchConfig} />
+            </CollapsibleTab>
+
+            {/* YouTube频道配置标签 */}
+            <CollapsibleTab
+              title='YouTube频道配置'
+              icon={
+                <Youtube
+                  size={20}
+                  className='text-gray-600 dark:text-gray-400'
+                />
+              }
+              isExpanded={expandedTabs.youtubeChannels}
+              onToggle={() => toggleTab('youtubeChannels')}
+            >
+              <YouTubeChannelConfig config={config} refreshConfig={fetchConfig} />
             </CollapsibleTab>
 
             {/* 数据迁移标签 - 仅站长可见 */}

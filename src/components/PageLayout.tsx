@@ -8,10 +8,9 @@ import AIChatEntry from './AIChatEntry';
 
 interface PageLayoutProps {
   children: React.ReactNode;
-  activePath?: string;
 }
 
-const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
+const PageLayout = ({ children }: PageLayoutProps) => {
   return (
     <div className='w-full min-h-screen'>
       {/* 移动端头部 */}
@@ -21,7 +20,7 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
       <div className='flex md:grid md:grid-cols-[auto_1fr] w-full min-h-screen md:min-h-auto'>
         {/* 侧边栏 - 桌面端显示，移动端隐藏 */}
         <div className='hidden md:block'>
-          <Sidebar activePath={activePath} />
+          <Sidebar />
         </div>
 
         {/* 主内容区域 */}
@@ -50,7 +49,7 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
 
       {/* 移动端底部导航 */}
       <div className='md:hidden'>
-        <MobileBottomNav activePath={activePath} />
+        <MobileBottomNav />
       </div>
     </div>
   );
