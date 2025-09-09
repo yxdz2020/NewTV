@@ -4895,7 +4895,11 @@ const YouTubeChannelConfig = ({
       const data = await response.json();
       setChannels(data.channels || []);
     } catch (error) {
-      showAlert('error', '错误', error instanceof Error ? error.message : '获取频道列表失败');
+      showAlert({
+        type: 'error',
+        title: '错误',
+        message: error instanceof Error ? error.message : '获取频道列表失败'
+      });
     } finally {
       setIsRefreshing(false);
     }
@@ -4904,7 +4908,11 @@ const YouTubeChannelConfig = ({
   // 添加频道
   const handleAddChannel = async () => {
     if (!newChannelId.trim()) {
-      showAlert('warning', '提示', '请输入频道ID');
+      showAlert({
+        type: 'warning',
+        title: '提示',
+        message: '请输入频道ID'
+      });
       return;
     }
 
@@ -4925,9 +4933,17 @@ const YouTubeChannelConfig = ({
 
         setNewChannelId('');
         await fetchChannels();
-        showAlert('success', '成功', '频道添加成功');
+        showAlert({
+            type: 'success',
+            title: '成功',
+            message: '频道添加成功'
+          });
       } catch (error) {
-        showAlert('error', '错误', error instanceof Error ? error.message : '添加频道失败');
+        showAlert({
+        type: 'error',
+        title: '错误',
+        message: error instanceof Error ? error.message : '添加频道失败'
+      });
       }
     });
   };
@@ -4950,9 +4966,17 @@ const YouTubeChannelConfig = ({
         }
 
         await fetchChannels();
-        showAlert('success', '成功', '频道删除成功');
+        showAlert({
+            type: 'success',
+            title: '成功',
+            message: '频道删除成功'
+          });
       } catch (error) {
-        showAlert('error', '错误', error instanceof Error ? error.message : '删除频道失败');
+        showAlert({
+        type: 'error',
+        title: '错误',
+        message: error instanceof Error ? error.message : '删除频道失败'
+      });
       }
     });
   };
