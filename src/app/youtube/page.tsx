@@ -147,8 +147,7 @@ const YouTubePage = () => {
             <p className="text-gray-600 dark:text-gray-400">正在检测YouTube连通性...</p>
           </div>
         </div>
-      </div>
-    </PageLayout>
+      </PageLayout>
     );
   }
 
@@ -186,7 +185,7 @@ const YouTubePage = () => {
         </div>
       </div>
     </PageLayout>
-    );
+  );
   }
 
   return (
@@ -453,7 +452,7 @@ const YouTubePage = () => {
                             </div>
                         </div>
                       );
-                    })()
+                    })();
                     )}
                   </div>
                 )}
