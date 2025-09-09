@@ -7,15 +7,6 @@ const nextConfig = {
     dirs: ['src'],
   },
 
-  async rewrites() {
-    return [
-      {
-        source: '/youtube-proxy/:path*',
-        destination: 'https://www.youtube.com/:path*',
-      },
-    ];
-  },
-
   reactStrictMode: false,
   swcMinify: false,
 
