@@ -2,7 +2,7 @@
 
 'use client';
 
-import { Cat, Clover, Clapperboard, Cloud, Film, Home, Menu, Radio, Search, Star, Tv } from 'lucide-react';
+import { Cat, Clover, Clapperboard, Cloud, Film, Home, Menu, Radio, Search, Star, Tv, Youtube } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -154,6 +154,11 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
       icon: Radio,
       label: '直播',
       href: '/live',
+    },
+    {
+      icon: Youtube,
+      label: 'YouTube',
+      href: '/youtube',
     },
   ]);
 
