@@ -40,7 +40,7 @@ const YouTubePage = () => {
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [expandedChannels, setExpandedChannels] = useState<Set<string>>(new Set());
-  const [videosByChannel, setVideosByChannel] = useState<{[key: string]: YouTubeVideo[]}>({});
+  const [videosByChannel, setVideosByChannel] = useState<{ [key: string]: YouTubeVideo[] }>({});
 
   useEffect(() => {
     const checkYouTubeAccess = async () => {
@@ -253,7 +253,7 @@ const YouTubePage = () => {
                       {channels.length} 个频道
                     </div>
                   </div>
-                  
+
                   {/* 频道标签页 */}
                   <div className="mb-6">
                     <div className="flex flex-wrap gap-2">
@@ -268,11 +268,10 @@ const YouTubePage = () => {
                             }
                           }, 100);
                         }}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                          selectedChannelId === null
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedChannelId === null
                             ? 'bg-red-600 text-white'
                             : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                        }`}
+                          }`}
                       >
                         全部
                       </button>
@@ -289,18 +288,17 @@ const YouTubePage = () => {
                               }
                             }, 100);
                           }}
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                            selectedChannelId === channel.channelId
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedChannelId === channel.channelId
                               ? 'bg-red-600 text-white'
                               : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                          }`}
+                            }`}
                         >
                           {channel.name}
                         </button>
                       ))}
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {channels.map((channel) => {
                       const videoData = channel.latestVideo || {
@@ -346,74 +344,72 @@ const YouTubePage = () => {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   推荐视频
                 </h2>
-                
+
                 {/* 推荐视频频道标签 */}
                 <div className="flex flex-wrap gap-2 mb-6">
                   <button
                     onClick={() => setSelectedChannelId(null)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                      selectedChannelId === null
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedChannelId === null
                         ? 'bg-red-600 text-white'
                         : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                    }`}
+                      }`}
                   >
                     全部
                   </button>
                   {/* 显示所有添加的频道 */}
                   {channels.map((channel) => {
-                      return (
-                        <button
-                          key={channel.channelId}
-                          onClick={() => setSelectedChannelId(channel.channelId)}
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                            selectedChannelId === channel.channelId
-                              ? 'bg-red-600 text-white'
-                              : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    return (
+                      <button
+                        key={channel.channelId}
+                        onClick={() => setSelectedChannelId(channel.channelId)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedChannelId === channel.channelId
+                            ? 'bg-red-600 text-white'
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                           }`}
-                        >
-                          {channel.name}
-                        </button>
-                      );
-                    })
+                      >
+                        {channel.name}
+                      </button>
+                    );
+                  })
                   }
                 </div>
-                
+
                 {/* 视频展示区域 */}
                 {selectedChannelId === null ? (
                   /* 显示所有频道，按频道分组 */
                   <div className="space-y-8">
                     {channels.map((channel) => {
-                        const channelVideos = videos.filter(video => 
-                          video.snippet.channelTitle === channel.name
-                        ).slice(0, 6);
-                        
-                        return (
-                          <div key={channel.channelId} id={`channel-${channel.channelId}`} className="space-y-4">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                              {channel.name}
-                              <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
-                                ({channelVideos.length} 个视频)
-                              </span>
-                            </h3>
-                            {channelVideos.length > 0 ? (
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                               {channelVideos.map((video) => (
-                                 <YouTubeVideoCard
-                                   key={video.id.videoId}
-                                   video={video}
-                                   onPlay={handleVideoPlay}
-                                   showActions={false}
-                                 />
-                               ))}
-                             </div>
-                            ) : (
-                               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                                 <p>该频道暂无视频数据</p>
-                               </div>
-                             )}
-                          </div>
-                        );
-                      })
+                      const channelVideos = videos.filter(video =>
+                        video.snippet.channelTitle === channel.name
+                      ).slice(0, 6);
+
+                      return (
+                        <div key={channel.channelId} id={`channel-${channel.channelId}`} className="space-y-4">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                            {channel.name}
+                            <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
+                              ({channelVideos.length} 个视频)
+                            </span>
+                          </h3>
+                          {channelVideos.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {channelVideos.map((video) => (
+                                <YouTubeVideoCard
+                                  key={video.id.videoId}
+                                  video={video}
+                                  onPlay={handleVideoPlay}
+                                  showActions={false}
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                              <p>该频道暂无视频数据</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
                     }
                   </div>
                 ) : (
@@ -421,7 +417,7 @@ const YouTubePage = () => {
                   <div>
                     {(() => {
                       const selectedChannel = channels.find(c => c.channelId === selectedChannelId);
-                      
+
                       if (!selectedChannel) {
                         return (
                           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
@@ -429,11 +425,11 @@ const YouTubePage = () => {
                           </div>
                         );
                       }
-                      
-                      const channelVideos = videos.filter(video => 
+
+                      const channelVideos = videos.filter(video =>
                         video.snippet.channelTitle === selectedChannel.name
                       );
-                      
+
                       return (
                         <div id={`channel-${selectedChannelId}`} className="space-y-4">
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -450,9 +446,9 @@ const YouTubePage = () => {
                                   video={video}
                                   onPlay={handleVideoPlay}
                                   showActions={false}
-                              />
-                            ))}
-                          </div>
+                                />
+                              ))}
+                            </div>
                         </div>
                       );
                     })()
@@ -471,7 +467,7 @@ const YouTubePage = () => {
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">暂无视频</h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  请在管理后台添加YouTube频道以显示视频内容
+                  请在管理后台添加YouTube频道，即可显示视频内容
                 </p>
                 <a
                   href="https://www.youtube.com"
