@@ -185,7 +185,7 @@ const YouTubePage = () => {
 
   return (
     <PageLayout>
-      <div className="h-full flex flex-col bg-white dark:bg-gray-900">
+      <div className="h-full flex flex-col">
         {/* YouTube Header */}
         <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-center mb-6">
@@ -261,15 +261,15 @@ const YouTubePage = () => {
                           </div>
                         </div>
                         <iframe
-                          width="100%"
-                          height="300"
-                          src={`https://www.youtube.com/embed?listType=playlist&list=${convertChannelIdToPlaylistId(channel.channelId)}`}
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          className="rounded-lg"
-                          title={`${channel.name} 播放列表`}
-                        />
+                           width="100%"
+                           height="225"
+                           src={`https://www.youtube.com/embed?listType=playlist&list=${convertChannelIdToPlaylistId(channel.channelId)}`}
+                           frameBorder="0"
+                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                           allowFullScreen
+                           className="rounded-lg aspect-video"
+                           title={`${channel.name} 播放列表`}
+                         />
                       </div>
                     ))}
                   </div>

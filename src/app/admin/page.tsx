@@ -4947,11 +4947,6 @@ const YouTubeChannelConfig = ({
         setNewChannelId('');
         setNewChannelName('');
         await fetchChannels();
-        showAlert({
-            type: 'success',
-            title: '成功',
-            message: '频道添加成功'
-          });
       } catch (error) {
         showAlert({
         type: 'error',
