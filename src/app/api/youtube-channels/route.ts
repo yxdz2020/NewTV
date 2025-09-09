@@ -18,21 +18,8 @@ async function getChannels(): Promise<YouTubeChannel[]> {
   try {
     const storage = getStorage();
     if (!storage) {
-      // 如果没有数据库存储，返回默认频道
-      return [
-        {
-          id: '1',
-          name: 'YouTube官方频道',
-          channelId: 'UC_x5XG1OV2P6uZZ5FSM9Ttw',
-          addedAt: new Date().toISOString()
-        },
-        {
-          id: '2', 
-          name: 'Google Developers',
-          channelId: 'UC_x5XG1OV2P6uZZ5FSM9Ttw',
-          addedAt: new Date().toISOString()
-        }
-      ];
+      // 如果没有数据库存储，返回空数组
+      return [];
     }
     
     const adminConfig = await storage.getAdminConfig();
