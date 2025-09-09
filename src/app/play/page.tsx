@@ -2895,7 +2895,7 @@ function PlayPageClient() {
   }
 
   return (
-    <PageLayout activePath='/play'>
+    <PageLayout>
       <div className='flex flex-col gap-3 py-4 px-5 lg:px-[3rem] 2xl:px-20'>
         {/* 第一行：影片标题 */}
         <div className='py-1'>
