@@ -47,7 +47,7 @@ const YouTubeVideoCard = ({ video, onPlay }: YouTubeVideoCardProps) => {
     });
   };
 
-  const truncateTitle = (title: string, maxLength: number = 60) => {
+  const truncateTitle = (title: string, maxLength = 60) => {
     return title.length > maxLength ? title.substring(0, maxLength) + '...' : title;
   };
 

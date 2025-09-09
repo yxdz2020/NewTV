@@ -35,6 +35,7 @@ import {
   FileText,
   FolderOpen,
   Settings,
+  Trash2,
   Tv,
   Users,
   Video,
