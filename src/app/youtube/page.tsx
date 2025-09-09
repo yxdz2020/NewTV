@@ -108,6 +108,14 @@ const YouTubePage = () => {
     console.log('播放视频:', videoId);
   };
 
+  // 将频道ID转换为播放列表ID（UC -> UU）
+  const convertChannelIdToPlaylistId = (channelId: string) => {
+    if (channelId.startsWith('UC')) {
+      return 'UU' + channelId.substring(2);
+    }
+    return channelId;
+  };
+
   if (isLoading) {
     return (
       <PageLayout>
@@ -159,7 +167,7 @@ const YouTubePage = () => {
 
   return (
     <PageLayout>
-      <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-red-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="absolute inset-0 bg-white dark:bg-gray-900">
         <div className="flex flex-col h-full">
           {/* YouTube Header */}
           <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 p-6">
@@ -208,6 +216,32 @@ const YouTubePage = () => {
               </div>
             ) : videos.length > 0 ? (
               <div>
+                {/* 频道播放列表区域 */}
+                {channels.length > 0 && (
+                  <div className="mb-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                        频道播放列表
+                      </h2>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        {channels[0].name}
+                      </div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+                      <iframe
+                        width="100%"
+                        height="450"
+                        src={`https://www.youtube.com/embed?listType=playlist&list=${convertChannelIdToPlaylistId(channels[0].channelId)}`}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="rounded-lg"
+                        title={`${channels[0].name} 播放列表`}
+                      />
+                    </div>
+                  </div>
+                )}
+                
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                     推荐视频

@@ -119,9 +119,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 如果没有配置真实的API Key，返回模拟数据
+    // 如果没有配置真实的API Key，返回基于频道ID的模拟数据
     if (YOUTUBE_API_KEY === 'demo_key') {
-      const videos = mockVideos.slice(0, parseInt(maxResults));
+      // 根据频道ID返回不同的模拟视频数据
+      const videos = mockVideos.slice(0, parseInt(maxResults)).map(video => ({
+        ...video,
+        snippet: {
+          ...video.snippet,
+          channelTitle: `频道 ${channelId.substring(0, 8)}...`
+        }
+      }));
       return NextResponse.json({ videos });
     }
 
