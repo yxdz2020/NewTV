@@ -147,7 +147,8 @@ const YouTubePage = () => {
             <p className="text-gray-600 dark:text-gray-400">正在检测YouTube连通性...</p>
           </div>
         </div>
-      </PageLayout>
+      </div>
+    </PageLayout>
     );
   }
 
