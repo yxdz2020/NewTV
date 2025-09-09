@@ -5215,7 +5215,7 @@ function AdminPageClient() {
   }
 
   return (
-    <PageLayout activePath='/admin'>
+    <PageLayout>
       <div className='px-2 sm:px-10 py-4 sm:py-8'>
         <div className='max-w-[95%] mx-auto'>
           {/* 标题 + 重置配置按钮 */}
