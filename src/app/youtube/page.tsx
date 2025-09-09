@@ -26,6 +26,8 @@ interface Channel {
   name: string;
   channelId: string;
   addedAt: string;
+  thumbnail?: string;
+  playlistId: string;
 }
 
 const YouTubePage = () => {
@@ -126,13 +128,7 @@ const YouTubePage = () => {
     console.log('播放视频:', videoId);
   };
 
-  // 将频道ID转换为播放列表ID（UC -> UU）
-  const convertChannelIdToPlaylistId = (channelId: string) => {
-    if (channelId.startsWith('UC')) {
-      return 'UU' + channelId.substring(2);
-    }
-    return channelId;
-  };
+
 
   if (isLoading) {
     return (
@@ -257,18 +253,18 @@ const YouTubePage = () => {
                           title: channel.name,
                           thumbnails: {
                             medium: {
-                              url: `https://i.ytimg.com/vi/${channel.id}/hqdefault.jpg`,
+                              url: channel.thumbnail || '',
                             },
                           },
                           channelTitle: channel.name,
                           publishedAt: '',
                         },
-                        embedPlayer: `https://www.youtube.com/embed/videoseries?list=${convertChannelIdToPlaylistId(channel.channelId)}`,
+                        embedPlayer: `https://www.youtube.com/embed/videoseries?list=${channel.playlistId}&autoplay=1`,
                       };
                       return (
                         <YouTubeVideoCard
                           key={channel.id}
-                          video={pseudoVideo}
+                          video={pseudoVideo as any}
                           showActions={false}
                           onPlay={handleVideoPlay}
                         />

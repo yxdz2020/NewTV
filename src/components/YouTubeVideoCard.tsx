@@ -30,6 +30,7 @@ interface YouTubeVideoCardProps {
 const YouTubeVideoCard = ({ video, onPlay, showActions = true }: YouTubeVideoCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const thumbnailUrl = video.snippet.thumbnails.medium.url;
 
   const handlePlay = () => {
     setIsPlaying(true);
@@ -72,9 +73,9 @@ const YouTubeVideoCard = ({ video, onPlay, showActions = true }: YouTubeVideoCar
           />
         ) : (
           <>
-            {!imageError ? (
+            {!imageError && thumbnailUrl ? (
               <Image
-                src={video.snippet.thumbnails.medium.url}
+                src={thumbnailUrl}
                 alt={video.snippet.title}
                 fill
                 className="object-cover"
@@ -88,6 +89,13 @@ const YouTubeVideoCard = ({ video, onPlay, showActions = true }: YouTubeVideoCar
               </div>
             )}
             
+            {/* Title Overlay */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
+                <h3 className="text-white font-semibold text-sm line-clamp-2">
+                  {video.snippet.title}
+                </h3>
+            </div>
+
             {/* 播放按钮覆盖层 */}
             <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center group">
               <button
