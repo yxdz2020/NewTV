@@ -183,7 +183,6 @@ const YouTubePage = () => {
             </div>
           </div>
         </div>
-      </div>
     </PageLayout>
   );
   }
