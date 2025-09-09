@@ -38,6 +38,9 @@ const YouTubePage = () => {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loadingVideos, setLoadingVideos] = useState(true);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
+  const [expandedChannels, setExpandedChannels] = useState<Set<string>>(new Set());
+  const [videosByChannel, setVideosByChannel] = useState<{[key: string]: YouTubeVideo[]}>({});
 
   useEffect(() => {
     const checkYouTubeAccess = async () => {
@@ -287,26 +290,125 @@ const YouTubePage = () => {
                       );
                     })}
                   </div>
+                  
+                  {/* 频道标签页 */}
+                  <div className="mt-6">
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <button
+                        onClick={() => setSelectedChannelId(null)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                          selectedChannelId === null
+                            ? 'bg-red-600 text-white'
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        全部
+                      </button>
+                      {channels.map((channel) => (
+                        <button
+                          key={channel.id}
+                          onClick={() => setSelectedChannelId(channel.channelId)}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                            selectedChannelId === channel.channelId
+                              ? 'bg-red-600 text-white'
+                              : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          {channel.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              {/* 推荐视频分组标签 */}
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
                   推荐视频
                 </h2>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  {channels.length > 0 && `来自 ${channels.length} 个频道`}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {videos.map((video) => (
-                  <YouTubeVideoCard
-                    key={video.id.videoId}
-                    video={video}
-                    onPlay={handleVideoPlay}
-                  />
-                ))}
+                
+                {channels.map((channel) => {
+                  const channelVideos = videos.filter(video => 
+                    video.snippet.channelTitle === channel.name
+                  ).slice(0, 6); // 只显示最近6个视频
+                  
+                  if (channelVideos.length === 0) return null;
+                  
+                  const isExpanded = expandedChannels.has(channel.channelId);
+                  
+                  return (
+                    <div key={channel.id} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                      {/* 频道标题栏 */}
+                      <button
+                        onClick={() => {
+                          const newExpanded = new Set(expandedChannels);
+                          if (isExpanded) {
+                            newExpanded.delete(channel.channelId);
+                          } else {
+                            newExpanded.add(channel.channelId);
+                          }
+                          setExpandedChannels(newExpanded);
+                        }}
+                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <h3 className="font-semibold text-gray-900 dark:text-white">
+                            {channel.name}
+                          </h3>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {channelVideos.length} 个视频
+                          </span>
+                        </div>
+                        <svg 
+                          className={`w-5 h-5 text-gray-500 transition-transform ${
+                            isExpanded ? 'rotate-180' : ''
+                          }`} 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      
+                      {/* 视频列表 */}
+                      {isExpanded && (
+                        <div className="p-4 bg-white dark:bg-gray-800">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {channelVideos.map((video) => (
+                              <YouTubeVideoCard
+                                key={video.id.videoId}
+                                video={video}
+                                onPlay={handleVideoPlay}
+                                showActions={false}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                
+                {/* 如果没有选择特定频道，显示所有视频的混合列表 */}
+                {selectedChannelId === null && (
+                  <div className="mt-8">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                      最新推荐
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {videos.slice(0, 12).map((video) => (
+                        <YouTubeVideoCard
+                          key={video.id.videoId}
+                          video={video}
+                          onPlay={handleVideoPlay}
+                          showActions={false}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
