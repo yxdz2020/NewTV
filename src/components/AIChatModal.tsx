@@ -139,7 +139,7 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl h-[80vh] flex flex-col">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">AI 影视推荐</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">NewTV AI 荐片助手</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white">
             <X className="w-5 h-5" />
           </button>
@@ -213,9 +213,9 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
             <button
               onClick={handleSendMessage}
               disabled={!inputValue.trim() || isLoading}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 flex items-center justify-center transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 flex items-center justify-center transition-colors"
             >
-              <Send className="w-4 h-4 text-white" />
+              <Send size={12} className="text-white" />
             </button>
           </div>
           <p className="text-xs text-gray-400 mt-2 text-center">点击推荐卡片可跳转搜索</p>

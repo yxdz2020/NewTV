@@ -342,8 +342,8 @@ export default function AIConfigComponent() {
       <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-md">
         <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">使用说明</h4>
         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-          <li>• 启用后，用户可以在移动端看到AI荐片图标</li>
-          <li>• 支持OpenAI兼容的API模型</li>
+          <li>• 启用后，用户可以网页顶部看到AI荐片图标</li>
+          <li>• 兼容OpenAI格式的API模型</li>
           <li>• API地址示例：https://api.openai.com/v1</li>
           <li>• 建议选择带联网搜索的模型</li>
           <li>• 确保API密钥有足够的调用额度</li>
