@@ -278,7 +278,8 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                   const isActive =
                     decodedActive === decodedItemHref ||
                     (decodedActive.startsWith('/douban') &&
-                      decodedActive.includes(`type=${typeMatch}`));
+                      decodedActive.includes(`type=${typeMatch}`)) ||
+                    (item.href === '/youtube' && decodedActive.startsWith('/youtube'));
                   const Icon = item.icon;
                   return (
                     <Link

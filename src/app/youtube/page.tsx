@@ -34,7 +34,8 @@ const YouTubePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
-  const [loadingVideos, setLoadingVideos] = useState(false);
+  const [loadingVideos, setLoadingVideos] = useState(true);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   useEffect(() => {
     const checkYouTubeAccess = async () => {
@@ -73,7 +74,6 @@ const YouTubePage = () => {
 
           // 获取所有频道的视频
           if (channelsData.channels && channelsData.channels.length > 0) {
-            setLoadingVideos(true);
             const allVideos: YouTubeVideo[] = [];
 
             // 并行获取所有频道的视频
@@ -103,6 +103,7 @@ const YouTubePage = () => {
         console.error('加载频道和视频失败:', error);
       } finally {
         setLoadingVideos(false);
+        setInitialLoadComplete(true);
       }
     };
 
@@ -229,14 +230,14 @@ const YouTubePage = () => {
 
         {/* Videos Grid */}
         <div className="flex-1 overflow-y-auto p-6">
-          {loadingVideos ? (
+          {loadingVideos && !initialLoadComplete ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
                 <p className="text-gray-600 dark:text-gray-400">正在加载视频...</p>
               </div>
             </div>
-          ) : videos.length > 0 ? (
+          ) : videos.length > 0 || channels.length > 0 ? (
             <div>
               {/* 频道播放列表区域 */}
               {channels.length > 0 && (
