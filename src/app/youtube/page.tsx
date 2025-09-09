@@ -249,29 +249,31 @@ const YouTubePage = () => {
                       {channels.length} 个频道
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {channels.map((channel) => (
-                      <div key={channel.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                            {channel.name}
-                          </h3>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            {channel.channelId}
-                          </div>
-                        </div>
-                        <iframe
-                           width="100%"
-                           height="225"
-                           src={`https://www.youtube.com/embed?listType=playlist&list=${convertChannelIdToPlaylistId(channel.channelId)}`}
-                           frameBorder="0"
-                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                           allowFullScreen
-                           className="rounded-lg aspect-video"
-                           title={`${channel.name} 播放列表`}
-                         />
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {channels.map((channel) => {
+                      const pseudoVideo = {
+                        id: { videoId: channel.channelId },
+                        snippet: {
+                          title: channel.name,
+                          thumbnails: {
+                            medium: {
+                              url: `https://i.ytimg.com/vi/${channel.id}/hqdefault.jpg`,
+                            },
+                          },
+                          channelTitle: channel.name,
+                          publishedAt: '',
+                        },
+                        embedPlayer: `https://www.youtube.com/embed/videoseries?list=${convertChannelIdToPlaylistId(channel.channelId)}`,
+                      };
+                      return (
+                        <YouTubeVideoCard
+                          key={channel.id}
+                          video={pseudoVideo}
+                          showActions={false}
+                          onPlay={handleVideoPlay}
+                        />
+                      );
+                    })}
                   </div>
                 </div>
               )}

@@ -27,14 +27,14 @@ async function getChannels(): Promise<YouTubeChannel[]> {
           addedAt: new Date().toISOString()
         },
         {
-          id: '2', 
+          id: '2',
           name: 'Google Developers',
           channelId: 'UC_x5XG1OV2P6uZZ5FSM9Ttw',
           addedAt: new Date().toISOString()
         }
       ];
     }
-    
+
     const adminConfig = await storage.getAdminConfig();
     return (adminConfig as any)?.YouTubeChannels || [];
   } catch (error) {
@@ -50,7 +50,7 @@ async function saveChannels(channels: YouTubeChannel[]): Promise<void> {
     if (!storage) {
       throw new Error('数据库存储不可用');
     }
-    
+
     const adminConfig = await storage.getAdminConfig() || {} as any;
     adminConfig.YouTubeChannels = channels;
     await storage.setAdminConfig(adminConfig);
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { name, channelId } = await request.json();
-    
+
     if (!name || !channelId) {
       return NextResponse.json(
         { error: '频道名称和ID不能为空' },
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     }
 
     const channels = await getChannels();
-    
+
     const newChannel: YouTubeChannel = {
       id: Date.now().toString(),
       name,
@@ -126,7 +126,7 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const channelId = searchParams.get('id');
-    
+
     if (!channelId) {
       return NextResponse.json(
         { error: '频道ID不能为空' },
@@ -137,7 +137,7 @@ export async function DELETE(request: NextRequest) {
     const channels = await getChannels();
     const initialLength = channels.length;
     const filteredChannels = channels.filter(channel => channel.id !== channelId);
-    
+
     if (filteredChannels.length === initialLength) {
       return NextResponse.json(
         { error: '频道不存在' },

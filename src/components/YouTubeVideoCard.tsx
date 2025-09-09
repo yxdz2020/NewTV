@@ -7,31 +7,35 @@ interface YouTubeVideo {
   id: { videoId: string };
   snippet: {
     title: string;
-    description: string;
+    description?: string;
     thumbnails: {
       medium: {
         url: string;
-        width: number;
-        height: number;
+        width?: number;
+        height?: number;
       };
     };
     channelTitle: string;
     publishedAt: string;
   };
+  embedPlayer?: string;
 }
 
 interface YouTubeVideoCardProps {
   video: YouTubeVideo;
   onPlay?: (videoId: string) => void;
+  showActions?: boolean;
 }
 
-const YouTubeVideoCard = ({ video, onPlay }: YouTubeVideoCardProps) => {
+const YouTubeVideoCard = ({ video, onPlay, showActions = true }: YouTubeVideoCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [imageError, setImageError] = useState(false);
 
   const handlePlay = () => {
     setIsPlaying(true);
-    onPlay?.(video.id.videoId);
+    if (onPlay && video.id.videoId) {
+      onPlay(video.id.videoId);
+    }
   };
 
   const handleOpenInNewTab = () => {
@@ -39,6 +43,7 @@ const YouTubeVideoCard = ({ video, onPlay }: YouTubeVideoCardProps) => {
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('zh-CN', {
       year: 'numeric',
@@ -51,13 +56,15 @@ const YouTubeVideoCard = ({ video, onPlay }: YouTubeVideoCardProps) => {
     return title.length > maxLength ? title.substring(0, maxLength) + '...' : title;
   };
 
+  const videoUrl = video.embedPlayer || `https://www.youtube.com/embed/${video.id.videoId}?autoplay=1`;
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
       {/* 视频缩略图区域 */}
       <div className="relative aspect-video bg-gray-200 dark:bg-gray-700">
         {isPlaying ? (
           <iframe
-            src={`https://www.youtube.com/embed/${video.id.videoId}?autoplay=1`}
+            src={videoUrl}
             className="w-full h-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
@@ -114,20 +121,22 @@ const YouTubeVideoCard = ({ video, onPlay }: YouTubeVideoCardProps) => {
         </div>
         
         {/* 操作按钮 */}
-        <div className="flex space-x-2">
-          <button
-            onClick={handlePlay}
-            className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs py-2 px-3 rounded transition-colors"
-          >
-            嵌入播放
-          </button>
-          <button
-            onClick={handleOpenInNewTab}
-            className="flex-1 bg-gray-600 hover:bg-gray-700 text-white text-xs py-2 px-3 rounded transition-colors"
-          >
-            新窗口打开
-          </button>
-        </div>
+        {showActions && (
+            <div className="flex space-x-2">
+            <button
+                onClick={handlePlay}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs py-2 px-3 rounded transition-colors"
+            >
+                嵌入播放
+            </button>
+            <button
+                onClick={handleOpenInNewTab}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white text-xs py-2 px-3 rounded transition-colors"
+            >
+                新窗口打开
+            </button>
+            </div>
+        )}
       </div>
     </div>
   );

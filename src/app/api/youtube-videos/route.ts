@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const channelId = searchParams.get('channelId');
     const maxResults = searchParams.get('maxResults') || '6';
-    
+
     if (!channelId) {
       return NextResponse.json(
         { error: '频道ID不能为空' },
@@ -148,11 +148,11 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    
+
     return NextResponse.json({ videos: data.items || [] });
   } catch (error) {
     console.error('获取YouTube视频失败:', error);
-    
+
     // 如果API调用失败，返回模拟数据作为备用
     const videos = mockVideos.slice(0, 6);
     return NextResponse.json({ videos });
