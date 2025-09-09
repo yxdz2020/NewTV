@@ -21,38 +21,53 @@ export class CacheManager {
   }
 
   private initializeStorages() {
-    // 按优先级顺序尝试初始化存储
-    const storageConfigs = [
-      {
-        name: 'Redis',
-        envVar: 'REDIS_URL',
-        createStorage: () => new RedisStorage()
-      },
-      {
-        name: 'KVRocks',
-        envVar: 'KVROCKS_URL',
-        createStorage: () => new KvrocksStorage()
-      },
-      {
-        name: 'Upstash',
-        envVar: 'UPSTASH_REDIS_REST_URL',
-        createStorage: () => new UpstashRedisStorage()
-      }
-    ];
+    const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE;
+    
+    if (!storageType) {
+      console.warn('NEXT_PUBLIC_STORAGE_TYPE 未配置，缓存功能将被禁用');
+      return;
+    }
 
-    for (const config of storageConfigs) {
-      if (process.env[config.envVar]) {
-        try {
-          const storage = config.createStorage();
-          this.storages.push(storage);
-          if (!this.primaryStorage) {
+    try {
+      switch (storageType.toLowerCase()) {
+        case 'redis':
+          if (process.env.REDIS_URL) {
+            const storage = new RedisStorage();
+            this.storages.push(storage);
             this.primaryStorage = storage;
-            console.log(`使用 ${config.name} 作为主缓存存储`);
+            console.log('使用 Redis 作为主缓存存储');
+          } else {
+            console.warn('REDIS_URL 未配置，无法使用 Redis 存储');
           }
-        } catch (error) {
-          console.warn(`初始化 ${config.name} 失败:`, error);
-        }
+          break;
+          
+        case 'kvrocks':
+          if (process.env.KVROCKS_URL) {
+            const storage = new KvrocksStorage();
+            this.storages.push(storage);
+            this.primaryStorage = storage;
+            console.log('使用 KVRocks 作为主缓存存储');
+          } else {
+            console.warn('KVROCKS_URL 未配置，无法使用 KVRocks 存储');
+          }
+          break;
+          
+        case 'upstash':
+          if (process.env.UPSTASH_URL && process.env.UPSTASH_TOKEN) {
+            const storage = new UpstashRedisStorage();
+            this.storages.push(storage);
+            this.primaryStorage = storage;
+            console.log('使用 Upstash 作为主缓存存储');
+          } else {
+            console.warn('UPSTASH_URL 或 UPSTASH_TOKEN 未配置，无法使用 Upstash 存储');
+          }
+          break;
+          
+        default:
+          console.warn(`不支持的存储类型: ${storageType}，支持的类型: redis, kvrocks, upstash`);
       }
+    } catch (error) {
+      console.error(`初始化 ${storageType} 存储失败:`, error);
     }
 
     if (this.storages.length === 0) {
