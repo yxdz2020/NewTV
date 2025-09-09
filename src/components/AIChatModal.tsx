@@ -213,9 +213,9 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
             <button
               onClick={handleSendMessage}
               disabled={!inputValue.trim() || isLoading}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 flex items-center justify-center transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 flex items-center justify-center transition-colors"
             >
-              <Send size={12} className="text-white" />
+              <Send className="w-4 h-4 text-white" />
             </button>
           </div>
           <p className="text-xs text-gray-400 mt-2 text-center">点击推荐卡片可跳转搜索</p>
