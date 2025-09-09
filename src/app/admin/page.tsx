@@ -4880,7 +4880,7 @@ const YouTubeChannelConfig = ({
 }) => {
   const { alertModal, showAlert, hideAlert } = useAlertModal();
   const { isLoading, withLoading } = useLoadingState();
-  const [channels, setChannels] = useState<{id: string; name: string; channelId: string; addedAt: string}[]>([]);
+  const [channels, setChannels] = useState<{ id: string; name: string; channelId: string; addedAt: string }[]>([]);
   const [newChannelId, setNewChannelId] = useState('');
   const [newChannelName, setNewChannelName] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -4933,9 +4933,9 @@ const YouTubeChannelConfig = ({
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ 
-            name: newChannelName.trim(), 
-            channelId: newChannelId.trim() 
+          body: JSON.stringify({
+            name: newChannelName.trim(),
+            channelId: newChannelId.trim()
           }),
         });
 
@@ -4947,12 +4947,17 @@ const YouTubeChannelConfig = ({
         setNewChannelId('');
         setNewChannelName('');
         await fetchChannels();
+        showAlert({
+          type: 'success',
+          title: '成功',
+          message: '频道添加成功'
+        });
       } catch (error) {
         showAlert({
-        type: 'error',
-        title: '错误',
-        message: error instanceof Error ? error.message : '添加频道失败'
-      });
+          type: 'error',
+          title: '错误',
+          message: error instanceof Error ? error.message : '添加频道失败'
+        });
       }
     });
   };
@@ -4971,13 +4976,17 @@ const YouTubeChannelConfig = ({
         }
 
         await fetchChannels();
-        // 删除成功后直接刷新列表，不显示提示
+        showAlert({
+          type: 'success',
+          title: '成功',
+          message: '频道删除成功'
+        });
       } catch (error) {
         showAlert({
-        type: 'error',
-        title: '错误',
-        message: error instanceof Error ? error.message : '删除频道失败'
-      });
+          type: 'error',
+          title: '错误',
+          message: error instanceof Error ? error.message : '删除频道失败'
+        });
       }
     });
   };
@@ -5009,7 +5018,7 @@ const YouTubeChannelConfig = ({
               type='text'
               value={newChannelId}
               onChange={(e) => setNewChannelId(e.target.value)}
-              placeholder='输入YouTube频道ID（如：UCq-Fj5jknLsUf-MWSy4_brA）'
+              placeholder='输入YouTube频道ID'
               className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400'
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
@@ -5017,14 +5026,14 @@ const YouTubeChannelConfig = ({
                 }
               }}
             />
-             <button
-               onClick={handleAddChannel}
-               disabled={isLoading('addChannel')}
-               className='px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors'
-             >
-               {isLoading('addChannel') ? '添加中...' : '添加'}
-             </button>
-           </div>
+            <button
+              onClick={handleAddChannel}
+              disabled={isLoading('addChannel')}
+              className='px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors'
+            >
+              {isLoading('addChannel') ? '添加中...' : '添加'}
+            </button>
+          </div>
         </div>
       </div>
 
