@@ -2,29 +2,111 @@
 
 import { useEffect, useState } from 'react';
 import PageLayout from '@/components/PageLayout';
+import YouTubeVideoCard from '@/components/YouTubeVideoCard';
+
+interface YouTubeVideo {
+  id: { videoId: string };
+  snippet: {
+    title: string;
+    description: string;
+    thumbnails: {
+      medium: {
+        url: string;
+        width: number;
+        height: number;
+      };
+    };
+    channelTitle: string;
+    publishedAt: string;
+  };
+}
+
+interface Channel {
+  id: string;
+  name: string;
+  channelId: string;
+  addedAt: string;
+}
 
 const YouTubePage = () => {
   const [isOnline, setIsOnline] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [videos, setVideos] = useState<YouTubeVideo[]>([]);
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [loadingVideos, setLoadingVideos] = useState(false);
 
   useEffect(() => {
     const checkYouTubeAccess = async () => {
       try {
-        const response = await fetch('/api/youtube-check');
-        if (response.ok) {
-          setIsOnline(true);
-        } else {
+        // 尝试访问YouTube的favicon来检测连通性
+        const response = await fetch('https://www.youtube.com/favicon.ico', {
+          method: 'HEAD',
+          mode: 'no-cors',
+          cache: 'no-cache'
+        });
+        setIsOnline(true);
+      } catch (error) {
+        // 如果直接访问失败，尝试通过代理检测
+        try {
+          const proxyResponse = await fetch('/api/youtube-check');
+          if (proxyResponse.ok) {
+            setIsOnline(true);
+          } else {
+            setIsOnline(false);
+          }
+        } catch (proxyError) {
           setIsOnline(false);
         }
-      } catch (proxyError) {
-        setIsOnline(false);
       } finally {
         setIsLoading(false);
       }
     };
 
+    const loadChannelsAndVideos = async () => {
+      try {
+        // 获取频道列表
+        const channelsResponse = await fetch('/api/youtube-channels');
+        if (channelsResponse.ok) {
+          const channelsData = await channelsResponse.json();
+          setChannels(channelsData.channels || []);
+          
+          // 获取第一个频道的视频
+          if (channelsData.channels && channelsData.channels.length > 0) {
+            setLoadingVideos(true);
+            const videosResponse = await fetch(`/api/youtube-videos?channelId=${channelsData.channels[0].channelId}&maxResults=6`);
+            if (videosResponse.ok) {
+              const videosData = await videosResponse.json();
+              setVideos(videosData.videos || []);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('加载频道和视频失败:', error);
+      } finally {
+        setLoadingVideos(false);
+      }
+    };
+
     checkYouTubeAccess();
+    loadChannelsAndVideos();
   }, []);
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`, '_blank');
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const handleVideoPlay = (videoId: string) => {
+    console.log('播放视频:', videoId);
+  };
 
   if (isLoading) {
     return (
@@ -77,15 +159,102 @@ const YouTubePage = () => {
 
   return (
     <PageLayout>
-      <div className="absolute inset-0 -m-4">
-        <iframe
-          src="/youtube-proxy/"
-          className="w-full h-full border-none"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-          allowFullScreen
-          referrerPolicy="strict-origin-when-cross-origin"
-          title="YouTube"
-        />
+      <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-red-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="flex flex-col h-full">
+          {/* YouTube Header */}
+          <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center justify-center mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  </svg>
+                </div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">YouTube</h1>
+              </div>
+            </div>
+            
+            {/* Search Bar */}
+            <div className="max-w-2xl mx-auto">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="搜索YouTube视频..."
+                  className="w-full px-4 py-3 pr-12 text-gray-900 bg-gray-50 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                />
+                <button
+                  onClick={handleSearch}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-500 hover:text-red-600 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Videos Grid */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {loadingVideos ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600 dark:text-gray-400">正在加载视频...</p>
+                </div>
+              </div>
+            ) : videos.length > 0 ? (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    推荐视频
+                  </h2>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    {channels.length > 0 && `来自 ${channels[0].name}`}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {videos.map((video) => (
+                    <YouTubeVideoCard
+                      key={video.id.videoId}
+                      video={video}
+                      onPlay={handleVideoPlay}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">暂无视频</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    请在管理后台添加YouTube频道以显示视频内容
+                  </p>
+                  <a 
+                    href="https://www.youtube.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                    访问YouTube官网
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </PageLayout>
   );
