@@ -36,7 +36,7 @@ const YouTubePage = () => {
         </div>
       ) : isOnline ? (
         <iframe
-          src="https://www.youtube.com"
+          src="/youtube-proxy/"
           className="w-full h-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
