@@ -26,8 +26,6 @@ interface Channel {
   name: string;
   channelId: string;
   addedAt: string;
-  thumbnail?: string;
-  playlistId: string;
 }
 
 const YouTubePage = () => {
@@ -72,12 +70,12 @@ const YouTubePage = () => {
         if (channelsResponse.ok) {
           const channelsData = await channelsResponse.json();
           setChannels(channelsData.channels || []);
-          
+
           // 获取所有频道的视频
           if (channelsData.channels && channelsData.channels.length > 0) {
             setLoadingVideos(true);
             const allVideos: YouTubeVideo[] = [];
-            
+
             // 并行获取所有频道的视频
             const videoPromises = channelsData.channels.map(async (channel: Channel) => {
               try {
@@ -91,13 +89,13 @@ const YouTubePage = () => {
               }
               return [];
             });
-            
+
             const videoResults = await Promise.all(videoPromises);
             // 合并所有频道的视频
             videoResults.forEach(videos => {
               allVideos.push(...videos);
             });
-            
+
             setVideos(allVideos);
           }
         }
@@ -128,7 +126,13 @@ const YouTubePage = () => {
     console.log('播放视频:', videoId);
   };
 
-
+  // 将频道ID转换为播放列表ID（UC -> UU）
+  const convertChannelIdToPlaylistId = (channelId: string) => {
+    if (channelId.startsWith('UC')) {
+      return 'UU' + channelId.substring(2);
+    }
+    return channelId;
+  };
 
   if (isLoading) {
     return (
@@ -158,15 +162,15 @@ const YouTubePage = () => {
               抱歉，您的网络暂不支持访问YouTube。请检查您的网络连接或代理设置。
             </p>
             <div className="space-y-2">
-              <button 
-                onClick={() => window.location.reload()} 
+              <button
+                onClick={() => window.location.reload()}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors block w-full"
               >
                 重新检测
               </button>
-              <a 
-                href="https://www.youtube.com" 
-                target="_blank" 
+              <a
+                href="https://www.youtube.com"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors block w-full text-center"
               >
@@ -188,7 +192,7 @@ const YouTubePage = () => {
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                 </svg>
               </div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">YouTube</h1>
@@ -253,18 +257,18 @@ const YouTubePage = () => {
                           title: channel.name,
                           thumbnails: {
                             medium: {
-                              url: channel.thumbnail || '',
+                              url: `https://yt3.ggpht.com/ytc/default_user=s240-c-k-c0x00ffffff-no-rj`,
                             },
                           },
                           channelTitle: channel.name,
-                          publishedAt: '',
+                          publishedAt: new Date().toISOString(),
                         },
-                        embedPlayer: `https://www.youtube.com/embed/videoseries?list=${channel.playlistId}&autoplay=1`,
+                        embedPlayer: `https://www.youtube.com/embed/videoseries?list=${convertChannelIdToPlaylistId(channel.channelId)}`,
                       };
                       return (
                         <YouTubeVideoCard
                           key={channel.id}
-                          video={pseudoVideo as any}
+                          video={pseudoVideo}
                           showActions={false}
                           onPlay={handleVideoPlay}
                         />
@@ -273,7 +277,7 @@ const YouTubePage = () => {
                   </div>
                 </div>
               )}
-              
+
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   推荐视频
@@ -282,7 +286,7 @@ const YouTubePage = () => {
                   {channels.length > 0 && `来自 ${channels.length} 个频道`}
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {videos.map((video) => (
                   <YouTubeVideoCard
@@ -298,21 +302,21 @@ const YouTubePage = () => {
               <div className="text-center">
                 <div className="w-16 h-16 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-8 h-8 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">暂无视频</h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   请在管理后台添加YouTube频道以显示视频内容
                 </p>
-                <a 
-                  href="https://www.youtube.com" 
-                  target="_blank" 
+                <a
+                  href="https://www.youtube.com"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
                 >
                   <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                   </svg>
                   访问YouTube官网
                 </a>

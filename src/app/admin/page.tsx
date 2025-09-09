@@ -4880,7 +4880,7 @@ const YouTubeChannelConfig = ({
 }) => {
   const { alertModal, showAlert, hideAlert } = useAlertModal();
   const { isLoading, withLoading } = useLoadingState();
-  const [channels, setChannels] = useState<{ id: string; name: string; channelId: string; addedAt: string }[]>([]);
+  const [channels, setChannels] = useState<{id: string; name: string; channelId: string; addedAt: string}[]>([]);
   const [newChannelId, setNewChannelId] = useState('');
   const [newChannelName, setNewChannelName] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -4933,9 +4933,9 @@ const YouTubeChannelConfig = ({
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            name: newChannelName.trim(),
-            channelId: newChannelId.trim()
+          body: JSON.stringify({ 
+            name: newChannelName.trim(), 
+            channelId: newChannelId.trim() 
           }),
         });
 
@@ -4949,10 +4949,10 @@ const YouTubeChannelConfig = ({
         await fetchChannels();
       } catch (error) {
         showAlert({
-          type: 'error',
-          title: '错误',
-          message: error instanceof Error ? error.message : '添加频道失败'
-        });
+        type: 'error',
+        title: '错误',
+        message: error instanceof Error ? error.message : '添加频道失败'
+      });
       }
     });
   };
@@ -4971,17 +4971,13 @@ const YouTubeChannelConfig = ({
         }
 
         await fetchChannels();
-        showAlert({
-          type: 'success',
-          title: '成功',
-          message: '频道删除成功'
-        });
+        // 删除成功后直接刷新列表，不显示提示
       } catch (error) {
         showAlert({
-          type: 'error',
-          title: '错误',
-          message: error instanceof Error ? error.message : '删除频道失败'
-        });
+        type: 'error',
+        title: '错误',
+        message: error instanceof Error ? error.message : '删除频道失败'
+      });
       }
     });
   };
@@ -5021,14 +5017,14 @@ const YouTubeChannelConfig = ({
                 }
               }}
             />
-            <button
-              onClick={handleAddChannel}
-              disabled={isLoading('addChannel')}
-              className='px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors'
-            >
-              {isLoading('addChannel') ? '添加中...' : '添加'}
-            </button>
-          </div>
+             <button
+               onClick={handleAddChannel}
+               disabled={isLoading('addChannel')}
+               className='px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors'
+             >
+               {isLoading('addChannel') ? '添加中...' : '添加'}
+             </button>
+           </div>
         </div>
       </div>
 

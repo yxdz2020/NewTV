@@ -30,7 +30,6 @@ interface YouTubeVideoCardProps {
 const YouTubeVideoCard = ({ video, onPlay, showActions = true }: YouTubeVideoCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const thumbnailUrl = video.snippet.thumbnails.medium.url;
 
   const handlePlay = () => {
     setIsPlaying(true);
@@ -57,7 +56,7 @@ const YouTubeVideoCard = ({ video, onPlay, showActions = true }: YouTubeVideoCar
     return title.length > maxLength ? title.substring(0, maxLength) + '...' : title;
   };
 
-  const videoUrl = video.embedPlayer || `https://www.youtube.com/embed/${video.id.videoId}?autoplay=1`;
+  const videoUrl = video.embedPlayer || `https://www.youtube.com/embed/${video.id.videoId}?autoplay=1&rel=0`;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
@@ -73,9 +72,9 @@ const YouTubeVideoCard = ({ video, onPlay, showActions = true }: YouTubeVideoCar
           />
         ) : (
           <>
-            {!imageError && thumbnailUrl ? (
+            {!imageError ? (
               <Image
-                src={thumbnailUrl}
+                src={video.snippet.thumbnails.medium.url}
                 alt={video.snippet.title}
                 fill
                 className="object-cover"
@@ -89,24 +88,13 @@ const YouTubeVideoCard = ({ video, onPlay, showActions = true }: YouTubeVideoCar
               </div>
             )}
             
-            {/* Title Overlay */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
-                <h3 className="text-white font-semibold text-sm line-clamp-2">
-                  {video.snippet.title}
-                </h3>
-            </div>
-
             {/* 播放按钮覆盖层 */}
-            <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center group">
-              <button
-                onClick={handlePlay}
-                className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-red-600 hover:bg-red-700 text-white rounded-full p-3 transform hover:scale-110 transition-transform"
-                aria-label="播放视频"
-              >
+            <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center group cursor-pointer" onClick={handlePlay}>
+              <div className="opacity-70 group-hover:opacity-100 transition-opacity duration-300 bg-red-600 hover:bg-red-700 text-white rounded-full p-3 transform hover:scale-110 transition-transform">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z"/>
                 </svg>
-              </button>
+              </div>
             </div>
             
             {/* 视频时长（如果有的话） */}
