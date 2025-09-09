@@ -8,17 +8,18 @@ interface YouTubeVideo {
   id: { videoId: string };
   snippet: {
     title: string;
-    description: string;
+    description?: string;
     thumbnails: {
       medium: {
         url: string;
-        width: number;
-        height: number;
+        width?: number;
+        height?: number;
       };
     };
     channelTitle: string;
     publishedAt: string;
   };
+  embedPlayer?: string;
 }
 
 interface Channel {
@@ -26,6 +27,7 @@ interface Channel {
   name: string;
   channelId: string;
   addedAt: string;
+  latestVideo?: YouTubeVideo;
 }
 
 const YouTubePage = () => {
@@ -66,36 +68,34 @@ const YouTubePage = () => {
 
     const loadChannelsAndVideos = async () => {
       try {
-        // 获取频道列表
         const channelsResponse = await fetch('/api/youtube-channels');
         if (channelsResponse.ok) {
           const channelsData = await channelsResponse.json();
-          setChannels(channelsData.channels || []);
+          const loadedChannels = channelsData.channels || [];
 
-          // 获取所有频道的视频
-          if (channelsData.channels && channelsData.channels.length > 0) {
+          if (loadedChannels.length > 0) {
             const allVideos: YouTubeVideo[] = [];
-
-            // 并行获取所有频道的视频
-            const videoPromises = channelsData.channels.map(async (channel: Channel) => {
-              try {
-                const videosResponse = await fetch(`/api/youtube-videos?channelId=${channel.channelId}&maxResults=6`);
-                if (videosResponse.ok) {
-                  const videosData = await videosResponse.json();
-                  return videosData.videos || [];
+            const updatedChannels = await Promise.all(
+              loadedChannels.map(async (channel: Channel) => {
+                try {
+                  const videosResponse = await fetch(
+                    `/api/youtube-videos?channelId=${channel.channelId}&maxResults=6`
+                  );
+                  if (videosResponse.ok) {
+                    const videosData = await videosResponse.json();
+                    const channelVideos = videosData.videos || [];
+                    if (channelVideos.length > 0) {
+                      allVideos.push(...channelVideos);
+                      return { ...channel, latestVideo: channelVideos[0] };
+                    }
+                  }
+                } catch (error) {
+                  console.error(`获取频道 ${channel.name} 的视频失败:`, error);
                 }
-              } catch (error) {
-                console.error(`获取频道 ${channel.name} 的视频失败:`, error);
-              }
-              return [];
-            });
-
-            const videoResults = await Promise.all(videoPromises);
-            // 合并所有频道的视频
-            videoResults.forEach(videos => {
-              allVideos.push(...videos);
-            });
-
+                return channel;
+              })
+            );
+            setChannels(updatedChannels);
             setVideos(allVideos);
           }
         }
@@ -252,8 +252,7 @@ const YouTubePage = () => {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {channels.map((channel) => {
-                      const pseudoVideo = {
-                        id: { videoId: channel.channelId },
+                      const videoData = channel.latestVideo || {
                         snippet: {
                           title: channel.name,
                           thumbnails: {
@@ -262,10 +261,22 @@ const YouTubePage = () => {
                             },
                           },
                           channelTitle: channel.name,
-                          publishedAt: new Date().toISOString(),
+                          publishedAt: channel.addedAt,
                         },
-                        embedPlayer: `https://www.youtube.com/embed/videoseries?list=${convertChannelIdToPlaylistId(channel.channelId)}`,
                       };
+
+                      const pseudoVideo = {
+                        id: { videoId: channel.channelId }, // This will be used for play action
+                        snippet: {
+                          ...videoData.snippet,
+                          title: videoData.snippet.title, // latest video title
+                          channelTitle: channel.name, // channel name
+                        },
+                        embedPlayer: `https://www.youtube.com/embed/videoseries?list=${convertChannelIdToPlaylistId(
+                          channel.channelId
+                        )}&autoplay=1`,
+                      };
+
                       return (
                         <YouTubeVideoCard
                           key={channel.id}
