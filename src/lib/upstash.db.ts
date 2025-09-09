@@ -60,6 +60,23 @@ export class UpstashRedisStorage implements IStorage {
     this.client = getUpstashRedisClient();
   }
 
+  // ---------- 通用缓存方法 ----------
+  async connect(): Promise<void> {
+    // Upstash Redis 不需要显式连接
+  }
+
+  async get(key: string): Promise<string | null> {
+    return await withRetry(() => this.client.get(key));
+  }
+
+  async set(key: string, value: string, options?: { EX?: number }): Promise<void> {
+    if (options?.EX) {
+      await withRetry(() => this.client.setex(key, options.EX!, value));
+    } else {
+      await withRetry(() => this.client.set(key, value));
+    }
+  }
+
   // ---------- 播放记录 ----------
   private prKey(user: string, key: string) {
     return `u:${user}:pr:${key}`; // u:username:pr:source+id
