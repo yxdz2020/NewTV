@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getAuthInfoFromCookie } from '@/lib/auth';
 
 // 简单的内存存储，实际项目中应该使用数据库
 let channels: { id: string; name: string; channelId: string; addedAt: string }[] = [
@@ -32,8 +31,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
+    const authInfo = getAuthInfoFromCookie(request);
+    if (!authInfo || !authInfo.username) {
       return NextResponse.json(
         { error: '未授权访问' },
         { status: 401 }
@@ -70,8 +69,8 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
+    const authInfo = getAuthInfoFromCookie(request);
+    if (!authInfo || !authInfo.username) {
       return NextResponse.json(
         { error: '未授权访问' },
         { status: 401 }
