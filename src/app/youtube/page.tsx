@@ -185,10 +185,9 @@ const YouTubePage = () => {
 
   return (
     <PageLayout>
-      <div className="absolute inset-0 bg-white dark:bg-gray-900">
-        <div className="flex flex-col h-full">
-          {/* YouTube Header */}
-          <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 p-6">
+      <div className="h-full flex flex-col bg-white dark:bg-gray-900">
+        {/* YouTube Header */}
+        <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center justify-center mb-6">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
@@ -242,20 +241,32 @@ const YouTubePage = () => {
                         频道播放列表
                       </h2>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {channels[0].name}
+                        {channels.length} 个频道
                       </div>
                     </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-                      <iframe
-                        width="100%"
-                        height="450"
-                        src={`https://www.youtube.com/embed?listType=playlist&list=${convertChannelIdToPlaylistId(channels[0].channelId)}`}
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        className="rounded-lg"
-                        title={`${channels[0].name} 播放列表`}
-                      />
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {channels.map((channel) => (
+                        <div key={channel.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                              {channel.name}
+                            </h3>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {channel.channelId}
+                            </div>
+                          </div>
+                          <iframe
+                            width="100%"
+                            height="300"
+                            src={`https://www.youtube.com/embed?listType=playlist&list=${convertChannelIdToPlaylistId(channel.channelId)}`}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="rounded-lg"
+                            title={`${channel.name} 播放列表`}
+                          />
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -265,7 +276,7 @@ const YouTubePage = () => {
                     推荐视频
                   </h2>
                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                    {channels.length > 0 && `来自 ${channels[0].name}`}
+                    {channels.length > 0 && `来自 ${channels.length} 个频道`}
                   </div>
                 </div>
                 
