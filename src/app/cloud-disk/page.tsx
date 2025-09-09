@@ -117,7 +117,7 @@ export default function CloudDiskPage() {
 
   return (
     <ErrorBoundary>
-      <PageLayout activePath="/cloud-disk">
+      <PageLayout>
         <div className="min-h-screen">
           <div className="container mx-auto px-4 py-6">
             {/* 页面标题 */}
