@@ -43,7 +43,6 @@ const Logo = () => {
 
 interface SidebarProps {
   onToggle?: (collapsed: boolean) => void;
-  activePath?: string;
 }
 
 // 在浏览器环境下通过全局变量缓存折叠状态，避免组件重新挂载时出现初始值闪烁
@@ -53,7 +52,7 @@ declare global {
   }
 }
 
-const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
+const Sidebar = ({ onToggle }: SidebarProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -89,22 +88,16 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
     }
   }, [isCollapsed]);
 
-  const [active, setActive] = useState(activePath);
+  const [active, setActive] = useState('/');
 
   useEffect(() => {
-    // 优先使用传入的 activePath
-    if (activePath) {
-      setActive(activePath);
-    } else {
-      // 否则使用当前路径
-      const getCurrentFullPath = () => {
-        const queryString = searchParams.toString();
-        return queryString ? `${pathname}?${queryString}` : pathname;
-      };
-      const fullPath = getCurrentFullPath();
-      setActive(fullPath);
-    }
-  }, [activePath, pathname, searchParams]);
+    const getCurrentFullPath = () => {
+      const queryString = searchParams.toString();
+      return queryString ? `${pathname}?${queryString}` : pathname;
+    };
+    const fullPath = getCurrentFullPath();
+    setActive(fullPath);
+  }, [pathname, searchParams]);
 
   const handleToggle = useCallback(() => {
     const newState = !isCollapsed;
