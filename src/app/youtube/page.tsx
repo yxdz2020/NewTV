@@ -171,7 +171,7 @@ const YouTubePage = () => {
 
       const searchParams = new URLSearchParams({
         q: query,
-        maxResults: '20'
+        maxResults: '50'
       });
 
       if (loadMore && nextPageToken) {

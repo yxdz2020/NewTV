@@ -6,7 +6,7 @@ const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('q');
-  const maxResults = searchParams.get('maxResults') || '20';
+  const maxResults = searchParams.get('maxResults') || '50';
   const pageToken = searchParams.get('pageToken') || '';
 
   if (!query) {

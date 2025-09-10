@@ -4975,7 +4975,7 @@ const YouTubeChannelConfig = ({
             type: 'success',
             title: '解析成功',
             message,
-            timer: 4000
+            timer: 2000
           });
         } else {
           throw new Error('解析结果无效');
