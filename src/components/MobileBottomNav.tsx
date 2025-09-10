@@ -44,17 +44,27 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
   }, []);
 
   const isActive = (href: string) => {
-    const typeMatch = href.match(/type=([^&]+)/)?.[1];
-
-    // 解码URL以进行正确的比较
     const decodedActive = decodeURIComponent(currentActive);
     const decodedItemHref = decodeURIComponent(href);
 
-    return (
-      decodedActive === decodedItemHref ||
-      (decodedActive.startsWith('/douban') &&
-        decodedActive.includes(`type=${typeMatch}`))
-    );
+    // 完全匹配优先
+    if (decodedActive === decodedItemHref) {
+      return true;
+    }
+
+    // 处理 /douban?type=... 的情况
+    if (href.startsWith('/douban?type=')) {
+      const typeMatch = href.match(/type=([^&]+)/)?.[1];
+      if (typeMatch && decodedActive.startsWith('/douban') && decodedActive.includes(`type=${typeMatch}`)) {
+        return true;
+      }
+    }
+
+    if (href === '/youtube') {
+      return decodedActive.startsWith('/youtube');
+    }
+
+    return false;
   };
 
   const moreActive =
@@ -95,11 +105,10 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                       }`}
                   />
                   <span
-                    className={`${
-                      active
+                    className={`${active
                         ? 'text-green-600 dark:text-green-400'
                         : 'text-gray-600 dark:text-gray-300'
-                    } ${item.label === 'YouTube' ? 'text-[10px]' : 'text-xs'}`}
+                      } ${item.label === 'YouTube' ? 'text-[10px]' : 'text-xs'}`}
                   >
                     {item.label}
                   </span>
