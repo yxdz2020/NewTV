@@ -44,17 +44,32 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
   }, []);
 
   const isActive = (href: string) => {
-    const typeMatch = href.match(/type=([^&]+)/)?.[1];
-
     // 解码URL以进行正确的比较
     const decodedActive = decodeURIComponent(currentActive);
     const decodedItemHref = decodeURIComponent(href);
 
-    return (
-      decodedActive === decodedItemHref ||
-      (decodedActive.startsWith('/douban') &&
-        decodedActive.includes(`type=${typeMatch}`))
-    );
+    // 精确匹配
+    if (decodedActive === decodedItemHref) {
+      return true;
+    }
+
+    // 对于douban页面，检查type参数匹配
+    if (href.includes('/douban') && decodedActive.startsWith('/douban')) {
+      const typeMatch = href.match(/type=([^&]+)/)?.[1];
+      if (typeMatch && decodedActive.includes(`type=${typeMatch}`)) {
+        return true;
+      }
+    }
+
+    // 对于其他页面，检查路径前缀匹配
+    if (href === '/' && decodedActive === '/') {
+      return true;
+    }
+    if (href !== '/' && href !== '#more' && !href.includes('/douban')) {
+      return decodedActive.startsWith(href);
+    }
+
+    return false;
   };
 
   const moreActive =
