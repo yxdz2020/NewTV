@@ -1,4 +1,4 @@
-'use client';
+''''use client';
 
 import { useEffect, useState } from 'react';
 import PageLayout from '@/components/PageLayout';
@@ -42,175 +42,34 @@ const YouTubePage = () => {
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
-  // 优化：使用对象按频道ID存储视频，避免渲染时反复过滤，提高性能
-  const [videosByChannel, setVideosByChannel] = useState<{ [key: string]: YouTubeVideo[] }>({});
-
-  // 移除了未使用的 `videos` 和 `expandedChannels` 状态
-
-  // --- 数据加载 Effect ---
-  useEffect(() => {
-    const checkYouTubeAccess = async () => {
-      try {
-        // 设置8秒超时控制
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8秒超时
-
-        await fetch('https://www.youtube.com/favicon.ico', {
-          method: 'HEAD',
-          mode: 'no-cors',
-          cache: 'no-cache',
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-        setIsOnline(true);
-      } catch (error) {
-        try {
-          const proxyResponse = await fetch('/api/youtube-check');
-          setIsOnline(proxyResponse.ok);
-        } catch (proxyError) {
-          setIsOnline(false);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    const loadChannelsAndVideos = async () => {
-      try {
-        const channelsResponse = await fetch('/api/youtube-channels');
-        if (!channelsResponse.ok) return;
-
-        const channelsData = await channelsResponse.json();
-        const loadedChannels = channelsData.channels || [];
-        if (loadedChannels.length === 0) return;
-
-        const newVideosByChannel: { [key: string]: YouTubeVideo[] } = {};
-
-        const updatedChannels = await Promise.all(
-          loadedChannels.map(async (channel: Channel) => {
-            try {
-              const videosResponse = await fetch(
-                `/api/youtube-videos?channelId=${channel.channelId}&maxResults=6`
-              );
-              if (videosResponse.ok) {
-                const videosData = await videosResponse.json();
-                const channelVideos = videosData.videos || [];
-                // 优化：将获取到的视频直接存入以channelId为键的对象中
-                newVideosByChannel[channel.channelId] = channelVideos;
-                if (channelVideos.length > 0) {
-                  return { ...channel, latestVideo: channelVideos[0] };
-                }
-              } else {
-                newVideosByChannel[channel.channelId] = [];
-              }
-            } catch (error) {
-              console.error(`获取频道 ${channel.name} 的视频失败:`, error);
-              newVideosByChannel[channel.channelId] = [];
-            }
-            return channel;
-          })
-        );
-
-        setChannels(updatedChannels);
-        setVideosByChannel(newVideosByChannel); // 更新视频数据结构
-      } catch (error) {
-        console.error('加载频道和视频失败:', error);
-      } finally {
-        setLoadingVideos(false);
-        setInitialLoadComplete(true);
-      }
-    };
-
-    checkYouTubeAccess();
-    loadChannelsAndVideos();
-  }, []);
-
-  // --- 事件处理函数 ---
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`, '_blank');
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
-
-  const handleVideoPlay = (videoId: string) => {
-    console.log('播放视频:', videoId);
-  };
-
   const scrollToTop = () => {
-    const contentArea = document.querySelector('.overflow-y-auto');
-    if (contentArea) {
-      contentArea.scrollTo({ top: 0, behavior: 'smooth' });
+    try {
+      document.body.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+    } catch (error) {
+      console.error("Failed to scroll to top:", error);
+      // Fallback for older browsers
+      document.body.scrollTop = 0;
     }
   };
 
-  // 将频道ID转换为播放列表ID（UC -> UU）
-  const convertChannelIdToPlaylistId = (channelId: string) => {
-    if (channelId.startsWith('UC')) {
-      return 'UU' + channelId.substring(2);
-    }
-    return channelId;
-  };
-
-  const handleChannelSelect = (channelId: string | null) => {
-    setSelectedChannelId(channelId);
-
-    // 延迟执行滚动，确保DOM更新完毕
-    setTimeout(() => {
-      const elementId = channelId ? `channel-${channelId}` : 'recommended-videos';
-      const element = document.getElementById(elementId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  useEffect(() => {
+    const checkScrollPosition = () => {
+      if (document.body.scrollTop > 300) {
+        setShowScrollToTop(true);
+      } else {
+        setShowScrollToTop(false);
       }
-    }, 100);
-  }
+    };
 
-  // --- 渲染逻辑 ---
+    document.body.addEventListener('scroll', checkScrollPosition);
 
-  // 加载状态：检测YouTube连通性
-  if (isLoading) {
-    return (
-      <PageLayout>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">正在检测YouTube连通性...</p>
-          </div>
-        </div>
-      </PageLayout>
-    );
-  }
-
-  // 无法访问YouTube
-  if (isOnline === false) {
-    return (
-      <PageLayout>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center max-w-md mx-auto p-6">
-            <div className="text-red-500 mb-4">
-              <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">无法访问YouTube</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              抱歉，您的网络暂不支持访问YouTube。请检查您的网络连接或代理设置。
-            </p>
-            <div className="space-y-2">
-              <button onClick={() => window.location.reload()} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors block w-full">重新检测</button>
-              <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors block w-full text-center">在新标签页打开YouTube</a>
-            </div>
-          </div>
-        </div>
-      </PageLayout>
-    );
-  }
+    return () => {
+      document.body.removeEventListener('scroll', checkScrollPosition);
+    };
+  }, []);
 
   return (
     <PageLayout>
@@ -241,14 +100,7 @@ const YouTubePage = () => {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-6" onScroll={(e) => {
-          const target = e.target as HTMLDivElement;
-          if (target.scrollTop > 300) {
-            setShowScrollToTop(true);
-          } else {
-            setShowScrollToTop(false);
-          }
-        }}>
+        <div className="flex-1 overflow-y-auto p-6">
           {loadingVideos && !initialLoadComplete ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
@@ -377,19 +229,31 @@ const YouTubePage = () => {
             </div>
           )}
         </div>
-
-        {showScrollToTop && (
-          <button
-            onClick={scrollToTop}
-            className="fixed bottom-8 right-8 bg-gray-800 text-white rounded-full p-3 shadow-lg hover:bg-gray-700 transition-opacity duration-300 z-50"
-            aria-label="返回顶部"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-            </svg>
-          </button>
-        )}
       </div>
+
+      {/* Back to Top Button */}
+      {showScrollToTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-8 bg-red-600 hover:bg-red-700 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-opacity duration-300"
+          aria-label="返回顶部"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 15l7-7 7 7"
+            />
+          </svg>
+        </button>
+      )}
     </PageLayout>
   );
 };
