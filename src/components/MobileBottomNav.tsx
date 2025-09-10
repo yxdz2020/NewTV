@@ -44,17 +44,42 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
   }, []);
 
   const isActive = (href: string) => {
-    const typeMatch = href.match(/type=([^&]+)/)?.[1];
-
     // 解码URL以进行正确的比较
     const decodedActive = decodeURIComponent(currentActive);
     const decodedItemHref = decodeURIComponent(href);
 
-    return (
-      decodedActive === decodedItemHref ||
-      (decodedActive.startsWith('/douban') &&
-        decodedActive.includes(`type=${typeMatch}`))
-    );
+    // 首页完全匹配
+    if (href === '/' && decodedActive === '/') {
+      return true;
+    }
+
+    // 直播页面匹配
+    if (href === '/live' && decodedActive.startsWith('/live')) {
+      return true;
+    }
+
+    // YouTube页面匹配
+    if (href === '/youtube' && decodedActive.startsWith('/youtube')) {
+      return true;
+    }
+
+    // 处理豆瓣类型页面的匹配
+    if (href.startsWith('/douban?type=')) {
+      const typeMatch = href.match(/type=([^&]+)/)?.[1];
+      if (typeMatch && decodedActive.startsWith('/douban')) {
+        // 使用更简单可靠的方法：直接解析查询字符串
+        const queryString = decodedActive.split('?')[1];
+        if (queryString) {
+          const params = new URLSearchParams(queryString);
+          const activeType = params.get('type');
+          return activeType === typeMatch;
+        }
+        // 如果没有查询字符串，回退到字符串包含检查
+        return decodedActive.includes(`type=${typeMatch}`);
+      }
+    }
+
+    return false;
   };
 
   const moreActive =
@@ -95,11 +120,10 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                       }`}
                   />
                   <span
-                    className={`${
-                      active
+                    className={`${active
                         ? 'text-green-600 dark:text-green-400'
                         : 'text-gray-600 dark:text-gray-300'
-                    } ${item.label === 'YouTube' ? 'text-[10px]' : 'text-xs'}`}
+                      } ${item.label === 'YouTube' ? 'text-[10px]' : 'text-xs'}`}
                   >
                     {item.label}
                   </span>
