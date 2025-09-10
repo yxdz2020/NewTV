@@ -1,4 +1,79 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getCacheManager } from '@/lib/cache-manager';
+
+// YouTube Data API v3 的基础URL
+const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY || 'demo_key';
+const cacheManager = getCacheManager();
+
+// 获取频道详细信息的函数
+async function getChannelInfo(channelId: string) {
+  if (!YOUTUBE_API_KEY || YOUTUBE_API_KEY === 'demo_key') {
+    console.warn('YouTube API Key未配置，无法获取频道详细信息');
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      `${YOUTUBE_API_BASE}/channels?` +
+      `key=${YOUTUBE_API_KEY}&` +
+      `id=${channelId}&` +
+      `part=snippet,statistics`
+    );
+
+    if (!response.ok) {
+      console.error(`YouTube API请求失败: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    if (data.items && data.items.length > 0) {
+      const channel = data.items[0];
+      return {
+        title: channel.snippet.title,
+        description: channel.snippet.description,
+        thumbnail: channel.snippet.thumbnails?.medium?.url || channel.snippet.thumbnails?.default?.url,
+        subscriberCount: channel.statistics?.subscriberCount,
+        videoCount: channel.statistics?.videoCount
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('获取频道信息失败:', error);
+    return null;
+  }
+}
+
+// 获取频道最新视频的函数
+async function getChannelLatestVideos(channelId: string, maxResults = 3) {
+  if (!YOUTUBE_API_KEY || YOUTUBE_API_KEY === 'demo_key') {
+    console.warn('YouTube API Key未配置，无法获取频道视频');
+    return [];
+  }
+
+  try {
+    const response = await fetch(
+      `${YOUTUBE_API_BASE}/search?` +
+      `key=${YOUTUBE_API_KEY}&` +
+      `channelId=${channelId}&` +
+      `part=snippet&` +
+      `order=date&` +
+      `maxResults=${maxResults}&` +
+      `type=video`
+    );
+
+    if (!response.ok) {
+      console.error(`YouTube API请求失败: ${response.status}`);
+      return [];
+    }
+
+    const data = await response.json();
+    return data.items || [];
+  } catch (error) {
+    console.error('获取频道视频失败:', error);
+    return [];
+  }
+}
 
 // 从YouTube页面HTML中解析频道ID的函数
 async function parseChannelIdFromHtml(url: string): Promise<string | null> {
@@ -131,13 +206,21 @@ export async function POST(request: NextRequest) {
     // 生成播放列表ID
     const playlistId = convertChannelIdToPlaylistId(channelId);
 
+    // 获取频道详细信息和最新视频
+    const [channelInfo, latestVideos] = await Promise.all([
+      getChannelInfo(channelId),
+      getChannelLatestVideos(channelId, 3)
+    ]);
+
     return NextResponse.json({
       success: true,
       data: {
         channelId,
         playlistId,
         inputType,
-        originalInput: trimmedInput
+        originalInput: trimmedInput,
+        channelInfo,
+        latestVideos
       }
     });
   } catch (error) {

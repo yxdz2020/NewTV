@@ -22,7 +22,7 @@ export class CacheManager {
 
   private initializeStorages() {
     const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE;
-    
+
     if (!storageType) {
       console.warn('NEXT_PUBLIC_STORAGE_TYPE 未配置，缓存功能将被禁用');
       return;
@@ -40,7 +40,7 @@ export class CacheManager {
             console.warn('REDIS_URL 未配置，无法使用 Redis 存储');
           }
           break;
-          
+
         case 'kvrocks':
           if (process.env.KVROCKS_URL) {
             const storage = new KvrocksStorage();
@@ -51,7 +51,7 @@ export class CacheManager {
             console.warn('KVROCKS_URL 未配置，无法使用 KVRocks 存储');
           }
           break;
-          
+
         case 'upstash':
           if (process.env.UPSTASH_URL && process.env.UPSTASH_TOKEN) {
             const storage = new UpstashRedisStorage();
@@ -62,7 +62,7 @@ export class CacheManager {
             console.warn('UPSTASH_URL 或 UPSTASH_TOKEN 未配置，无法使用 Upstash 存储');
           }
           break;
-          
+
         default:
           console.warn(`不支持的存储类型: ${storageType}，支持的类型: redis, kvrocks, upstash`);
       }
@@ -95,7 +95,7 @@ export class CacheManager {
       if (value === null) {
         return null;
       }
-      
+
       // 尝试解析JSON，如果失败则返回原始字符串
       try {
         return JSON.parse(value);
@@ -116,15 +116,15 @@ export class CacheManager {
     try {
       const serializedValue = typeof value === 'string' ? value : JSON.stringify(value);
       const options = expirationSeconds ? { EX: expirationSeconds } : undefined;
-      
+
       await this.primaryStorage.set(key, serializedValue, options);
-      
+
       // 如果有多个存储，尝试同步到其他存储（可选）
       if (this.storages.length > 1) {
         const otherStorages = this.storages.filter(s => s !== this.primaryStorage);
         await Promise.allSettled(
-          otherStorages.map(storage => 
-            storage.set(key, serializedValue, options).catch(err => 
+          otherStorages.map(storage =>
+            storage.set(key, serializedValue, options).catch(err =>
               console.warn('同步到备用缓存失败:', err)
             )
           )

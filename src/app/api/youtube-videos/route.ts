@@ -34,9 +34,9 @@ export async function GET(request: NextRequest) {
       const cachedVideos = await cacheManager.get(cacheKey);
 
       if (cachedVideos) {
-         console.log('从缓存中获取YouTube视频数据');
-         return NextResponse.json({ videos: cachedVideos });
-       }
+        console.log('从缓存中获取YouTube视频数据');
+        return NextResponse.json({ videos: cachedVideos });
+      }
     } catch (e) {
       console.error('获取缓存失败，将直接从API获取', e);
     }
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ videos });
   } catch (error) {
     console.error('获取YouTube视频失败:', error);
-    
+
     // 如果API调用失败，返回空数组
     return NextResponse.json({ videos: [] });
   }

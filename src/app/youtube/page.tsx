@@ -60,7 +60,7 @@ const YouTubePage = () => {
           cache: 'no-cache',
           signal: controller.signal,
         });
-        
+
         clearTimeout(timeoutId);
         setIsOnline(true);
       } catch (error) {
