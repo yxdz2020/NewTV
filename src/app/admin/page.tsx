@@ -4884,6 +4884,18 @@ const YouTubeChannelConfig = ({
   const [newChannelId, setNewChannelId] = useState('');
   const [newChannelName, setNewChannelName] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [parseResult, setParseResult] = useState<{
+    channelId: string;
+    playlistId: string;
+    channelInfo?: {
+      title: string;
+      description: string;
+      thumbnail: string;
+      subscriberCount: string;
+      videoCount: string;
+    };
+    latestVideos?: any[];
+  } | null>(null);
 
   // 获取YouTube频道列表
   const fetchChannels = useCallback(async () => {
@@ -4905,6 +4917,79 @@ const YouTubeChannelConfig = ({
       setIsRefreshing(false);
     }
   }, []);
+
+  // 解析频道信息
+  const handleParseChannel = async () => {
+    if (!newChannelId.trim()) {
+      showAlert({
+        type: 'warning',
+        title: '提示',
+        message: '请输入YouTube频道链接、@用户名或频道ID',
+        timer: 2000
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+      return;
+    }
+
+    await withLoading('parseChannel', async () => {
+      try {
+        const response = await fetch('/api/youtube-channel-parser', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            input: newChannelId.trim()
+          }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || '解析频道失败');
+        }
+
+        const result = await response.json();
+        if (result.success && result.data) {
+          // 保存解析结果
+          setParseResult(result.data);
+          
+          // 自动填充解析到的频道ID
+          setNewChannelId(result.data.channelId);
+          
+          // 如果获取到频道信息，自动填充频道名称
+          if (result.data.channelInfo && result.data.channelInfo.title) {
+            setNewChannelName(result.data.channelInfo.title);
+          }
+
+          let message = `已解析出频道ID: ${result.data.channelId}\n播放列表ID: ${result.data.playlistId}`;
+          if (result.data.channelInfo) {
+            message += `\n频道名称: ${result.data.channelInfo.title}`;
+            if (result.data.latestVideos && result.data.latestVideos.length > 0) {
+              message += `\n获取到 ${result.data.latestVideos.length} 个最新视频`;
+            }
+          }
+
+          showAlert({
+            type: 'success',
+            title: '解析成功',
+            message,
+            timer: 4000
+          });
+        } else {
+          throw new Error('解析结果无效');
+        }
+      } catch (error) {
+        showAlert({
+          type: 'error',
+          title: '解析失败',
+          message: error instanceof Error ? error.message : '解析频道失败',
+          timer: 2000
+        });
+      }
+    });
+  };
 
   // 添加频道
   const handleAddChannel = async () => {
@@ -4956,6 +5041,7 @@ const YouTubeChannelConfig = ({
 
         setNewChannelId('');
         setNewChannelName('');
+        setParseResult(null); // 清除解析结果
         await fetchChannels();
         // 移除成功弹窗，直接刷新频道列表
       } catch (error) {
@@ -5015,29 +5101,124 @@ const YouTubeChannelConfig = ({
               className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400'
             />
           </div>
-          <div className='flex flex-col sm:flex-row gap-2'>
-            <input
-              type='text'
-              value={newChannelId}
-              onChange={(e) => setNewChannelId(e.target.value)}
-              placeholder='输入YouTube频道ID'
-              className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400'
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleAddChannel();
-                }
-              }}
-            />
-            <button
-              onClick={handleAddChannel}
-              disabled={isLoading('addChannel')}
-              className='w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors whitespace-nowrap'
-            >
-              {isLoading('addChannel') ? '添加中...' : '添加'}
-            </button>
+          <div className='space-y-2'>
+            <div className='flex flex-col sm:flex-row gap-2'>
+              <input
+                type='text'
+                value={newChannelId}
+                onChange={(e) => {
+                  setNewChannelId(e.target.value);
+                  // 当输入内容改变时清除解析结果
+                  if (parseResult) {
+                    setParseResult(null);
+                  }
+                }}
+                placeholder='输入YouTube频道链接、@用户名或频道ID'
+                className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400'
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleParseChannel();
+                  }
+                }}
+              />
+              <button
+                onClick={handleParseChannel}
+                disabled={isLoading('parseChannel')}
+                className='w-full sm:w-auto px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-lg transition-colors whitespace-nowrap'
+              >
+                {isLoading('parseChannel') ? '解析中...' : '解析频道'}
+              </button>
+            </div>
+            <div className='text-xs text-gray-500 dark:text-gray-400'>
+              使用UC频道ID可以直接添加，如果使用频道主页链接或者频道主ID需要先解析为UC ID
+            </div>
+            <div className='flex flex-col sm:flex-row gap-2'>
+              <button
+                onClick={handleAddChannel}
+                disabled={isLoading('addChannel') || !newChannelId.trim() || !newChannelName.trim()}
+                className='w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors whitespace-nowrap'
+              >
+                {isLoading('addChannel') ? '添加中...' : '添加频道'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* 解析结果显示 */}
+      {parseResult && (
+        <div className='bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800'>
+          <h3 className='text-sm font-medium text-blue-900 dark:text-blue-100 mb-3'>
+            解析结果预览
+          </h3>
+          <div className='space-y-3'>
+            {/* 频道基本信息 */}
+            {parseResult.channelInfo && (
+              <div className='flex items-start gap-3'>
+                {parseResult.channelInfo.thumbnail && (
+                  <img
+                    src={parseResult.channelInfo.thumbnail}
+                    alt={parseResult.channelInfo.title}
+                    className='w-16 h-16 rounded-full object-cover'
+                  />
+                )}
+                <div className='flex-1 min-w-0'>
+                  <h4 className='font-medium text-gray-900 dark:text-gray-100 truncate'>
+                    {parseResult.channelInfo.title}
+                  </h4>
+                  <div className='text-sm text-gray-600 dark:text-gray-400 space-y-1'>
+                    <div>频道ID: {parseResult.channelId}</div>
+                    <div>播放列表ID: {parseResult.playlistId}</div>
+                    {parseResult.channelInfo.subscriberCount && (
+                      <div>订阅者: {parseInt(parseResult.channelInfo.subscriberCount).toLocaleString()}</div>
+                    )}
+                    {parseResult.channelInfo.videoCount && (
+                      <div>视频数量: {parseInt(parseResult.channelInfo.videoCount).toLocaleString()}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* 最新视频 */}
+            {parseResult.latestVideos && parseResult.latestVideos.length > 0 && (
+              <div>
+                <h5 className='text-sm font-medium text-gray-900 dark:text-gray-100 mb-2'>
+                  最新视频 ({parseResult.latestVideos.length})
+                </h5>
+                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'>
+                  {parseResult.latestVideos.map((video, index) => (
+                    <div key={index} className='bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700'>
+                      {video.snippet.thumbnails?.medium?.url && (
+                        <img
+                          src={video.snippet.thumbnails.medium.url}
+                          alt={video.snippet.title}
+                          className='w-full h-20 object-cover rounded mb-2'
+                        />
+                      )}
+                      <h6 className='text-xs font-medium text-gray-900 dark:text-gray-100 line-clamp-2 mb-1'>
+                        {video.snippet.title}
+                      </h6>
+                      <p className='text-xs text-gray-600 dark:text-gray-400'>
+                        {new Date(video.snippet.publishedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <div className='flex gap-2 pt-2'>
+              <button
+                onClick={() => setParseResult(null)}
+                className='px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded transition-colors'
+              >
+                清除预览
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 频道列表 */}
       <div className='space-y-2'>
