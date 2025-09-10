@@ -97,12 +97,26 @@ export async function POST(request: NextRequest) {
 
     const partialConfig = await request.json();
 
-    // Safely deep merge AIConfig
+    // Safely deep merge all config sections
     const newConfig: AdminConfig = {
       ...currentConfig,
+      ...partialConfig,
+      // Ensure proper deep merge for nested objects
+      UserConfig: {
+        ...(currentConfig.UserConfig || {}),
+        ...(partialConfig.UserConfig || {}),
+      },
+      CloudDiskConfig: {
+        ...(currentConfig.CloudDiskConfig || {}),
+        ...(partialConfig.CloudDiskConfig || {}),
+      },
       AIConfig: {
         ...(currentConfig.AIConfig || {}),
         ...(partialConfig.AIConfig || {}),
+      },
+      SiteConfig: {
+        ...(currentConfig.SiteConfig || {}),
+        ...(partialConfig.SiteConfig || {}),
       },
     };
 
