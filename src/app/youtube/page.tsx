@@ -41,6 +41,7 @@ const YouTubePage = () => {
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
 
   // 搜索相关状态
   const [isSearchMode, setIsSearchMode] = useState(false);
@@ -224,7 +225,10 @@ const YouTubePage = () => {
   };
 
   const handleVideoPlay = (videoId: string) => {
-    console.log('播放视频:', videoId);
+    // 切换当前播放视频，确保之前的视频被销毁
+    setCurrentPlayingId(videoId);
+    // 滚动到页面顶部，确保用户能看到播放窗口（可选）
+    scrollToTop();
   };
 
   const scrollToTop = () => {
@@ -405,6 +409,7 @@ const YouTubePage = () => {
                         video={video} 
                         onPlay={handleVideoPlay} 
                         showActions={false} 
+                        currentPlayingId={currentPlayingId}
                       />
                     ))}
                   </div>
@@ -490,7 +495,7 @@ const YouTubePage = () => {
                       },
                       embedPlayer: `https://www.youtube.com/embed/videoseries?list=${convertChannelIdToPlaylistId(channel.channelId)}&autoplay=1`,
                     };
-                    return <YouTubeVideoCard key={channel.id} video={pseudoVideo} showActions={false} onPlay={handleVideoPlay} />;
+                    return <YouTubeVideoCard key={channel.id} video={pseudoVideo} showActions={false} onPlay={handleVideoPlay} currentPlayingId={currentPlayingId} />
                   })}
                 </div>
               </div>
@@ -517,7 +522,7 @@ const YouTubePage = () => {
                           {channelVideos.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                               {channelVideos.map((video) => (
-                                <YouTubeVideoCard key={video.id.videoId} video={video} onPlay={handleVideoPlay} showActions={false} />
+                                <YouTubeVideoCard key={video.id.videoId} video={video} onPlay={handleVideoPlay} showActions={false} currentPlayingId={currentPlayingId} />
                               ))}
                             </div>
                           ) : (
@@ -547,7 +552,7 @@ const YouTubePage = () => {
                         {channelVideos.length > 0 ? (
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {channelVideos.map((video) => (
-                              <YouTubeVideoCard key={video.id.videoId} video={video} onPlay={handleVideoPlay} showActions={false} />
+                              <YouTubeVideoCard key={video.id.videoId} video={video} onPlay={handleVideoPlay} showActions={false} currentPlayingId={currentPlayingId} />
                             ))}
                           </div>
                         ) : (

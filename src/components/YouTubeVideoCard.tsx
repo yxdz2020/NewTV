@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 
 interface YouTubeVideo {
@@ -25,16 +25,27 @@ interface YouTubeVideoCardProps {
   video: YouTubeVideo;
   onPlay?: (videoId: string) => void;
   showActions?: boolean;
+  /** 当前正在播放的视频 ID，用于外部控制播放状态 */
+  currentPlayingId?: string | null;
 }
 
-const YouTubeVideoCard = ({ video, onPlay, showActions = true }: YouTubeVideoCardProps) => {
-  const [isPlaying, setIsPlaying] = useState(false);
+const YouTubeVideoCard = ({ video, onPlay, showActions = true, currentPlayingId }: YouTubeVideoCardProps) => {
+  // 统一使用外部传入的 currentPlayingId 来判断是否播放
+  const identifier = video.id.videoId ?? video.embedPlayer ?? '';
+  const isPlaying = currentPlayingId === identifier;
   const [imageError, setImageError] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  // 当停止播放时，清空 iframe 的 src 以释放内存
+  useEffect(() => {
+    if (!isPlaying && iframeRef.current) {
+      iframeRef.current.src = '';
+    }
+  }, [isPlaying]);
 
   const handlePlay = () => {
-    setIsPlaying(true);
-    if (onPlay && video.id.videoId) {
-      onPlay(video.id.videoId);
+    // 仅当外部未处于播放状态时才触发
+    if (currentPlayingId !== identifier) {
+      onPlay?.(identifier);
     }
   };
 
@@ -64,6 +75,7 @@ const YouTubeVideoCard = ({ video, onPlay, showActions = true }: YouTubeVideoCar
       <div className="relative aspect-video bg-gray-200 dark:bg-gray-700">
         {isPlaying ? (
           <iframe
+            ref={iframeRef}
             src={videoUrl}
             className="w-full h-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
