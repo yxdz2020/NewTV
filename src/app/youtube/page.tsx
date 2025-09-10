@@ -50,11 +50,18 @@ const YouTubePage = () => {
   useEffect(() => {
     const checkYouTubeAccess = async () => {
       try {
+        // 设置8秒超时控制
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8秒超时
+
         await fetch('https://www.youtube.com/favicon.ico', {
           method: 'HEAD',
           mode: 'no-cors',
           cache: 'no-cache',
+          signal: controller.signal,
         });
+        
+        clearTimeout(timeoutId);
         setIsOnline(true);
       } catch (error) {
         try {

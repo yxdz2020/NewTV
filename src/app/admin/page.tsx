@@ -4982,11 +4982,7 @@ const YouTubeChannelConfig = ({
         }
 
         await fetchChannels();
-        showAlert({
-          type: 'success',
-          title: '成功',
-          message: '频道删除成功'
-        });
+        // 移除成功弹窗，直接刷新频道列表
       } catch (error) {
         showAlert({
           type: 'error',
