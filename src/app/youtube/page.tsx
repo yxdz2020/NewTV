@@ -52,13 +52,29 @@ const YouTubePage = () => {
   // --- 滚动监听 Effect ---
   useEffect(() => {
     const handleScroll = () => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      setShowScrollToTop(scrollTop > 300); // 滚动超过300px时显示按钮
+      // 检查多个可能的滚动容器
+      const windowScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const bodyScrollTop = document.body.scrollTop;
+      const scrollTop = Math.max(windowScrollTop, bodyScrollTop);
+      
+      // 降低阈值便于测试，并添加调试信息
+      const shouldShow = scrollTop > 100;
+      console.log('Scroll position:', scrollTop, 'Show button:', shouldShow);
+      setShowScrollToTop(shouldShow);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    // 监听多个滚动事件
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    document.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // 初始检查
+    handleScroll();
+    
+    return () => {
+        window.removeEventListener('scroll', handleScroll);
+        document.removeEventListener('scroll', handleScroll);
+      };
+    }, []);
 
   // 回到顶部函数
   const scrollToTop = () => {
@@ -387,11 +403,13 @@ const YouTubePage = () => {
       </div>
       
       {/* 回到顶部按钮 */}
+      {console.log('Rendering scroll button, showScrollToTop:', showScrollToTop)}
       {showScrollToTop && (
         <button
           onClick={scrollToTop}
           className="fixed bottom-6 right-6 z-50 w-12 h-12 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-all duration-300 flex items-center justify-center group hover:scale-110"
           aria-label="回到顶部"
+          style={{ display: 'flex' }} // 强制显示
         >
           <svg 
             className="w-6 h-6 transform group-hover:-translate-y-0.5 transition-transform duration-200" 
