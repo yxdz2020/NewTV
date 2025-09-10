@@ -4942,7 +4942,7 @@ const YouTubeChannelConfig = ({
         if (result.success && result.data) {
           // 自动填充解析到的频道ID
           setNewChannelId(result.data.channelId);
-          
+
           showAlert({
             type: 'success',
             title: '解析成功',
@@ -4953,12 +4953,13 @@ const YouTubeChannelConfig = ({
           throw new Error('解析结果无效');
         }
       } catch (error) {
-        showAlert({
-          type: 'error',
-          title: '解析失败',
-          message: error instanceof Error ? error.message : '解析频道失败'
-        });
-      }
+         showAlert({
+           type: 'error',
+           title: '解析失败',
+           message: error instanceof Error ? error.message : '解析频道失败',
+           timer: 2000
+         });
+       }
     });
   };
 
@@ -5094,7 +5095,7 @@ const YouTubeChannelConfig = ({
               </button>
             </div>
             <div className='text-xs text-gray-500 dark:text-gray-400'>
-              支持格式：https://www.youtube.com/@IShowSpeed、@IShowSpeed、IShowSpeed 或 UC频道ID
+              使用UC频道ID可以直接添加，如果使用频道主页链接或者频道主ID需要先解析为UC ID
             </div>
             <div className='flex flex-col sm:flex-row gap-2'>
               <button
