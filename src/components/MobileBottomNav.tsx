@@ -67,10 +67,15 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
     if (href.startsWith('/douban?type=')) {
       const typeMatch = href.match(/type=([^&]+)/)?.[1];
       if (typeMatch && decodedActive.startsWith('/douban')) {
-        // 使用URLSearchParams来正确解析查询参数
-        const activeUrl = new URL(decodedActive, 'http://localhost');
-        const activeType = activeUrl.searchParams.get('type');
-        return activeType === typeMatch;
+        // 使用更简单可靠的方法：直接解析查询字符串
+        const queryString = decodedActive.split('?')[1];
+        if (queryString) {
+          const params = new URLSearchParams(queryString);
+          const activeType = params.get('type');
+          return activeType === typeMatch;
+        }
+        // 如果没有查询字符串，回退到字符串包含检查
+        return decodedActive.includes(`type=${typeMatch}`);
       }
     }
 

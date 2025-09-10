@@ -8,9 +8,10 @@ import AIChatEntry from './AIChatEntry';
 
 interface PageLayoutProps {
   children: React.ReactNode;
+  activePath?: string;
 }
 
-const PageLayout = ({ children }: PageLayoutProps) => {
+const PageLayout = ({ children, activePath }: PageLayoutProps) => {
   return (
     <div className='w-full min-h-screen'>
       {/* 移动端头部 */}
@@ -49,7 +50,7 @@ const PageLayout = ({ children }: PageLayoutProps) => {
 
       {/* 移动端底部导航 */}
       <div className='md:hidden'>
-        <MobileBottomNav />
+        <MobileBottomNav activePath={activePath} />
       </div>
     </div>
   );
