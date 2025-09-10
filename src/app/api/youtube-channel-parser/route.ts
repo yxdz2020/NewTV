@@ -44,7 +44,41 @@ async function getChannelInfo(channelId: string) {
   }
 }
 
-// 获取频道最新视频的函数
+// 将频道ID转换为上传播放列表ID（UC -> UU）
+function convertChannelIdToUploadsPlaylistId(channelId: string): string {
+  if (channelId.startsWith('UC')) {
+    return 'UU' + channelId.substring(2);
+  }
+  return channelId;
+}
+
+// 获取频道的上传播放列表ID（更可靠的方法）
+async function getChannelUploadsPlaylistId(channelId: string): Promise<string | null> {
+  try {
+    const response = await fetch(
+      `${YOUTUBE_API_BASE}/channels?` +
+      `key=${YOUTUBE_API_KEY}&` +
+      `id=${channelId}&` +
+      `part=contentDetails`
+    );
+
+    if (!response.ok) {
+      console.error(`获取频道信息失败: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    if (data.items && data.items.length > 0) {
+      return data.items[0].contentDetails?.relatedPlaylists?.uploads || null;
+    }
+    return null;
+  } catch (error) {
+    console.error('获取频道上传播放列表ID失败:', error);
+    return null;
+  }
+}
+
+// 获取频道最新视频的函数（使用省配额的playlistItems.list方法）
 async function getChannelLatestVideos(channelId: string, maxResults = 3) {
   if (!YOUTUBE_API_KEY || YOUTUBE_API_KEY === 'demo_key') {
     console.warn('YouTube API Key未配置，无法获取频道视频');
@@ -52,23 +86,63 @@ async function getChannelLatestVideos(channelId: string, maxResults = 3) {
   }
 
   try {
+    // 首先获取频道的上传播放列表ID
+    let uploadsPlaylistId = await getChannelUploadsPlaylistId(channelId);
+    
+    // 如果API调用失败，使用转换方法作为备选
+    if (!uploadsPlaylistId) {
+      console.log('使用转换方法获取播放列表ID');
+      uploadsPlaylistId = convertChannelIdToUploadsPlaylistId(channelId);
+    }
+
+    // 使用playlistItems.list获取视频（每次请求消耗1点配额）
     const response = await fetch(
-      `${YOUTUBE_API_BASE}/search?` +
+      `${YOUTUBE_API_BASE}/playlistItems?` +
       `key=${YOUTUBE_API_KEY}&` +
-      `channelId=${channelId}&` +
+      `playlistId=${uploadsPlaylistId}&` +
       `part=snippet&` +
-      `order=date&` +
       `maxResults=${maxResults}&` +
-      `type=video`
+      `order=date`
     );
 
     if (!response.ok) {
       console.error(`YouTube API请求失败: ${response.status}`);
-      return [];
+      
+      // 如果playlistItems.list失败，回退到search.list方法
+      console.log('playlistItems.list失败，回退到search.list方法');
+      const fallbackResponse = await fetch(
+        `${YOUTUBE_API_BASE}/search?` +
+        `key=${YOUTUBE_API_KEY}&` +
+        `channelId=${channelId}&` +
+        `part=snippet&` +
+        `order=date&` +
+        `maxResults=${maxResults}&` +
+        `type=video`
+      );
+      
+      if (!fallbackResponse.ok) {
+        return [];
+      }
+      
+      const fallbackData = await fallbackResponse.json();
+      return fallbackData.items || [];
     }
 
     const data = await response.json();
-    return data.items || [];
+    
+    // 转换playlistItems格式为search格式，保持兼容性
+    const videos = (data.items || []).map((item: any) => ({
+      id: { videoId: item.snippet?.resourceId?.videoId },
+      snippet: {
+        title: item.snippet?.title,
+        description: item.snippet?.description,
+        thumbnails: item.snippet?.thumbnails,
+        channelTitle: item.snippet?.channelTitle,
+        publishedAt: item.snippet?.publishedAt
+      }
+    })).filter((video: any) => video.id?.videoId); // 过滤掉无效的视频
+    
+    return videos;
   } catch (error) {
     console.error('获取频道视频失败:', error);
     return [];
@@ -136,7 +210,7 @@ async function parseChannelIdFromHtml(url: string): Promise<string | null> {
   }
 }
 
-// 将频道ID转换为播放列表ID（UC -> UU）
+// 将频道ID转换为播放列表ID（UC -> UU）- 保持向后兼容
 function convertChannelIdToPlaylistId(channelId: string): string {
   if (channelId.startsWith('UC')) {
     return 'UU' + channelId.substring(2);
@@ -182,13 +256,13 @@ export async function POST(request: NextRequest) {
       const url = `https://www.youtube.com/@${trimmedInput}`;
       inputType = 'username';
       channelId = await parseChannelIdFromHtml(url);
-
+      
       // 如果@username格式失败，尝试传统的/user/格式
       if (!channelId) {
         const userUrl = `https://www.youtube.com/user/${trimmedInput}`;
         channelId = await parseChannelIdFromHtml(userUrl);
       }
-
+      
       // 如果还是失败，尝试/c/格式
       if (!channelId) {
         const customUrl = `https://www.youtube.com/c/${trimmedInput}`;
