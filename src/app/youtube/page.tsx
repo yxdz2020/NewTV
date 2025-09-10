@@ -40,47 +40,12 @@ const YouTubePage = () => {
   const [loadingVideos, setLoadingVideos] = useState(true);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
 
   // 优化：使用对象按频道ID存储视频，避免渲染时反复过滤，提高性能
   const [videosByChannel, setVideosByChannel] = useState<{ [key: string]: YouTubeVideo[] }>({});
-  
-  // 回到顶部按钮状态
-  const [showScrollToTop, setShowScrollToTop] = useState(false);
 
   // 移除了未使用的 `videos` 和 `expandedChannels` 状态
-
-  // --- 滚动监听 Effect ---
-  useEffect(() => {
-    const handleScroll = () => {
-      // 检查多个可能的滚动容器
-      const windowScrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const bodyScrollTop = document.body.scrollTop;
-      const scrollTop = Math.max(windowScrollTop, bodyScrollTop);
-      
-      // 滚动超过300px时显示按钮
-       setShowScrollToTop(scrollTop > 300);
-    };
-
-    // 监听多个滚动事件
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    document.addEventListener('scroll', handleScroll, { passive: true });
-    
-    // 初始检查
-    handleScroll();
-    
-    return () => {
-        window.removeEventListener('scroll', handleScroll);
-        document.removeEventListener('scroll', handleScroll);
-      };
-    }, []);
-
-  // 回到顶部函数
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-  };
 
   // --- 数据加载 Effect ---
   useEffect(() => {
@@ -178,6 +143,13 @@ const YouTubePage = () => {
     console.log('播放视频:', videoId);
   };
 
+  const scrollToTop = () => {
+    const contentArea = document.querySelector('.overflow-y-auto');
+    if (contentArea) {
+      contentArea.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   // 将频道ID转换为播放列表ID（UC -> UU）
   const convertChannelIdToPlaylistId = (channelId: string) => {
     if (channelId.startsWith('UC')) {
@@ -269,7 +241,14 @@ const YouTubePage = () => {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6" onScroll={(e) => {
+          const target = e.target as HTMLDivElement;
+          if (target.scrollTop > 300) {
+            setShowScrollToTop(true);
+          } else {
+            setShowScrollToTop(false);
+          }
+        }}>
           {loadingVideos && !initialLoadComplete ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
@@ -398,30 +377,19 @@ const YouTubePage = () => {
             </div>
           )}
         </div>
-      </div>
-      
-      {/* 回到顶部按钮 */}
-      {showScrollToTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-50 w-12 h-12 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-all duration-300 flex items-center justify-center group hover:scale-110"
-          aria-label="回到顶部"
-        >
-          <svg 
-            className="w-6 h-6 transform group-hover:-translate-y-0.5 transition-transform duration-200" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
+
+        {showScrollToTop && (
+          <button
+            onClick={scrollToTop}
+            className="fixed bottom-8 right-8 bg-gray-800 text-white rounded-full p-3 shadow-lg hover:bg-gray-700 transition-opacity duration-300 z-50"
+            aria-label="返回顶部"
           >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M5 10l7-7m0 0l7 7m-7-7v18" 
-            />
-          </svg>
-        </button>
-      )}
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+            </svg>
+          </button>
+        )}
+      </div>
     </PageLayout>
   );
 };

@@ -182,13 +182,13 @@ export async function POST(request: NextRequest) {
       const url = `https://www.youtube.com/@${trimmedInput}`;
       inputType = 'username';
       channelId = await parseChannelIdFromHtml(url);
-      
+
       // 如果@username格式失败，尝试传统的/user/格式
       if (!channelId) {
         const userUrl = `https://www.youtube.com/user/${trimmedInput}`;
         channelId = await parseChannelIdFromHtml(userUrl);
       }
-      
+
       // 如果还是失败，尝试/c/格式
       if (!channelId) {
         const customUrl = `https://www.youtube.com/c/${trimmedInput}`;
