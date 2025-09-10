@@ -43,8 +43,30 @@ const YouTubePage = () => {
 
   // 优化：使用对象按频道ID存储视频，避免渲染时反复过滤，提高性能
   const [videosByChannel, setVideosByChannel] = useState<{ [key: string]: YouTubeVideo[] }>({});
+  
+  // 回到顶部按钮状态
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
 
   // 移除了未使用的 `videos` 和 `expandedChannels` 状态
+
+  // --- 滚动监听 Effect ---
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      setShowScrollToTop(scrollTop > 300); // 滚动超过300px时显示按钮
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 回到顶部函数
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   // --- 数据加载 Effect ---
   useEffect(() => {
@@ -363,6 +385,29 @@ const YouTubePage = () => {
           )}
         </div>
       </div>
+      
+      {/* 回到顶部按钮 */}
+      {showScrollToTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-50 w-12 h-12 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-all duration-300 flex items-center justify-center group hover:scale-110"
+          aria-label="回到顶部"
+        >
+          <svg 
+            className="w-6 h-6 transform group-hover:-translate-y-0.5 transition-transform duration-200" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M5 10l7-7m0 0l7 7m-7-7v18" 
+            />
+          </svg>
+        </button>
+      )}
     </PageLayout>
   );
 };
