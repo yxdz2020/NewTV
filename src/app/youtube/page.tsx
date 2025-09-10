@@ -42,6 +42,14 @@ const YouTubePage = () => {
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
+  // 搜索相关状态
+  const [isSearchMode, setIsSearchMode] = useState(false);
+  const [searchResults, setSearchResults] = useState<YouTubeVideo[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+  const [hasMoreResults, setHasMoreResults] = useState(false);
+
   // 优化：使用对象按频道ID存储视频，避免渲染时反复过滤，提高性能
   const [videosByChannel, setVideosByChannel] = useState<{ [key: string]: YouTubeVideo[] }>({});
 
@@ -148,15 +156,70 @@ const YouTubePage = () => {
   }, []);
 
   // --- 事件处理函数 ---
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`, '_blank');
+  const handleSearch = async (loadMore = false) => {
+    const query = searchQuery.trim();
+    if (!query) return;
+
+    try {
+      if (!loadMore) {
+        setIsSearching(true);
+        setSearchError(null);
+        setSearchResults([]);
+        setIsSearchMode(true);
+        setSelectedChannelId(null); // 清除频道选择
+      }
+
+      const searchParams = new URLSearchParams({
+        q: query,
+        maxResults: '20'
+      });
+
+      if (loadMore && nextPageToken) {
+        searchParams.set('pageToken', nextPageToken);
+      }
+
+      const response = await fetch(`/api/youtube-search?${searchParams}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '搜索失败');
+      }
+
+      if (loadMore) {
+        setSearchResults(prev => [...prev, ...data.videos]);
+      } else {
+        setSearchResults(data.videos);
+      }
+
+      setNextPageToken(data.nextPageToken || null);
+      setHasMoreResults(!!data.nextPageToken);
+
+    } catch (error) {
+      console.error('搜索失败:', error);
+      setSearchError(error instanceof Error ? error.message : '搜索失败');
+    } finally {
+      setIsSearching(false);
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSearch();
+    }
+  };
+
+  const clearSearch = () => {
+    setIsSearchMode(false);
+    setSearchQuery('');
+    setSearchResults([]);
+    setSearchError(null);
+    setNextPageToken(null);
+    setHasMoreResults(false);
+  };
+
+  const loadMoreResults = () => {
+    if (hasMoreResults && !isSearching) {
+      handleSearch(true);
     }
   };
 
@@ -187,6 +250,11 @@ const YouTubePage = () => {
 
   const handleChannelSelect = (channelId: string | null) => {
     setSelectedChannelId(channelId);
+    
+    // 如果在搜索模式下，清除搜索状态
+    if (isSearchMode) {
+      clearSearch();
+    }
 
     // 延迟执行滚动，确保DOM更新完毕
     setTimeout(() => {
@@ -256,20 +324,131 @@ const YouTubePage = () => {
           </div>
           <div className="max-w-2xl mx-auto">
             <div className="relative">
-              <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyPress={handleKeyPress} placeholder="搜索YouTube视频..." className="w-full px-4 py-3 pl-12 pr-12 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+              <input 
+                type="text" 
+                value={searchQuery} 
+                onChange={(e) => setSearchQuery(e.target.value)} 
+                onKeyPress={handleKeyPress} 
+                placeholder="搜索YouTube视频..." 
+                className="w-full px-4 py-3 pl-12 pr-20 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" 
+              />
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </div>
-              <button onClick={handleSearch} className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-red-500 transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-              </button>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-2">
+                {isSearchMode && (
+                  <button 
+                    onClick={clearSearch} 
+                    className="mr-2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    title="清除搜索"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+                <button 
+                  onClick={() => handleSearch()} 
+                  disabled={isSearching || !searchQuery.trim()}
+                  className="p-2 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSearching ? (
+                    <div className="w-5 h-5 border-2 border-gray-400 border-t-red-500 rounded-full animate-spin"></div>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
+            {isSearchMode && (
+              <div className="mt-2 text-center">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  搜索结果: "{searchQuery}" 
+                  {searchResults.length > 0 && `(${searchResults.length} 个视频)`}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-6">
-          {loadingVideos && !initialLoadComplete ? (
+          {isSearchMode ? (
+            /* 搜索结果展示区域 */
+            <div>
+              {searchError ? (
+                <div className="text-center py-8">
+                  <div className="text-red-500 mb-4">
+                    <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">搜索失败</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">{searchError}</p>
+                  <button 
+                    onClick={() => handleSearch()} 
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    重试
+                  </button>
+                </div>
+              ) : searchResults.length > 0 ? (
+                <div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {searchResults.map((video) => (
+                      <YouTubeVideoCard 
+                        key={video.id.videoId} 
+                        video={video} 
+                        onPlay={handleVideoPlay} 
+                        showActions={false} 
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* 加载更多按钮 */}
+                  {hasMoreResults && (
+                    <div className="text-center mt-8">
+                      <button 
+                        onClick={loadMoreResults}
+                        disabled={isSearching}
+                        className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg transition-colors disabled:cursor-not-allowed"
+                      >
+                        {isSearching ? (
+                          <div className="flex items-center">
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                            加载中...
+                          </div>
+                        ) : (
+                          '加载更多'
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : isSearching ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600 dark:text-gray-400">正在搜索...</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-gray-400 mb-4">
+                    <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">未找到相关视频</h3>
+                  <p className="text-gray-600 dark:text-gray-400">请尝试其他关键词</p>
+                </div>
+              )}
+            </div>
+          ) : loadingVideos && !initialLoadComplete ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
