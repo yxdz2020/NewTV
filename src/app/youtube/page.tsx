@@ -40,6 +40,7 @@ const YouTubePage = () => {
   const [loadingVideos, setLoadingVideos] = useState(true);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
 
   // 优化：使用对象按频道ID存储视频，避免渲染时反复过滤，提高性能
   const [videosByChannel, setVideosByChannel] = useState<{ [key: string]: YouTubeVideo[] }>({});
@@ -125,6 +126,27 @@ const YouTubePage = () => {
     loadChannelsAndVideos();
   }, []);
 
+  // --- 滚动监听 Effect ---
+  useEffect(() => {
+    // 获取滚动位置的函数 - 专门针对 body 滚动
+    const getScrollTop = () => {
+      return document.body.scrollTop || 0;
+    };
+
+    // 监听 body 元素的滚动事件
+    const handleScroll = () => {
+      const scrollTop = getScrollTop();
+      setShowScrollToTop(scrollTop > 300);
+    };
+
+    document.body.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      // 移除 body 滚动事件监听器
+      document.body.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
   // --- 事件处理函数 ---
   const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -140,6 +162,19 @@ const YouTubePage = () => {
 
   const handleVideoPlay = (videoId: string) => {
     console.log('播放视频:', videoId);
+  };
+
+  const scrollToTop = () => {
+    try {
+      // 根据调试结果，真正的滚动容器是 document.body
+      document.body.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+    } catch (error) {
+      // 如果平滑滚动完全失败，使用立即滚动
+      document.body.scrollTop = 0;
+    }
   };
 
   // 将频道ID转换为播放列表ID（UC -> UU）
@@ -362,6 +397,21 @@ const YouTubePage = () => {
             </div>
           )}
         </div>
+
+        {/* 返回顶部悬浮按钮 */}
+        <button
+          onClick={scrollToTop}
+          className={`fixed bottom-20 md:bottom-6 right-6 z-[500] w-12 h-12 bg-red-500/90 hover:bg-red-500 text-white rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out flex items-center justify-center group ${
+            showScrollToTop
+              ? 'opacity-100 translate-y-0 pointer-events-auto'
+              : 'opacity-0 translate-y-4 pointer-events-none'
+          }`}
+          aria-label='返回顶部'
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+          </svg>
+        </button>
       </div>
     </PageLayout>
   );

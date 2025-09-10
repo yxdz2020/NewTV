@@ -4954,10 +4954,10 @@ const YouTubeChannelConfig = ({
         if (result.success && result.data) {
           // 保存解析结果
           setParseResult(result.data);
-          
+
           // 自动填充解析到的频道ID
           setNewChannelId(result.data.channelId);
-          
+
           // 如果获取到频道信息，自动填充频道名称
           if (result.data.channelInfo && result.data.channelInfo.title) {
             setNewChannelName(result.data.channelInfo.title);
@@ -5179,7 +5179,7 @@ const YouTubeChannelConfig = ({
                 </div>
               </div>
             )}
-            
+
             {/* 最新视频 */}
             {parseResult.latestVideos && parseResult.latestVideos.length > 0 && (
               <div>
@@ -5207,7 +5207,7 @@ const YouTubeChannelConfig = ({
                 </div>
               </div>
             )}
-            
+
             <div className='flex gap-2 pt-2'>
               <button
                 onClick={() => setParseResult(null)}
