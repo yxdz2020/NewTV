@@ -44,24 +44,33 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
   }, []);
 
   const isActive = (href: string) => {
+    // 解码URL以进行正确的比较
     const decodedActive = decodeURIComponent(currentActive);
     const decodedItemHref = decodeURIComponent(href);
 
-    // 完全匹配优先
-    if (decodedActive === decodedItemHref) {
+    // 首页完全匹配
+    if (href === '/' && decodedActive === '/') {
       return true;
     }
 
-    // 处理 /douban?type=... 的情况
-    if (href.startsWith('/douban?type=')) {
-      const typeMatch = href.match(/type=([^&]+)/)?.[1];
-      if (typeMatch && decodedActive.startsWith('/douban') && decodedActive.includes(`type=${typeMatch}`)) {
-        return true;
-      }
+    // 直播页面匹配
+    if (href === '/live' && decodedActive.startsWith('/live')) {
+      return true;
     }
 
-    if (href === '/youtube') {
-      return decodedActive.startsWith('/youtube');
+    // YouTube页面匹配
+    if (href === '/youtube' && decodedActive.startsWith('/youtube')) {
+      return true;
+    }
+
+    // 处理豆瓣类型页面的匹配
+    if (href.startsWith('/douban?type=')) {
+      const typeMatch = href.match(/type=([^&]+)/)?.[1];
+      if (typeMatch) {
+        // 检查当前路径是否为豆瓣页面且包含相同的type参数
+        return decodedActive.startsWith('/douban') && 
+               decodedActive.includes(`type=${typeMatch}`);
+      }
     }
 
     return false;
