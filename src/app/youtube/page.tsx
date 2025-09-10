@@ -41,6 +41,7 @@ const YouTubePage = () => {
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
 
   // 搜索相关状态
   const [isSearchMode, setIsSearchMode] = useState(false);
@@ -224,7 +225,10 @@ const YouTubePage = () => {
   };
 
   const handleVideoPlay = (videoId: string) => {
-    console.log('播放视频:', videoId);
+    // 切换当前播放视频，确保之前的视频被销毁
+    setCurrentPlayingId(videoId);
+    // 取消自动滚动到顶部
+    // scrollToTop();
   };
 
   const scrollToTop = () => {
@@ -250,7 +254,7 @@ const YouTubePage = () => {
 
   const handleChannelSelect = (channelId: string | null) => {
     setSelectedChannelId(channelId);
-    
+
     // 如果在搜索模式下，清除搜索状态
     if (isSearchMode) {
       clearSearch();
@@ -324,13 +328,13 @@ const YouTubePage = () => {
           </div>
           <div className="max-w-2xl mx-auto">
             <div className="relative">
-              <input 
-                type="text" 
-                value={searchQuery} 
-                onChange={(e) => setSearchQuery(e.target.value)} 
-                onKeyPress={handleKeyPress} 
-                placeholder="搜索YouTube视频..." 
-                className="w-full px-4 py-3 pl-12 pr-20 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" 
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="搜索YouTube视频..."
+                className="w-full px-4 py-3 pl-12 pr-20 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
               />
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -339,8 +343,8 @@ const YouTubePage = () => {
               </div>
               <div className="absolute inset-y-0 right-0 flex items-center pr-2">
                 {isSearchMode && (
-                  <button 
-                    onClick={clearSearch} 
+                  <button
+                    onClick={clearSearch}
                     className="mr-2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                     title="清除搜索"
                   >
@@ -349,8 +353,8 @@ const YouTubePage = () => {
                     </svg>
                   </button>
                 )}
-                <button 
-                  onClick={() => handleSearch()} 
+                <button
+                  onClick={() => handleSearch()}
                   disabled={isSearching || !searchQuery.trim()}
                   className="p-2 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -367,7 +371,7 @@ const YouTubePage = () => {
             {isSearchMode && (
               <div className="mt-2 text-center">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  搜索结果: "{searchQuery}" 
+                  搜索结果: "{searchQuery}"
                   {searchResults.length > 0 && `(${searchResults.length} 个视频)`}
                 </span>
               </div>
@@ -389,8 +393,8 @@ const YouTubePage = () => {
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">搜索失败</h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-4">{searchError}</p>
-                  <button 
-                    onClick={() => handleSearch()} 
+                  <button
+                    onClick={() => handleSearch()}
                     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
                   >
                     重试
@@ -400,19 +404,20 @@ const YouTubePage = () => {
                 <div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {searchResults.map((video) => (
-                      <YouTubeVideoCard 
-                        key={video.id.videoId} 
-                        video={video} 
-                        onPlay={handleVideoPlay} 
-                        showActions={false} 
+                      <YouTubeVideoCard
+                        key={video.id.videoId}
+                        video={video}
+                        onPlay={handleVideoPlay}
+                        showActions={false}
+                        currentPlayingId={currentPlayingId}
                       />
                     ))}
                   </div>
-                  
+
                   {/* 加载更多按钮 */}
                   {hasMoreResults && (
                     <div className="text-center mt-8">
-                      <button 
+                      <button
                         onClick={loadMoreResults}
                         disabled={isSearching}
                         className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg transition-colors disabled:cursor-not-allowed"
@@ -490,7 +495,7 @@ const YouTubePage = () => {
                       },
                       embedPlayer: `https://www.youtube.com/embed/videoseries?list=${convertChannelIdToPlaylistId(channel.channelId)}&autoplay=1`,
                     };
-                    return <YouTubeVideoCard key={channel.id} video={pseudoVideo} showActions={false} onPlay={handleVideoPlay} />;
+                    return <YouTubeVideoCard key={channel.id} video={pseudoVideo} showActions={false} onPlay={handleVideoPlay} currentPlayingId={currentPlayingId} />
                   })}
                 </div>
               </div>
@@ -517,7 +522,7 @@ const YouTubePage = () => {
                           {channelVideos.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                               {channelVideos.map((video) => (
-                                <YouTubeVideoCard key={video.id.videoId} video={video} onPlay={handleVideoPlay} showActions={false} />
+                                <YouTubeVideoCard key={video.id.videoId} video={video} onPlay={handleVideoPlay} showActions={false} currentPlayingId={currentPlayingId} />
                               ))}
                             </div>
                           ) : (
@@ -547,7 +552,7 @@ const YouTubePage = () => {
                         {channelVideos.length > 0 ? (
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {channelVideos.map((video) => (
-                              <YouTubeVideoCard key={video.id.videoId} video={video} onPlay={handleVideoPlay} showActions={false} />
+                              <YouTubeVideoCard key={video.id.videoId} video={video} onPlay={handleVideoPlay} showActions={false} currentPlayingId={currentPlayingId} />
                             ))}
                           </div>
                         ) : (
@@ -580,11 +585,10 @@ const YouTubePage = () => {
         {/* 返回顶部悬浮按钮 */}
         <button
           onClick={scrollToTop}
-          className={`fixed bottom-20 md:bottom-6 right-6 z-[500] w-12 h-12 bg-red-500/90 hover:bg-red-500 text-white rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out flex items-center justify-center group ${
-            showScrollToTop
+          className={`fixed bottom-20 md:bottom-6 right-6 z-[500] w-12 h-12 bg-red-500/90 hover:bg-red-500 text-white rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out flex items-center justify-center group ${showScrollToTop
               ? 'opacity-100 translate-y-0 pointer-events-auto'
               : 'opacity-0 translate-y-4 pointer-events-none'
-          }`}
+            }`}
           aria-label='返回顶部'
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
