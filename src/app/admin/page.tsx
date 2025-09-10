@@ -4906,6 +4906,62 @@ const YouTubeChannelConfig = ({
     }
   }, []);
 
+  // 解析频道信息
+  const handleParseChannel = async () => {
+    if (!newChannelId.trim()) {
+      showAlert({
+        type: 'warning',
+        title: '提示',
+        message: '请输入YouTube频道链接、@用户名或频道ID',
+        timer: 2000
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+      return;
+    }
+
+    await withLoading('parseChannel', async () => {
+      try {
+        const response = await fetch('/api/youtube-channel-parser', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            input: newChannelId.trim()
+          }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || '解析频道失败');
+        }
+
+        const result = await response.json();
+        if (result.success && result.data) {
+          // 自动填充解析到的频道ID
+          setNewChannelId(result.data.channelId);
+          
+          showAlert({
+            type: 'success',
+            title: '解析成功',
+            message: `已解析出频道ID: ${result.data.channelId}\n播放列表ID: ${result.data.playlistId}`,
+            timer: 3000
+          });
+        } else {
+          throw new Error('解析结果无效');
+        }
+      } catch (error) {
+        showAlert({
+          type: 'error',
+          title: '解析失败',
+          message: error instanceof Error ? error.message : '解析频道失败'
+        });
+      }
+    });
+  };
+
   // 添加频道
   const handleAddChannel = async () => {
     if (!newChannelId.trim()) {
@@ -5015,26 +5071,40 @@ const YouTubeChannelConfig = ({
               className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400'
             />
           </div>
-          <div className='flex flex-col sm:flex-row gap-2'>
-            <input
-              type='text'
-              value={newChannelId}
-              onChange={(e) => setNewChannelId(e.target.value)}
-              placeholder='输入YouTube频道ID'
-              className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400'
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleAddChannel();
-                }
-              }}
-            />
-            <button
-              onClick={handleAddChannel}
-              disabled={isLoading('addChannel')}
-              className='w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors whitespace-nowrap'
-            >
-              {isLoading('addChannel') ? '添加中...' : '添加'}
-            </button>
+          <div className='space-y-2'>
+            <div className='flex flex-col sm:flex-row gap-2'>
+              <input
+                type='text'
+                value={newChannelId}
+                onChange={(e) => setNewChannelId(e.target.value)}
+                placeholder='输入YouTube频道链接、@用户名或频道ID'
+                className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400'
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleParseChannel();
+                  }
+                }}
+              />
+              <button
+                onClick={handleParseChannel}
+                disabled={isLoading('parseChannel')}
+                className='w-full sm:w-auto px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-lg transition-colors whitespace-nowrap'
+              >
+                {isLoading('parseChannel') ? '解析中...' : '解析频道'}
+              </button>
+            </div>
+            <div className='text-xs text-gray-500 dark:text-gray-400'>
+              支持格式：https://www.youtube.com/@IShowSpeed、@IShowSpeed、IShowSpeed 或 UC频道ID
+            </div>
+            <div className='flex flex-col sm:flex-row gap-2'>
+              <button
+                onClick={handleAddChannel}
+                disabled={isLoading('addChannel') || !newChannelId.trim() || !newChannelName.trim()}
+                className='w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors whitespace-nowrap'
+              >
+                {isLoading('addChannel') ? '添加中...' : '添加频道'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
