@@ -66,10 +66,11 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
     // 处理豆瓣类型页面的匹配
     if (href.startsWith('/douban?type=')) {
       const typeMatch = href.match(/type=([^&]+)/)?.[1];
-      if (typeMatch) {
-        // 检查当前路径是否为豆瓣页面且包含相同的type参数
-        return decodedActive.startsWith('/douban') && 
-               decodedActive.includes(`type=${typeMatch}`);
+      if (typeMatch && decodedActive.startsWith('/douban')) {
+        // 使用URLSearchParams来正确解析查询参数
+        const activeUrl = new URL(decodedActive, 'http://localhost');
+        const activeType = activeUrl.searchParams.get('type');
+        return activeType === typeMatch;
       }
     }
 
