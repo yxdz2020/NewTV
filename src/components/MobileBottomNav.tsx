@@ -2,7 +2,7 @@
 
 'use client';
 
-import { Cat, Clapperboard, Clover, Cloud, Ellipsis, Film, Home, Radio, Star, Tv } from 'lucide-react';
+import { Cat, Clapperboard, Clover, Cloud, Ellipsis, Film, Home, Radio, Star, Tv, Youtube } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -25,6 +25,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
     { icon: Film, label: '电影', href: '/douban?type=movie' },
     { icon: Tv, label: '剧集', href: '/douban?type=tv' },
     { icon: Radio, label: '直播', href: '/live' },
+    { icon: Youtube, label: 'YouTube', href: '/youtube' },
     { icon: Ellipsis, label: '更多', href: '#more' },
   ]);
 
@@ -80,7 +81,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
             <li
               key={item.href}
               className='flex-shrink-0'
-              style={{ width: '20vw', minWidth: '20vw' }}
+              style={{ width: 'calc(100vw / 6)', minWidth: 'calc(100vw / 6)' }}
             >
               {item.label !== '更多' ? (
                 <Link
@@ -94,11 +95,11 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                       }`}
                   />
                   <span
-                    className={
+                    className={`${
                       active
                         ? 'text-green-600 dark:text-green-400'
                         : 'text-gray-600 dark:text-gray-300'
-                    }
+                    } ${item.label === 'YouTube' ? 'text-[10px]' : 'text-xs'}`}
                   >
                     {item.label}
                   </span>
@@ -115,7 +116,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                       : 'text-gray-500 dark:text-gray-400'
                       }`}
                   />
-                  <span className={moreActive ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-300'}>
+                  <span className={`${moreActive ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-300'} text-xs`}>
                     更多
                   </span>
                 </button>
