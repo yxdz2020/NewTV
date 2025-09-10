@@ -1,4 +1,4 @@
-''''use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import PageLayout from '@/components/PageLayout';
@@ -41,6 +41,58 @@ const YouTubePage = () => {
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [videosByChannel, setVideosByChannel] = useState<Record<string, YouTubeVideo[]>>({});
+
+  // 处理函数
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const handleSearch = () => {
+    // 搜索逻辑
+    console.log('搜索:', searchQuery);
+  };
+
+  const handleChannelSelect = (channelId: string | null) => {
+    setSelectedChannelId(channelId);
+  };
+
+  const handleVideoPlay = (video: YouTubeVideo) => {
+    // 播放视频逻辑
+    console.log('播放视频:', video);
+  };
+
+  const convertChannelIdToPlaylistId = (channelId: string) => {
+    // 将频道ID转换为播放列表ID
+    return channelId.replace('UC', 'UU');
+  };
+
+  // 数据加载 Effect
+  useEffect(() => {
+    const loadChannels = async () => {
+      try {
+        setLoadingVideos(true);
+        // 这里应该是实际的API调用
+        // const response = await fetch('/api/youtube/channels');
+        // const data = await response.json();
+        // setChannels(data.channels || []);
+        // setVideosByChannel(data.videosByChannel || {});
+        
+        // 临时数据用于演示
+        setChannels([]);
+        setVideosByChannel({});
+      } catch (error) {
+        console.error('加载频道失败:', error);
+      } finally {
+        setLoadingVideos(false);
+        setInitialLoadComplete(true);
+      }
+    };
+
+    loadChannels();
+  }, []);
 
   const scrollToTop = () => {
     try {
