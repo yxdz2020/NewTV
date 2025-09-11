@@ -103,7 +103,7 @@ const YouTubePage = () => {
           loadedChannels.map(async (channel: Channel) => {
             try {
               const videosResponse = await fetch(
-                `/api/youtube-videos?channelId=${channel.channelId}&maxResults=6`
+                `/api/youtube-videos?channelId=${channel.channelId}&maxResults=7`
               );
               if (videosResponse.ok) {
                 const videosData = await videosResponse.json();
