@@ -4905,7 +4905,8 @@ const DraggableChannelItem = ({
         <div
           {...attributes}
           {...listeners}
-          className='cursor-grab active:cursor-grabbing p-2 sm:p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded touch-manipulation'
+          style={{ touchAction: 'none' }}
+          className='cursor-grab active:cursor-grabbing p-2 sm:p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded'
         >
           <GripVertical className='w-5 h-5 sm:w-4 sm:h-4 text-gray-400' />
         </div>
@@ -4950,14 +4951,11 @@ const YouTubeChannelConfig = ({
   // 拖拽传感器配置
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      // 移动端拖拽体验优化：移除距离约束，改为轻微延迟
       activationConstraint: {
-        delay: 100, // 轻微延迟以区分点击和拖拽
-        tolerance: 5, // 允许5px的手指抖动
+        distance: 8,
       },
     }),
     useSensor(TouchSensor, {
-      // 保持触摸设备的默认行为，但可以根据需要微调
       activationConstraint: {
         delay: 200,
         tolerance: 5,
@@ -5165,17 +5163,17 @@ const YouTubeChannelConfig = ({
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    
+
     const oldIndex = channels.findIndex((c) => c.id === active.id);
     const newIndex = channels.findIndex((c) => c.id === over.id);
-    
+
     const newChannels = arrayMove(channels, oldIndex, newIndex);
     // 更新sortOrder
     const updatedChannels = newChannels.map((channel, index) => ({
       ...channel,
       sortOrder: index
     }));
-    
+
     setChannels(updatedChannels);
     setOrderChanged(true);
   };
