@@ -540,7 +540,7 @@ const YouTubePage = () => {
                     {channels.map((channel) => {
                       // 获取频道视频，跳过第一个（最新的）视频，因为它已经在频道播放列表中展示了
                       const allChannelVideos = videosByChannel[channel.channelId] || [];
-                      const channelVideos = allChannelVideos.slice(1); // 从第二个视频开始显示
+                      const channelVideos = allChannelVideos.slice(0, 6); // 显示最新开始的前 6 个视频
                       return (
                         <div key={channel.channelId} id={`channel-${channel.channelId}`} className="space-y-4">
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -569,7 +569,7 @@ const YouTubePage = () => {
                     }
                     // 获取选中频道的视频，跳过第一个（最新的）视频
                     const allChannelVideos = videosByChannel[selectedChannelId] || [];
-                    const channelVideos = allChannelVideos.slice(1); // 从第二个视频开始显示
+                    const channelVideos = allChannelVideos.slice(0, 6); // 显示最新开始的前 6 个视频
 
                     // 修正：确保整个内容块都在一个父 `div` 中
                     return (
