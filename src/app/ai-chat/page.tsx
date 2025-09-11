@@ -241,12 +241,12 @@ const AIChatPage = () => {
                             </div>
                             <button
                               onClick={() => setPlayingVideoId(null)}
-                              className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-70 transition-all"
+                              className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-70 transition-all"
                             >
-                              <X className="w-4 h-4" />
+                              <X className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
                             <div className="mt-2">
-                              <h4 className="font-medium text-gray-900 dark:text-white text-sm line-clamp-2">
+                              <h4 className="font-medium text-gray-900 dark:text-white text-xs sm:text-sm line-clamp-2">
                                 {video.title}
                               </h4>
                               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -256,30 +256,30 @@ const AIChatPage = () => {
                           </div>
                         ) : (
                           <div
-                            className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                            className="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 sm:p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                             onClick={() => handleYouTubeVideoSelect(video)}
                           >
-                            <div className="flex gap-3">
+                            <div className="flex gap-2 sm:gap-3">
                               <div className="relative flex-shrink-0">
                                 <img
                                   src={video.thumbnail}
                                   alt={video.title}
-                                  className="w-20 h-14 object-cover rounded"
+                                  className="w-16 h-12 sm:w-20 sm:h-14 object-cover rounded"
                                 />
                                 <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded">
-                                  <div className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center">
-                                    <div className="w-0 h-0 border-l-[6px] border-l-white border-t-[3px] border-t-transparent border-b-[3px] border-b-transparent ml-0.5"></div>
+                                  <div className="w-4 h-4 sm:w-6 sm:h-6 bg-red-600 rounded-full flex items-center justify-center">
+                                    <div className="w-0 h-0 border-l-[4px] sm:border-l-[6px] border-l-white border-t-[2px] sm:border-t-[3px] border-t-transparent border-b-[2px] sm:border-b-[3px] border-b-transparent ml-0.5"></div>
                                   </div>
                                 </div>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-gray-900 dark:text-white text-sm line-clamp-2">
+                                <h4 className="font-medium text-gray-900 dark:text-white text-xs sm:text-sm line-clamp-2">
                                   {video.title}
                                 </h4>
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                   {video.channelTitle}
                                 </p>
-                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2 hidden sm:block">
                                   {video.description}
                                 </p>
                               </div>
