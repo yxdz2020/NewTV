@@ -4950,11 +4950,14 @@ const YouTubeChannelConfig = ({
   // 拖拽传感器配置
   const sensors = useSensors(
     useSensor(PointerSensor, {
+      // 移动端拖拽体验优化：移除距离约束，改为轻微延迟
       activationConstraint: {
-        distance: 8,
+        delay: 100, // 轻微延迟以区分点击和拖拽
+        tolerance: 5, // 允许5px的手指抖动
       },
     }),
     useSensor(TouchSensor, {
+      // 保持触摸设备的默认行为，但可以根据需要微调
       activationConstraint: {
         delay: 200,
         tolerance: 5,
