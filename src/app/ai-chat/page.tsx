@@ -1,6 +1,6 @@
 'use client';
 
-import { Bot, Send, User, ArrowLeft } from 'lucide-react';
+import { Bot, Send, User, ArrowLeft, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
@@ -13,6 +13,7 @@ interface Message {
   content: string;
   timestamp: Date;
   recommendations?: MovieRecommendation[];
+  youtubeVideos?: YouTubeVideo[];
 }
 
 interface MovieRecommendation {
@@ -21,6 +22,15 @@ interface MovieRecommendation {
   genre?: string;
   description: string;
   poster?: string;
+}
+
+interface YouTubeVideo {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail: string;
+  channelTitle: string;
+  publishedAt: string;
 }
 
 const AIChatPage = () => {
@@ -35,6 +45,7 @@ const AIChatPage = () => {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -111,9 +122,10 @@ const AIChatPage = () => {
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: data.content || '抱歉，我现在无法为你推荐影片，请稍后再试。',
+        content: data.content || '抱歉，我现在无法为你推荐内容，请稍后再试。',
         timestamp: new Date(),
-        recommendations: data.recommendations || []
+        recommendations: data.recommendations || [],
+        youtubeVideos: data.youtubeVideos || []
       };
 
       setMessages(prev => [...prev, aiMessage]);
@@ -142,6 +154,10 @@ const AIChatPage = () => {
     // 跳转到搜索页面并搜索该影片
     const searchQuery = encodeURIComponent(movie.title);
     router.push(`/search?q=${searchQuery}`);
+  };
+
+  const handleYouTubeVideoSelect = (video: YouTubeVideo) => {
+    setPlayingVideoId(video.id);
   };
 
   return (
@@ -202,6 +218,74 @@ const AIChatPage = () => {
                             </p>
                           </div>
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {message.youtubeVideos && message.youtubeVideos.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {message.youtubeVideos.map((video, index) => (
+                      <div key={index} className="relative">
+                        {playingVideoId === video.id ? (
+                          <div className="relative">
+                            <div className="aspect-video bg-black rounded-lg overflow-hidden">
+                              <iframe
+                                src={`https://www.youtube.com/embed/${video.id}?autoplay=1`}
+                                title={video.title}
+                                className="w-full h-full"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            </div>
+                            <button
+                              onClick={() => setPlayingVideoId(null)}
+                              className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-70 transition-all"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                            <div className="mt-2">
+                              <h4 className="font-medium text-gray-900 dark:text-white text-sm line-clamp-2">
+                                {video.title}
+                              </h4>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                {video.channelTitle}
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                            onClick={() => handleYouTubeVideoSelect(video)}
+                          >
+                            <div className="flex gap-3">
+                              <div className="relative flex-shrink-0">
+                                <img
+                                  src={video.thumbnail}
+                                  alt={video.title}
+                                  className="w-20 h-14 object-cover rounded"
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded">
+                                  <div className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center">
+                                    <div className="w-0 h-0 border-l-[6px] border-l-white border-t-[3px] border-t-transparent border-b-[3px] border-b-transparent ml-0.5"></div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-gray-900 dark:text-white text-sm line-clamp-2">
+                                  {video.title}
+                                </h4>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                  {video.channelTitle}
+                                </p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                                  {video.description}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

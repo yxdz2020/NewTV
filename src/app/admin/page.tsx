@@ -4870,6 +4870,67 @@ const LiveSourceConfig = ({
   );
 };
 
+// 可拖拽的频道项组件
+const DraggableChannelItem = ({
+  channel,
+  onDelete,
+  isDeleting,
+}: {
+  channel: { id: string; name: string; channelId: string; addedAt: string; sortOrder: number };
+  onDelete: (id: string) => void;
+  isDeleting: boolean;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: channel.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className='flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg'
+    >
+      <div className='flex items-center space-x-3'>
+        <div
+          {...attributes}
+          {...listeners}
+          className='cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded'
+        >
+          <GripVertical className='w-4 h-4 text-gray-400' />
+        </div>
+        <Youtube className='w-5 h-5 text-red-500' />
+        <div>
+          <div className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+            {channel.name}
+          </div>
+          <div className='text-xs text-gray-500 dark:text-gray-400'>
+            {channel.channelId}
+          </div>
+        </div>
+      </div>
+      <button
+        onClick={() => onDelete(channel.id)}
+        disabled={isDeleting}
+        className='text-red-600 hover:text-red-700 disabled:text-red-400 p-1'
+        title='删除频道'
+      >
+        <Trash2 className='w-4 h-4' />
+      </button>
+    </div>
+  );
+};
+
 // YouTube频道配置组件
 const YouTubeChannelConfig = ({
   config,
@@ -4880,10 +4941,17 @@ const YouTubeChannelConfig = ({
 }) => {
   const { alertModal, showAlert, hideAlert } = useAlertModal();
   const { isLoading, withLoading } = useLoadingState();
-  const [channels, setChannels] = useState<{ id: string; name: string; channelId: string; addedAt: string }[]>([]);
+  const [channels, setChannels] = useState<{ id: string; name: string; channelId: string; addedAt: string; sortOrder: number }[]>([]);
   const [newChannelId, setNewChannelId] = useState('');
   const [newChannelName, setNewChannelName] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [orderChanged, setOrderChanged] = useState(false);
+
+  // 拖拽传感器配置
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(TouchSensor)
+  );
   const [parseResult, setParseResult] = useState<{
     channelId: string;
     playlistId: string;
@@ -4907,6 +4975,7 @@ const YouTubeChannelConfig = ({
       }
       const data = await response.json();
       setChannels(data.channels || []);
+      setOrderChanged(false);
     } catch (error) {
       showAlert({
         type: 'error',
@@ -5080,6 +5149,61 @@ const YouTubeChannelConfig = ({
   };
 
   // 初始化加载
+  // 拖动排序处理
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    
+    const oldIndex = channels.findIndex((c) => c.id === active.id);
+    const newIndex = channels.findIndex((c) => c.id === over.id);
+    
+    const newChannels = arrayMove(channels, oldIndex, newIndex);
+    // 更新sortOrder
+    const updatedChannels = newChannels.map((channel, index) => ({
+      ...channel,
+      sortOrder: index
+    }));
+    
+    setChannels(updatedChannels);
+    setOrderChanged(true);
+  };
+
+  // 保存排序
+  const handleSaveOrder = async () => {
+    await withLoading('saveChannelOrder', async () => {
+      try {
+        const response = await fetch('/api/youtube-channels', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            channels: channels
+          }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || '保存排序失败');
+        }
+
+        setOrderChanged(false);
+        showAlert({
+          type: 'success',
+          title: '成功',
+          message: '频道排序已保存',
+          timer: 2000
+        });
+      } catch (error) {
+        showAlert({
+          type: 'error',
+          title: '错误',
+          message: error instanceof Error ? error.message : '保存排序失败'
+        });
+      }
+    });
+  };
+
   useEffect(() => {
     fetchChannels();
   }, [fetchChannels]);
@@ -5226,13 +5350,24 @@ const YouTubeChannelConfig = ({
           <h3 className='text-sm font-medium text-gray-900 dark:text-gray-100'>
             已配置频道 ({channels.length})
           </h3>
-          <button
-            onClick={fetchChannels}
-            disabled={isRefreshing}
-            className='text-sm text-blue-600 hover:text-blue-700 disabled:text-blue-400'
-          >
-            {isRefreshing ? '刷新中...' : '刷新'}
-          </button>
+          <div className='flex items-center gap-2'>
+            {orderChanged && (
+              <button
+                onClick={handleSaveOrder}
+                disabled={isLoading('saveChannelOrder')}
+                className='px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded transition-colors'
+              >
+                {isLoading('saveChannelOrder') ? '保存中...' : '保存排序'}
+              </button>
+            )}
+            <button
+              onClick={fetchChannels}
+              disabled={isRefreshing}
+              className='text-sm text-blue-600 hover:text-blue-700 disabled:text-blue-400'
+            >
+              {isRefreshing ? '刷新中...' : '刷新'}
+            </button>
+          </div>
         </div>
 
         {channels.length === 0 ? (
@@ -5240,34 +5375,25 @@ const YouTubeChannelConfig = ({
             暂无配置的YouTube频道
           </div>
         ) : (
-          <div className='space-y-2'>
-            {channels.map((channel) => (
-              <div
-                key={channel.id}
-                className='flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg'
-              >
-                <div className='flex items-center space-x-3'>
-                  <Youtube className='w-5 h-5 text-red-500' />
-                  <div>
-                    <div className='text-sm font-medium text-gray-900 dark:text-gray-100'>
-                      {channel.name}
-                    </div>
-                    <div className='text-xs text-gray-500 dark:text-gray-400'>
-                      {channel.channelId}
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleDeleteChannel(channel.id)}
-                  disabled={isLoading('deleteChannel')}
-                  className='text-red-600 hover:text-red-700 disabled:text-red-400 p-1'
-                  title='删除频道'
-                >
-                  <Trash2 className='w-4 h-4' />
-                </button>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+            modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+          >
+            <SortableContext items={channels.map(c => c.id)} strategy={verticalListSortingStrategy}>
+              <div className='space-y-2'>
+                {channels.map((channel) => (
+                  <DraggableChannelItem
+                    key={channel.id}
+                    channel={channel}
+                    onDelete={handleDeleteChannel}
+                    isDeleting={isLoading('deleteChannel')}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
 

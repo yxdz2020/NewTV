@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import PageLayout from '@/components/PageLayout';
 import YouTubeVideoCard from '@/components/YouTubeVideoCard';
 
@@ -28,10 +29,13 @@ interface Channel {
   name: string;
   channelId: string;
   addedAt: string;
+  sortOrder: number;
   latestVideo?: YouTubeVideo;
 }
 
 const YouTubePage = () => {
+  const searchParams = useSearchParams();
+  
   // --- 状态管理 ---
   const [isOnline, setIsOnline] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -96,11 +100,14 @@ const YouTubePage = () => {
 
         const newVideosByChannel: { [key: string]: YouTubeVideo[] } = {};
 
+        // 确保频道按sortOrder排序
+        const sortedChannels = loadedChannels.sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
+        
         const updatedChannels = await Promise.all(
-          loadedChannels.map(async (channel: Channel) => {
+          sortedChannels.map(async (channel: Channel) => {
             try {
               const videosResponse = await fetch(
-                `/api/youtube-videos?channelId=${channel.channelId}&maxResults=6`
+                `/api/youtube-videos?channelId=${channel.channelId}&maxResults=7`
               );
               if (videosResponse.ok) {
                 const videosData = await videosResponse.json();
@@ -134,6 +141,16 @@ const YouTubePage = () => {
     checkYouTubeAccess();
     loadChannelsAndVideos();
   }, []);
+
+  // 处理URL参数中的play参数
+  useEffect(() => {
+    const playVideoId = searchParams.get('play');
+    if (playVideoId) {
+      setCurrentPlayingId(playVideoId);
+      // 滚动到页面顶部以便用户看到播放的视频
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [searchParams]);
 
   // --- 滚动监听 Effect ---
   useEffect(() => {
