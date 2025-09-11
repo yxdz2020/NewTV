@@ -4899,22 +4899,22 @@ const DraggableChannelItem = ({
     <div
       ref={setNodeRef}
       style={style}
-      className='flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg'
+      className='flex items-center justify-between p-2 sm:p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg'
     >
-      <div className='flex items-center space-x-3'>
+      <div className='flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0'>
         <div
           {...attributes}
           {...listeners}
-          className='cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded'
+          className='cursor-grab active:cursor-grabbing p-2 sm:p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded touch-manipulation'
         >
-          <GripVertical className='w-4 h-4 text-gray-400' />
+          <GripVertical className='w-5 h-5 sm:w-4 sm:h-4 text-gray-400' />
         </div>
-        <Youtube className='w-5 h-5 text-red-500' />
-        <div>
-          <div className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+        <Youtube className='w-5 h-5 text-red-500 flex-shrink-0' />
+        <div className='flex-1 min-w-0'>
+          <div className='text-sm font-medium text-gray-900 dark:text-gray-100 truncate'>
             {channel.name}
           </div>
-          <div className='text-xs text-gray-500 dark:text-gray-400'>
+          <div className='text-xs text-gray-500 dark:text-gray-400 truncate'>
             {channel.channelId}
           </div>
         </div>
@@ -4922,10 +4922,10 @@ const DraggableChannelItem = ({
       <button
         onClick={() => onDelete(channel.id)}
         disabled={isDeleting}
-        className='text-red-600 hover:text-red-700 disabled:text-red-400 p-1'
+        className='text-red-600 hover:text-red-700 disabled:text-red-400 p-2 sm:p-1 ml-2 flex-shrink-0 touch-manipulation'
         title='删除频道'
       >
-        <Trash2 className='w-4 h-4' />
+        <Trash2 className='w-5 h-5 sm:w-4 sm:h-4' />
       </button>
     </div>
   );
@@ -4949,8 +4949,17 @@ const YouTubeChannelConfig = ({
 
   // 拖拽传感器配置
   const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(TouchSensor)
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 5,
+      },
+    })
   );
   const [parseResult, setParseResult] = useState<{
     channelId: string;
