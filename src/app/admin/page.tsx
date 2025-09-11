@@ -4905,7 +4905,8 @@ const DraggableChannelItem = ({
         <div
           {...attributes}
           {...listeners}
-          className='cursor-grab active:cursor-grabbing p-2 sm:p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded touch-manipulation'
+          style={{ touchAction: 'none' }}
+          className='cursor-grab active:cursor-grabbing p-2 sm:p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded'
         >
           <GripVertical className='w-5 h-5 sm:w-4 sm:h-4 text-gray-400' />
         </div>
@@ -5162,17 +5163,17 @@ const YouTubeChannelConfig = ({
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    
+
     const oldIndex = channels.findIndex((c) => c.id === active.id);
     const newIndex = channels.findIndex((c) => c.id === over.id);
-    
+
     const newChannels = arrayMove(channels, oldIndex, newIndex);
     // 更新sortOrder
     const updatedChannels = newChannels.map((channel, index) => ({
       ...channel,
       sortOrder: index
     }));
-    
+
     setChannels(updatedChannels);
     setOrderChanged(true);
   };
