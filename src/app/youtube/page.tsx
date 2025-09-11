@@ -29,6 +29,7 @@ interface Channel {
   name: string;
   channelId: string;
   addedAt: string;
+  sortOrder: number;
   latestVideo?: YouTubeVideo;
 }
 
@@ -99,8 +100,11 @@ const YouTubePage = () => {
 
         const newVideosByChannel: { [key: string]: YouTubeVideo[] } = {};
 
+        // 确保频道按sortOrder排序
+        const sortedChannels = loadedChannels.sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
+        
         const updatedChannels = await Promise.all(
-          loadedChannels.map(async (channel: Channel) => {
+          sortedChannels.map(async (channel: Channel) => {
             try {
               const videosResponse = await fetch(
                 `/api/youtube-videos?channelId=${channel.channelId}&maxResults=7`
