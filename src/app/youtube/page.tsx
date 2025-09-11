@@ -244,14 +244,6 @@ const YouTubePage = () => {
     }
   };
 
-  // 将频道ID转换为播放列表ID（UC -> UU）
-  const convertChannelIdToPlaylistId = (channelId: string) => {
-    if (channelId.startsWith('UC')) {
-      return 'UU' + channelId.substring(2);
-    }
-    return channelId;
-  };
-
   const handleChannelSelect = (channelId: string | null) => {
     setSelectedChannelId(channelId);
 
@@ -485,17 +477,35 @@ const YouTubePage = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {channels.map((channel) => {
-                    const pseudoVideo = {
-                      id: { videoId: channel.channelId },
+                    // 只显示最新的单个视频，而不是整个播放列表
+                    const latestVideo = channel.latestVideo;
+                    if (!latestVideo) {
+                      // 如果没有最新视频，显示频道信息
+                      const pseudoVideo = {
+                        id: { videoId: `channel-${channel.channelId}` },
+                        snippet: {
+                          title: channel.name,
+                          thumbnails: { medium: { url: `https://yt3.ggpht.com/ytc/default_user=s240-c-k-c0x00ffffff-no-rj` } },
+                          channelTitle: channel.name,
+                          publishedAt: channel.addedAt,
+                        },
+                        embedPlayer: `https://www.youtube.com/channel/${channel.channelId}`,
+                      };
+                      return <YouTubeVideoCard key={channel.id} video={pseudoVideo} showActions={false} onPlay={handleVideoPlay} currentPlayingId={currentPlayingId} />
+                    }
+                    
+                    // 显示最新的单个视频
+                    const singleVideo = {
+                      id: { videoId: latestVideo.id.videoId },
                       snippet: {
-                        title: channel.latestVideo?.snippet.title || channel.name,
-                        thumbnails: channel.latestVideo?.snippet.thumbnails || { medium: { url: `https://yt3.ggpht.com/ytc/default_user=s240-c-k-c0x00ffffff-no-rj` } },
+                        title: latestVideo.snippet.title,
+                        thumbnails: latestVideo.snippet.thumbnails,
                         channelTitle: channel.name,
-                        publishedAt: channel.latestVideo?.snippet.publishedAt || channel.addedAt,
+                        publishedAt: latestVideo.snippet.publishedAt,
                       },
-                      embedPlayer: `https://www.youtube.com/embed/videoseries?list=${convertChannelIdToPlaylistId(channel.channelId)}&autoplay=1`,
+                      embedPlayer: `https://www.youtube.com/embed/${latestVideo.id.videoId}?autoplay=1`,
                     };
-                    return <YouTubeVideoCard key={channel.id} video={pseudoVideo} showActions={false} onPlay={handleVideoPlay} currentPlayingId={currentPlayingId} />
+                    return <YouTubeVideoCard key={channel.id} video={singleVideo} showActions={false} onPlay={handleVideoPlay} currentPlayingId={currentPlayingId} />
                   })}
                 </div>
               </div>
@@ -511,13 +521,14 @@ const YouTubePage = () => {
                   /* 显示所有频道，按频道分组 */
                   <div className="space-y-8">
                     {channels.map((channel) => {
-                      // 优化：直接从 `videosByChannel` 对象获取视频，无需过滤
-                      const channelVideos = videosByChannel[channel.channelId] || [];
+                      // 获取频道视频，跳过第一个（最新的）视频，因为它已经在频道播放列表中展示了
+                      const allChannelVideos = videosByChannel[channel.channelId] || [];
+                      const channelVideos = allChannelVideos.slice(1); // 从第二个视频开始显示
                       return (
                         <div key={channel.channelId} id={`channel-${channel.channelId}`} className="space-y-4">
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                             {channel.name}
-                            <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">({channelVideos.length} 个视频)</span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">({channelVideos.length} 个推荐视频)</span>
                           </h3>
                           {channelVideos.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -526,7 +537,7 @@ const YouTubePage = () => {
                               ))}
                             </div>
                           ) : (
-                            <div className="text-center py-8 text-gray-500 dark:text-gray-400"><p>该频道暂无视频数据</p></div>
+                            <div className="text-center py-8 text-gray-500 dark:text-gray-400"><p>该频道暂无更多推荐视频</p></div>
                           )}
                         </div>
                       );
@@ -539,15 +550,16 @@ const YouTubePage = () => {
                     if (!selectedChannel) {
                       return <div className="text-center py-8 text-gray-500 dark:text-gray-400"><p>未找到选中的频道</p></div>;
                     }
-                    // 优化：直接从 `videosByChannel` 对象获取视频
-                    const channelVideos = videosByChannel[selectedChannelId] || [];
+                    // 获取选中频道的视频，跳过第一个（最新的）视频
+                    const allChannelVideos = videosByChannel[selectedChannelId] || [];
+                    const channelVideos = allChannelVideos.slice(1); // 从第二个视频开始显示
 
                     // 修正：确保整个内容块都在一个父 `div` 中
                     return (
                       <div id={`channel-${selectedChannelId}`} className="space-y-4">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                           {selectedChannel.name}
-                          <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">({channelVideos.length} 个视频)</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">({channelVideos.length} 个推荐视频)</span>
                         </h3>
                         {channelVideos.length > 0 ? (
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -556,7 +568,7 @@ const YouTubePage = () => {
                             ))}
                           </div>
                         ) : (
-                          <div className="text-center py-8 text-gray-500 dark:text-gray-400"><p>该频道暂无视频数据</p></div>
+                          <div className="text-center py-8 text-gray-500 dark:text-gray-400"><p>该频道暂无更多推荐视频</p></div>
                         )}
                       </div>
                     );
@@ -586,8 +598,8 @@ const YouTubePage = () => {
         <button
           onClick={scrollToTop}
           className={`fixed bottom-20 md:bottom-6 right-6 z-[500] w-12 h-12 bg-red-500/90 hover:bg-red-500 text-white rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out flex items-center justify-center group ${showScrollToTop
-              ? 'opacity-100 translate-y-0 pointer-events-auto'
-              : 'opacity-0 translate-y-4 pointer-events-none'
+            ? 'opacity-100 translate-y-0 pointer-events-auto'
+            : 'opacity-0 translate-y-4 pointer-events-none'
             }`}
           aria-label='返回顶部'
         >
