@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from '@/lib/config';
 
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
+
 export async function POST(request: NextRequest) {
   try {
     const { messages } = await request.json();
@@ -118,25 +121,21 @@ export async function POST(request: NextRequest) {
     const isYouTubeRecommendation = aiContent.includes('【') && aiContent.includes('】');
     
     if (isYouTubeRecommendation) {
-      // 如果是YouTube视频推荐，调用YouTube推荐API
+      // 如果是YouTube视频推荐，直接搜索YouTube视频
       try {
-        const youtubeResponse = await fetch(`${request.nextUrl.origin}/api/ai/youtube-recommend`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ messages })
-        });
+        const searchKeywords = extractSearchKeywords(aiContent);
+        const youtubeVideos = await searchYouTubeVideos(searchKeywords);
         
-        if (youtubeResponse.ok) {
-          const youtubeData = await youtubeResponse.json();
-          return NextResponse.json({
-            content: youtubeData.content,
-            youtubeVideos: youtubeData.youtubeVideos
-          });
-        }
+        return NextResponse.json({
+          content: aiContent + (youtubeVideos.length > 0 ? `\n\n为您推荐以下${youtubeVideos.length}个YouTube视频：` : '\n\n抱歉，没有找到相关的YouTube视频，请尝试其他关键词。'),
+          youtubeVideos
+        });
       } catch (error) {
-        console.error('调用YouTube推荐API失败:', error);
+        console.error('搜索YouTube视频失败:', error);
+        return NextResponse.json({
+          content: aiContent + '\n\n抱歉，YouTube视频搜索服务暂时不可用。',
+          youtubeVideos: []
+        });
       }
     }
 
@@ -179,4 +178,57 @@ function extractRecommendations(content: string) {
     }
   }
   return recommendations;
+}
+
+// 从AI回复中提取搜索关键词的辅助函数
+function extractSearchKeywords(content: string): string[] {
+  const keywords: string[] = [];
+  const videoPattern = /【([^】]+)】/g;
+  let match;
+
+  while ((match = videoPattern.exec(content)) !== null && keywords.length < 4) {
+    keywords.push(match[1].trim());
+  }
+
+  return keywords;
+}
+
+// 使用YouTube API搜索视频的辅助函数
+async function searchYouTubeVideos(keywords: string[]) {
+  const videos = [];
+
+  for (const keyword of keywords) {
+    if (videos.length >= 4) break;
+
+    try {
+      const searchUrl = new URL(`${YOUTUBE_API_BASE}/search`);
+      searchUrl.searchParams.set('key', YOUTUBE_API_KEY!);
+      searchUrl.searchParams.set('q', keyword);
+      searchUrl.searchParams.set('part', 'snippet');
+      searchUrl.searchParams.set('type', 'video');
+      searchUrl.searchParams.set('maxResults', '1');
+      searchUrl.searchParams.set('order', 'relevance');
+
+      const response = await fetch(searchUrl.toString());
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.items && data.items.length > 0) {
+          const video = data.items[0];
+          videos.push({
+            id: video.id.videoId,
+            title: video.snippet.title,
+            description: video.snippet.description,
+            thumbnail: video.snippet.thumbnails?.medium?.url || video.snippet.thumbnails?.default?.url,
+            channelTitle: video.snippet.channelTitle,
+            publishedAt: video.snippet.publishedAt
+          });
+        }
+      }
+    } catch (error) {
+      console.error(`搜索关键词 "${keyword}" 失败:`, error);
+    }
+  }
+
+  return videos;
 }
