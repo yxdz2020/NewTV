@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
     // 方法1：使用playlistItems.list（省配额方案）
     // 首先获取频道的上传播放列表ID
     let uploadsPlaylistId = await getChannelUploadsPlaylistId(channelId);
-    
+
     // 如果API调用失败，使用转换方法作为备选
     if (!uploadsPlaylistId) {
       console.log('使用转换方法获取播放列表ID');
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
     if (!response.ok) {
       const errorBody = await response.text();
       console.error(`YouTube API请求失败: ${response.status}`, errorBody);
-      
+
       // 如果playlistItems.list失败，回退到search.list方法
       console.log('playlistItems.list失败，回退到search.list方法');
       const fallbackResponse = await fetch(
@@ -111,26 +111,26 @@ export async function GET(request: NextRequest) {
         `maxResults=${maxResults}&` +
         `type=video`
       );
-      
+
       if (!fallbackResponse.ok) {
         throw new Error(`YouTube API请求失败: ${fallbackResponse.status}`);
       }
-      
+
       const fallbackData = await fallbackResponse.json();
       const videos = fallbackData.items || [];
-      
+
       try {
-        // 缓存1小时
-        await cacheManager.set(cacheKey, videos, 3600);
+        // 缓存半小时
+        await cacheManager.set(cacheKey, videos, 1800);
       } catch (e) {
         console.error('YouTube视频数据写入缓存失败', e);
       }
-      
+
       return NextResponse.json({ videos });
     }
 
     const data = await response.json();
-    
+
     // 转换playlistItems格式为search格式，保持兼容性
     const videos = (data.items || []).map((item: any) => ({
       id: { videoId: item.snippet?.resourceId?.videoId },
