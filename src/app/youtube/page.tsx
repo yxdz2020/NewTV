@@ -511,9 +511,9 @@ const YouTubePage = () => {
                       return <YouTubeVideoCard key={channel.id} video={pseudoVideo} showActions={false} onPlay={handleVideoPlay} currentPlayingId={currentPlayingId} />
                     }
                     
-                    // 显示最新的单个视频
+                    // 显示最新的单个视频，添加playlist前缀以区分推荐视频中的同一视频
                     const singleVideo = {
-                      id: { videoId: latestVideo.id.videoId },
+                      id: { videoId: `playlist-${latestVideo.id.videoId}` },
                       snippet: {
                         title: latestVideo.snippet.title,
                         thumbnails: latestVideo.snippet.thumbnails,
