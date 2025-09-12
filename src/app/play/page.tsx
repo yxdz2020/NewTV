@@ -146,7 +146,7 @@ function PlayPageClient() {
   const [danmakuConfigLoaded, setDanmakuConfigLoaded] = useState<boolean>(false);
   const externalDanmuEnabledRef = useRef(externalDanmuEnabled);
   const updateButtonStateRef = useRef<(() => void) | null>(null);
-  
+
   useEffect(() => {
     externalDanmuEnabledRef.current = externalDanmuEnabled;
     // 当外部弹幕开关状态变化时，更新按钮状态
@@ -1033,7 +1033,7 @@ function PlayPageClient() {
         return cached.data;
       }
     }
-    
+
     if (lastDanmuLoadKeyRef.current === requestKey) {
       console.log('内容未变化，跳过本次请求');
       return [];
@@ -1171,13 +1171,13 @@ function PlayPageClient() {
         while (!danmakuConfigLoaded) {
           await new Promise(resolve => setTimeout(resolve, 100));
         }
-        
+
         console.log('集数变化，弹幕配置已加载，当前开关状态:', externalDanmuEnabledRef.current);
-        
+
         try {
           if (artPlayerRef.current?.plugins?.artplayerPluginDanmuku) {
             const plugin = artPlayerRef.current.plugins.artplayerPluginDanmuku;
-            
+
             // 根据用户开关状态同步弹幕插件的显示/隐藏状态
             if (externalDanmuEnabledRef.current) {
               // 用户开启了弹幕，确保插件显示并加载数据
@@ -1185,10 +1185,10 @@ function PlayPageClient() {
                 plugin.show();
                 console.log('集数切换：根据用户设置开启弹幕显示');
               }
-              
+
               const externalDanmu = await loadExternalDanmu();
               console.log('集数变化后外部弹幕加载结果:', externalDanmu);
-              
+
               if (externalDanmu.length > 0) {
                 console.log('向播放器插件重新加载弹幕数据:', externalDanmu.length, '条');
                 plugin.load(externalDanmu);
@@ -1212,7 +1212,7 @@ function PlayPageClient() {
               plugin.load([]);
               console.log('集数切换：弹幕开关关闭，已清空弹幕数据');
             }
-            
+
             // 更新按钮状态
             if (updateButtonStateRef.current) {
               updateButtonStateRef.current();
@@ -1902,13 +1902,13 @@ function PlayPageClient() {
             while (!danmakuConfigLoaded) {
               await new Promise(resolve => setTimeout(resolve, 100));
             }
-            
+
             console.log('视频切换完成，弹幕配置已加载，当前开关状态:', externalDanmuEnabledRef.current);
-            
+
             try {
               if (artPlayerRef.current?.plugins?.artplayerPluginDanmuku) {
                 const plugin = artPlayerRef.current.plugins.artplayerPluginDanmuku;
-                
+
                 // 根据用户开关状态同步弹幕插件的显示/隐藏状态
                 if (externalDanmuEnabledRef.current) {
                   // 用户开启了弹幕，确保插件显示并加载数据
@@ -1916,10 +1916,10 @@ function PlayPageClient() {
                     plugin.show();
                     console.log('换源：根据用户设置开启弹幕显示');
                   }
-                  
+
                   const externalDanmu = await loadExternalDanmu();
                   console.log('切换后重新加载弹幕结果:', externalDanmu);
-                  
+
                   if (externalDanmu.length > 0) {
                     console.log('切换后向播放器插件加载弹幕数据:', externalDanmu.length, '条');
                     plugin.load(externalDanmu);
@@ -1943,7 +1943,7 @@ function PlayPageClient() {
                   plugin.load([]);
                   console.log('换源：弹幕开关关闭，已清空弹幕数据');
                 }
-                
+
                 // 更新按钮状态
                 if (updateButtonStateRef.current) {
                   updateButtonStateRef.current();
@@ -2184,26 +2184,7 @@ function PlayPageClient() {
                 handleNextEpisode();
               },
             },
-            // 🚀 简单弹幕发送按钮（仅Web端显示）
-            ...(isMobile ? [] : [{
-              position: 'right',
-              html: '弹',
-              tooltip: '发送弹幕',
-              click: function () {
-                if (artPlayerRef.current?.plugins?.artplayerPluginDanmuku) {
-                  // 手动弹出输入框发送弹幕
-                  const text = prompt('请输入弹幕内容', '');
-                  if (text && text.trim()) {
-                    artPlayerRef.current.plugins.artplayerPluginDanmuku.emit({
-                      text: text.trim(),
-                      time: artPlayerRef.current.currentTime,
-                      color: '#FFFFFF',
-                      mode: 0,
-                    });
-                  }
-                }
-              },
-            }]),
+            // 弹幕发送功能已通过官方 emitter: true 参数启用
           ],
           // 🚀 性能优化的弹幕插件配置 - 保持弹幕数量，优化渲染性能
           plugins: [
@@ -2239,9 +2220,9 @@ function PlayPageClient() {
                   modes: JSON.parse(localStorage.getItem('danmaku_modes') || '[0, 1, 2]') as Array<0 | 1 | 2>,
                   margin: JSON.parse(localStorage.getItem('danmaku_margin') || '[10, "75%"]') as [number | `${number}%`, number | `${number}%`],
                   visible: localStorage.getItem('danmaku_visible') !== 'false',
-                  emitter: false,
-                  maxLength: 50,
-                  lockTime: 2, // v5.2.0优化: 减少锁定时间，降低快进时的延迟
+                  emitter: true, // 开启官方弹幕发射器
+                  maxLength: 200,
+                  lockTime: 5, // v5.2.0优化: 减少锁定时间，降低快进时的延迟
                   theme: 'dark' as const,
                   width: 300,
 
@@ -2364,13 +2345,52 @@ function PlayPageClient() {
             const style = document.createElement('style');
             style.id = 'danmuku-controls-optimize';
             style.textContent = `
-            /* 只显示弹幕配置按钮，隐藏开关按钮和发射器 */
+            /* 只隐藏官方开关按钮，保留发射器 */
             .artplayer-plugin-danmuku .apd-toggle {
               display: none !important;
             }
             
-            .artplayer-plugin-danmuku .apd-emitter {
-              display: none !important;
+            /* 移动端隐藏弹幕发射器（包括全屏和非全屏） - 使用最强的选择器 */
+            @media (max-width: 768px) {
+              body .artplayer .artplayer-plugin-danmuku .apd-emitter,
+              body .artplayer-fullscreen .artplayer-plugin-danmuku .apd-emitter,
+              html body .artplayer .artplayer-plugin-danmuku .apd-emitter,
+              html body .artplayer-fullscreen .artplayer-plugin-danmuku .apd-emitter,
+              .artplayer .artplayer-plugin-danmuku .apd-emitter,
+              .artplayer-fullscreen .artplayer-plugin-danmuku .apd-emitter,
+              .artplayer-plugin-danmuku .apd-emitter {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+                height: 0 !important;
+                width: 0 !important;
+                overflow: hidden !important;
+              }
+            }
+            
+            /* 去除官方弹幕发射器输入框的focus描边 */
+            .artplayer-plugin-danmuku .apd-emitter input {
+              outline: none !important;
+              border: none !important;
+              box-shadow: none !important;
+            }
+            
+            .artplayer-plugin-danmuku .apd-emitter input:focus {
+              outline: none !important;
+              border: none !important;
+              box-shadow: none !important;
+            }
+            
+            /* 自定义弹幕发射器输入框样式 */
+            .artplayer-plugin-danmuku .apd-emitter input {
+              font-size: 11px !important;
+            }
+            
+            .artplayer-plugin-danmuku .apd-emitter input::placeholder {
+              font-size: 11px !important;
+              color: #ffffff !important;
+              opacity: 0.85 !important;
             }
             
             /* 弹幕配置面板自动适配定位 - 完全模仿ArtPlayer设置面板 */
@@ -2462,6 +2482,28 @@ function PlayPageClient() {
 
               console.log('找到弹幕配置按钮，开始创建开关按钮');
 
+              // 修改弹幕发射器占位符文字
+              const customizePlaceholder = () => {
+                const emitterInput = document.querySelector('.artplayer-plugin-danmuku .apd-emitter input');
+                if (emitterInput) {
+                  const placeholderText = '\u004E\u0065\u0077\u0054\u0056\u0020\u9080\u60A8\u53D1\u4E2A\u53CB\u5584\u7684\u5F39\u5E55\u89C1\u8BC1';
+                  emitterInput.setAttribute('placeholder', placeholderText);
+                }
+              };
+
+              // 立即执行一次
+              customizePlaceholder();
+
+              // 使用MutationObserver监听DOM变化，确保占位符修改生效
+              const observer = new MutationObserver(() => {
+                customizePlaceholder();
+              });
+
+              const emitterContainer = document.querySelector('.artplayer-plugin-danmuku .apd-emitter');
+              if (emitterContainer) {
+                observer.observe(emitterContainer, { childList: true, subtree: true });
+              }
+
               // 创建弹幕开关按钮
               const createDanmakuToggleButton = () => {
                 const toggleButton = document.createElement('div');
@@ -2488,21 +2530,21 @@ function PlayPageClient() {
                 const updateButtonState = () => {
                   const isDanmakuVisible = artPlayerRef.current?.plugins?.artplayerPluginDanmuku && !artPlayerRef.current.plugins.artplayerPluginDanmuku.isHide;
                   const isExternalDanmuEnabled = externalDanmuEnabledRef.current;
-                  
+
                   // 只有当弹幕显示且外部弹幕开关都开启时，才显示开启图标
                   if (isDanmakuVisible && isExternalDanmuEnabled) {
                     // 弹幕开启（弹幕显示和外部弹幕同时开启）
-                    toggleButton.innerHTML = '<svg t="1757659936665" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="814" width="20" height="20"><path d="M663.04 457.6H610.133333v37.973333h52.906667v-37.973333z m-100.266667 0h-50.346666v37.973333h50.346666v-37.973333z m0 77.226667h-50.346666v35.84h50.346666v-35.84z m100.266667 0H610.133333v35.84h52.906667v-35.84z m-25.6-193.28l45.653333 16.213333c-9.386667 22.186667-20.053333 41.813333-31.573333 59.306667h53.76v194.133333h-95.573333v35.413333h113.493333v44.8l-0.426667 0.426667h-113.066666l-0.426667-0.426667c-29.013333-31.146667-77.653333-33.28-109.226667-4.266666l-4.693333 4.693333h-43.52v-45.226667h110.08v-35.413333h-93.44v-194.133333h55.466667a362.24 362.24 0 0 0-34.56-57.173334l43.946666-14.933333c12.8 18.346667 24.746667 37.973333 34.133334 58.88l-29.013334 12.8h64c13.653333-23.04 24.746667-48.64 34.986667-75.093333z m-198.826667 20.48v142.08H355.413333l-6.4 62.293333h92.586667c0 79.36-2.986667 132.266667-7.253333 159.146667-5.546667 26.88-29.013333 41.386667-71.253334 44.373333-11.946667 0-23.893333-0.853333-37.12-1.706667l-12.373333-44.8c11.946667 1.28 25.173333 2.133333 37.973333 2.133334 23.04 0 36.266667-7.253333 39.253334-22.186667 3.413333-14.933333 5.12-46.506667 5.12-95.573333H299.52l12.8-144.64h78.08v-59.733334H303.786667v-40.96h134.826666v-0.426666z" fill="#ffffff" p-id="815"></path><path d="M775.424 212.693333a170.666667 170.666667 0 0 1 170.496 162.133334l0.170667 8.533333v106.666667a42.666667 42.666667 0 0 1-85.034667 4.949333l-0.298667-4.992V383.36a85.333333 85.333333 0 0 0-78.933333-85.077333l-6.4-0.256H246.954667a85.333333 85.333333 0 0 0-85.12 78.976l-0.213334 6.4v400.597333a85.333333 85.333333 0 0 0 78.933334 85.12l6.4 0.213333h281.770666a42.666667 42.666667 0 0 1 4.992 85.034667l-4.992 0.298667H246.954667a170.666667 170.666667 0 0 1-170.453334-162.133334l-0.213333-8.533333v-400.64a170.666667 170.666667 0 0 1 162.133333-170.453333l8.533334-0.213334h528.469333z" fill="#ffffff" p-id="816"></path><path d="M300.842667 97.194667a42.666667 42.666667 0 0 1 56.32-3.541334l4.010666 3.541334 128 128a42.666667 42.666667 0 0 1-56.32 63.914666l-4.010666-3.541333-128-128a42.666667 42.666667 0 0 1 0-60.373333z" fill="#ffffff" p-id="817"></path><path d="M702.506667 97.194667a42.666667 42.666667 0 0 0-56.32-3.541334l-4.010667 3.541334-128 128a42.666667 42.666667 0 0 0 56.32 63.914666l4.010667-3.541333 128-128a42.666667 42.666667 0 0 0 0-60.373333z" fill="#ffffff" p-id="818"></path><path d="M872.362667 610.773333a42.666667 42.666667 0 0 1 65.578666 54.314667l-3.413333 4.138667-230.058667 244.608a42.666667 42.666667 0 0 1-57.685333 4.096l-4.096-3.712-110.634667-114.688a42.666667 42.666667 0 0 1 57.472-62.848l3.968 3.626666 79.488 82.389334 199.381334-211.925334z" fill="#00ff88" p-id="819"></path></svg>';
+                    toggleButton.innerHTML = '<svg t="1757659936665" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="814" width="23" height="23"><path d="M663.04 457.6H610.133333v37.973333h52.906667v-37.973333z m-100.266667 0h-50.346666v37.973333h50.346666v-37.973333z m0 77.226667h-50.346666v35.84h50.346666v-35.84z m100.266667 0H610.133333v35.84h52.906667v-35.84z m-25.6-193.28l45.653333 16.213333c-9.386667 22.186667-20.053333 41.813333-31.573333 59.306667h53.76v194.133333h-95.573333v35.413333h113.493333v44.8l-0.426667 0.426667h-113.066666l-0.426667-0.426667c-29.013333-31.146667-77.653333-33.28-109.226667-4.266666l-4.693333 4.693333h-43.52v-45.226667h110.08v-35.413333h-93.44v-194.133333h55.466667a362.24 362.24 0 0 0-34.56-57.173334l43.946666-14.933333c12.8 18.346667 24.746667 37.973333 34.133334 58.88l-29.013334 12.8h64c13.653333-23.04 24.746667-48.64 34.986667-75.093333z m-198.826667 20.48v142.08H355.413333l-6.4 62.293333h92.586667c0 79.36-2.986667 132.266667-7.253333 159.146667-5.546667 26.88-29.013333 41.386667-71.253334 44.373333-11.946667 0-23.893333-0.853333-37.12-1.706667l-12.373333-44.8c11.946667 1.28 25.173333 2.133333 37.973333 2.133334 23.04 0 36.266667-7.253333 39.253334-22.186667 3.413333-14.933333 5.12-46.506667 5.12-95.573333H299.52l12.8-144.64h78.08v-59.733334H303.786667v-40.96h134.826666v-0.426666z" fill="#ffffff" p-id="815"></path><path d="M775.424 212.693333a170.666667 170.666667 0 0 1 170.496 162.133334l0.170667 8.533333v106.666667a42.666667 42.666667 0 0 1-85.034667 4.949333l-0.298667-4.992V383.36a85.333333 85.333333 0 0 0-78.933333-85.077333l-6.4-0.256H246.954667a85.333333 85.333333 0 0 0-85.12 78.976l-0.213334 6.4v400.597333a85.333333 85.333333 0 0 0 78.933334 85.12l6.4 0.213333h281.770666a42.666667 42.666667 0 0 1 4.992 85.034667l-4.992 0.298667H246.954667a170.666667 170.666667 0 0 1-170.453334-162.133334l-0.213333-8.533333v-400.64a170.666667 170.666667 0 0 1 162.133333-170.453333l8.533334-0.213334h528.469333z" fill="#ffffff" p-id="816"></path><path d="M300.842667 97.194667a42.666667 42.666667 0 0 1 56.32-3.541334l4.010666 3.541334 128 128a42.666667 42.666667 0 0 1-56.32 63.914666l-4.010666-3.541333-128-128a42.666667 42.666667 0 0 1 0-60.373333z" fill="#ffffff" p-id="817"></path><path d="M702.506667 97.194667a42.666667 42.666667 0 0 0-56.32-3.541334l-4.010667 3.541334-128 128a42.666667 42.666667 0 0 0 56.32 63.914666l4.010667-3.541333 128-128a42.666667 42.666667 0 0 0 0-60.373333z" fill="#ffffff" p-id="818"></path><path d="M872.362667 610.773333a42.666667 42.666667 0 0 1 65.578666 54.314667l-3.413333 4.138667-230.058667 244.608a42.666667 42.666667 0 0 1-57.685333 4.096l-4.096-3.712-110.634667-114.688a42.666667 42.666667 0 0 1 57.472-62.848l3.968 3.626666 79.488 82.389334 199.381334-211.925334z" fill="#00ff88" p-id="819"></path></svg>';
                     toggleButton.title = '弹幕已开启';
                   } else {
                     // 弹幕关闭（弹幕显示或外部弹幕任一关闭）
-                    toggleButton.innerHTML = '<svg t="1757659973066" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="961" width="20" height="20"><path d="M663.04 457.6H610.133333v37.973333h52.906667v-37.973333z m-100.266667 0h-50.346666v37.973333h50.346666v-37.973333z m0 77.226667h-50.346666v35.84h50.346666v-35.84z m100.266667 0H610.133333v35.84h52.906667v-35.84z m-25.6-193.28l45.653333 16.213333c-9.386667 22.186667-20.053333 41.813333-31.573333 59.306667h53.76v194.133333h-95.573333v35.413333h41.813333l-14.08 45.226667h-27.733333l-0.426667-0.426667-113.92 0.426667h-43.52v-45.226667h110.08v-35.413333h-93.44v-194.133333h55.466667a362.24 362.24 0 0 0-34.56-57.173334l43.946666-14.933333c12.8 18.346667 24.746667 37.973333 34.133334 58.88l-29.013334 12.8h64c13.653333-23.04 24.746667-48.64 34.986667-75.093333z m-198.826667 20.48v142.08H355.413333l-6.4 62.293333h92.586667c0 79.36-2.986667 132.266667-7.253333 159.146667-5.546667 26.88-29.013333 41.386667-71.253334 44.373333-11.946667 0-23.893333-0.853333-37.12-1.706667l-12.373333-44.8c11.946667 1.28 25.173333 2.133333 37.973333 2.133334 23.04 0 36.266667-7.253333 39.253334-22.186667 3.413333-14.933333 5.12-46.506667 5.12-95.573333H299.52l12.8-144.64h78.08v-59.733334H303.786667v-40.96h134.826666v-0.426666z" fill="#ffffff" p-id="962"></path><path d="M775.424 212.693333a170.666667 170.666667 0 0 1 170.496 162.133334l0.170667 8.533333v74.24a42.666667 42.666667 0 0 1-85.034667 4.992l-0.298667-4.992v-74.24a85.333333 85.333333 0 0 0-78.933333-85.077333l-6.4-0.256H246.954667a85.333333 85.333333 0 0 0-85.12 78.976l-0.213334 6.4v400.597333a85.333333 85.333333 0 0 0 78.933334 85.12l6.4 0.213333h281.770666a42.666667 42.666667 0 0 1 4.992 85.034667l-4.992 0.298667H246.954667a170.666667 170.666667 0 0 1-170.453334-162.133334l-0.213333-8.533333v-400.64a170.666667 170.666667 0 0 1 162.133333-170.453333l8.533334-0.213334h528.469333z" fill="#ffffff" p-id="963"></path><path d="M300.842667 97.194667a42.666667 42.666667 0 0 1 56.32-3.541334l4.010666 3.541334 128 128a42.666667 42.666667 0 0 1-56.32 63.914666l-4.010666-3.541333-128-128a42.666667 42.666667 0 0 1 0-60.373333z" fill="#ffffff" p-id="964"></path><path d="M702.506667 97.194667a42.666667 42.666667 0 0 0-56.32-3.541334l-4.010667 3.541334-128 128a42.666667 42.666667 0 0 0 56.32 63.914666l4.010667-3.541333 128-128a42.666667 42.666667 0 0 0 0-60.373333z" fill="#ffffff" p-id="965"></path><path d="M768 512a213.333333 213.333333 0 1 0 0 426.666667 213.333333 213.333333 0 0 0 0-426.666667z m0 85.333333a128 128 0 1 1 0 256 128 128 0 0 1 0-256z" fill="#E73146" p-id="966"></path><path d="M848.512 588.245333a42.666667 42.666667 0 0 1 62.592 57.728l-3.626667 3.925334-214.954666 205.610666a42.666667 42.666667 0 0 1-62.592-57.728l3.626666-3.925333 214.954667-205.653333z" fill="#E73146" p-id="967"></path></svg>';
+                    toggleButton.innerHTML = '<svg t="1757659973066" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="961" width="23" height="23"><path d="M663.04 457.6H610.133333v37.973333h52.906667v-37.973333z m-100.266667 0h-50.346666v37.973333h50.346666v-37.973333z m0 77.226667h-50.346666v35.84h50.346666v-35.84z m100.266667 0H610.133333v35.84h52.906667v-35.84z m-25.6-193.28l45.653333 16.213333c-9.386667 22.186667-20.053333 41.813333-31.573333 59.306667h53.76v194.133333h-95.573333v35.413333h41.813333l-14.08 45.226667h-27.733333l-0.426667-0.426667-113.92 0.426667h-43.52v-45.226667h110.08v-35.413333h-93.44v-194.133333h55.466667a362.24 362.24 0 0 0-34.56-57.173334l43.946666-14.933333c12.8 18.346667 24.746667 37.973333 34.133334 58.88l-29.013334 12.8h64c13.653333-23.04 24.746667-48.64 34.986667-75.093333z m-198.826667 20.48v142.08H355.413333l-6.4 62.293333h92.586667c0 79.36-2.986667 132.266667-7.253333 159.146667-5.546667 26.88-29.013333 41.386667-71.253334 44.373333-11.946667 0-23.893333-0.853333-37.12-1.706667l-12.373333-44.8c11.946667 1.28 25.173333 2.133333 37.973333 2.133334 23.04 0 36.266667-7.253333 39.253334-22.186667 3.413333-14.933333 5.12-46.506667 5.12-95.573333H299.52l12.8-144.64h78.08v-59.733334H303.786667v-40.96h134.826666v-0.426666z" fill="#ffffff" p-id="962"></path><path d="M775.424 212.693333a170.666667 170.666667 0 0 1 170.496 162.133334l0.170667 8.533333v74.24a42.666667 42.666667 0 0 1-85.034667 4.992l-0.298667-4.992v-74.24a85.333333 85.333333 0 0 0-78.933333-85.077333l-6.4-0.256H246.954667a85.333333 85.333333 0 0 0-85.12 78.976l-0.213334 6.4v400.597333a85.333333 85.333333 0 0 0 78.933334 85.12l6.4 0.213333h281.770666a42.666667 42.666667 0 0 1 4.992 85.034667l-4.992 0.298667H246.954667a170.666667 170.666667 0 0 1-170.453334-162.133334l-0.213333-8.533333v-400.64a170.666667 170.666667 0 0 1 162.133333-170.453333l8.533334-0.213334h528.469333z" fill="#ffffff" p-id="963"></path><path d="M300.842667 97.194667a42.666667 42.666667 0 0 1 56.32-3.541334l4.010666 3.541334 128 128a42.666667 42.666667 0 0 1-56.32 63.914666l-4.010666-3.541333-128-128a42.666667 42.666667 0 0 1 0-60.373333z" fill="#ffffff" p-id="964"></path><path d="M702.506667 97.194667a42.666667 42.666667 0 0 0-56.32-3.541334l-4.010667 3.541334-128 128a42.666667 42.666667 0 0 0 56.32 63.914666l4.010667-3.541333 128-128a42.666667 42.666667 0 0 0 0-60.373333z" fill="#ffffff" p-id="965"></path><path d="M768 512a213.333333 213.333333 0 1 0 0 426.666667 213.333333 213.333333 0 0 0 0-426.666667z m0 85.333333a128 128 0 1 1 0 256 128 128 0 0 1 0-256z" fill="#E73146" p-id="966"></path><path d="M848.512 588.245333a42.666667 42.666667 0 0 1 62.592 57.728l-3.626667 3.925334-214.954666 205.610666a42.666667 42.666667 0 0 1-62.592-57.728l3.626666-3.925333 214.954667-205.653333z" fill="#E73146" p-id="967"></path></svg>';
                     toggleButton.title = '弹幕已关闭';
                   }
-                  
+
                   console.log('按钮状态更新 - 弹幕显示:', isDanmakuVisible, '外部弹幕开关:', isExternalDanmuEnabled, '最终图标状态:', isDanmakuVisible && isExternalDanmuEnabled ? '开启' : '关闭');
                 };
-                
+
                 // 将updateButtonState函数保存到ref中，以便在其他地方调用
                 updateButtonStateRef.current = updateButtonState;
 
@@ -2526,7 +2568,7 @@ function PlayPageClient() {
                     // 同时关闭外部弹幕
                     externalDanmuEnabledRef.current = false;
                     setExternalDanmuEnabled(false);
-                    
+
                     // 保存到数据库和localStorage
                     const authInfo = getAuthInfoFromBrowserCookie();
                     if (authInfo?.username) {
@@ -2545,7 +2587,7 @@ function PlayPageClient() {
                     // 同时开启外部弹幕
                     externalDanmuEnabledRef.current = true;
                     setExternalDanmuEnabled(true);
-                    
+
                     // 保存到数据库和localStorage
                     const authInfo = getAuthInfoFromBrowserCookie();
                     if (authInfo?.username) {
@@ -2631,7 +2673,7 @@ function PlayPageClient() {
                     clearTimeout(hideTimer);
                     hideTimer = null;
                   }
-                  
+
                   if (!isConfigVisible) {
                     isConfigVisible = true;
                     (configPanel as HTMLElement).style.setProperty('display', 'block', 'important');
@@ -2649,7 +2691,7 @@ function PlayPageClient() {
                     clearTimeout(showTimer);
                     showTimer = null;
                   }
-                  
+
                   if (isConfigVisible) {
                     isConfigVisible = false;
                     (configPanel as HTMLElement).classList.remove('show');
@@ -2667,7 +2709,7 @@ function PlayPageClient() {
                     clearTimeout(hideTimer);
                     hideTimer = null;
                   }
-                  
+
                   showTimer = setTimeout(showPanel, 300); // 300ms延迟显示
                 };
 
@@ -2677,14 +2719,14 @@ function PlayPageClient() {
                     clearTimeout(showTimer);
                     showTimer = null;
                   }
-                  
+
                   hideTimer = setTimeout(hidePanel, 500); // 500ms延迟隐藏
                 };
 
                 // 为按钮添加hover事件
                 configButton.addEventListener('mouseenter', handleMouseEnter);
                 configButton.addEventListener('mouseleave', handleMouseLeave);
-                
+
                 // 为面板添加hover事件
                 configPanel.addEventListener('mouseenter', handleMouseEnter);
                 configPanel.addEventListener('mouseleave', handleMouseLeave);
@@ -2697,7 +2739,7 @@ function PlayPageClient() {
                       setTimeout(adjustPanelPosition, 50); // 短暂延迟确保resize完成
                     }
                   });
-                  
+
                   // 监听全屏状态变化
                   artPlayerRef.current.on('fullscreen', (fullscreen: boolean) => {
                     if (isConfigVisible) {
@@ -2705,14 +2747,14 @@ function PlayPageClient() {
                       setTimeout(adjustPanelPosition, 100); // 延迟调整确保全屏切换完成
                     }
                   });
-                  
+
                   artPlayerRef.current.on('fullscreenWeb', (fullscreen: boolean) => {
                     if (isConfigVisible) {
                       console.log('检测到网页全屏状态变化:', fullscreen ? '进入网页全屏' : '退出网页全屏');
                       setTimeout(adjustPanelPosition, 100); // 延迟调整确保全屏切换完成
                     }
                   });
-                  
+
                   console.log('已监听ArtPlayer resize和全屏事件，实现自动适配');
                 }
 
@@ -2750,7 +2792,7 @@ function PlayPageClient() {
                     clearTimeout(hideTimer);
                     hideTimer = null;
                   }
-                  
+
                   if (!isConfigVisible) {
                     isConfigVisible = true;
                     (configPanel as HTMLElement).style.setProperty('display', 'block', 'important');
@@ -2767,7 +2809,7 @@ function PlayPageClient() {
                     clearTimeout(showTimer);
                     showTimer = null;
                   }
-                  
+
                   if (isConfigVisible) {
                     isConfigVisible = false;
                     (configPanel as HTMLElement).classList.remove('show');
@@ -2785,7 +2827,7 @@ function PlayPageClient() {
                     clearTimeout(hideTimer);
                     hideTimer = null;
                   }
-                  
+
                   showTimer = setTimeout(showPanel, 300); // 300ms延迟显示
                 };
 
@@ -2795,14 +2837,14 @@ function PlayPageClient() {
                     clearTimeout(showTimer);
                     showTimer = null;
                   }
-                  
+
                   hideTimer = setTimeout(hidePanel, 500); // 500ms延迟隐藏
                 };
 
                 // 为按钮添加hover事件
                 configButton.addEventListener('mouseenter', handleMouseEnter);
                 configButton.addEventListener('mouseleave', handleMouseLeave);
-                
+
                 // 为面板添加hover事件
                 configPanel.addEventListener('mouseenter', handleMouseEnter);
                 configPanel.addEventListener('mouseleave', handleMouseLeave);
@@ -2825,13 +2867,13 @@ function PlayPageClient() {
             while (!danmakuConfigLoaded) {
               await new Promise(resolve => setTimeout(resolve, 100));
             }
-            
+
             console.log('弹幕配置已加载，开始同步弹幕状态，当前开关状态:', externalDanmuEnabledRef.current);
-            
+
             try {
               if (artPlayerRef.current?.plugins?.artplayerPluginDanmuku) {
                 const plugin = artPlayerRef.current.plugins.artplayerPluginDanmuku;
-                
+
                 // 根据数据库配置同步弹幕插件的显示状态
                 if (externalDanmuEnabledRef.current) {
                   // 外部弹幕开关开启，确保弹幕插件显示
@@ -2839,11 +2881,11 @@ function PlayPageClient() {
                     plugin.show();
                     console.log('根据配置开启弹幕显示');
                   }
-                  
+
                   // 加载外部弹幕数据
                   const externalDanmu = await loadExternalDanmu();
                   console.log('外部弹幕加载结果:', externalDanmu);
-                  
+
                   if (externalDanmu.length > 0) {
                     console.log('向播放器插件加载弹幕数据:', externalDanmu.length, '条');
                     plugin.load(externalDanmu);
@@ -2866,7 +2908,7 @@ function PlayPageClient() {
                   plugin.load([]);
                   console.log('弹幕开关关闭，已清空弹幕数据');
                 }
-                
+
                 // 更新按钮状态
                 if (updateButtonStateRef.current) {
                   updateButtonStateRef.current();
@@ -2878,7 +2920,7 @@ function PlayPageClient() {
               console.error('同步弹幕状态失败:', error);
             }
           };
-          
+
           setTimeout(waitForConfigAndLoadDanmu, 1000); // 延迟1秒确保插件完全初始化
 
           // 监听弹幕插件的显示/隐藏事件，自动保存状态到localStorage
@@ -2932,15 +2974,15 @@ function PlayPageClient() {
           const debouncedConfigUpdate = (option: any) => {
             // 立即保存到localStorage（用户体验）
             debouncedSaveConfig(option);
-            
+
             // 防抖处理弹幕插件的配置更新（性能优化）
             if (configUpdateTimeoutRef.current) {
               clearTimeout(configUpdateTimeoutRef.current);
             }
-            
+
             // 对于字号调整，使用更长的防抖时间减少重新渲染
             const debounceTime = typeof option.fontSize !== 'undefined' ? 800 : 300;
-            
+
             configUpdateTimeoutRef.current = setTimeout(() => {
               // 这里可以添加额外的弹幕更新逻辑，如果需要的话
               console.log('弹幕配置更新防抖完成:', option);
