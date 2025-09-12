@@ -2342,6 +2342,12 @@ function PlayPageClient() {
               margin-bottom: 8px !important; /* 与按钮保持8px间距 */
               transform: translateX(-50%) !important; /* 水平居中偏移 */
               z-index: 91 !important; /* 比ArtPlayer设置面板(90)稍高 */
+              display: none !important; /* 默认隐藏，只能通过点击显示 */
+            }
+            
+            /* 移除hover显示效果，改为点击控制 */
+            .artplayer-plugin-danmuku .apd-config:hover .apd-config-panel {
+              display: none !important;
             }
             
             /* 全屏模式下保持相对于按钮的居中定位 */
@@ -2622,8 +2628,39 @@ function PlayPageClient() {
 
                 console.log('移动端弹幕配置切换功能已激活');
               } else {
-                // 桌面端：保持原有hover机制
-                console.log('桌面端保持原有hover机制');
+                // 桌面端：改为点击切换机制，与移动端保持一致
+                console.log('为桌面端添加弹幕配置按钮点击切换功能');
+
+                let isConfigVisible = false;
+
+                // 添加点击事件监听器
+                configButton.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+
+                  isConfigVisible = !isConfigVisible;
+
+                  if (isConfigVisible) {
+                    (configPanel as HTMLElement).style.display = 'block';
+                    console.log('桌面端弹幕配置面板：显示');
+                  } else {
+                    (configPanel as HTMLElement).style.display = 'none';
+                    console.log('桌面端弹幕配置面板：隐藏');
+                  }
+                });
+
+                // 点击其他地方自动隐藏
+                document.addEventListener('click', (e) => {
+                  if (isConfigVisible &&
+                    !configButton.contains(e.target as Node) &&
+                    !configPanel.contains(e.target as Node)) {
+                    isConfigVisible = false;
+                    (configPanel as HTMLElement).style.display = 'none';
+                    console.log('点击外部区域，隐藏弹幕配置面板');
+                  }
+                });
+
+                console.log('桌面端弹幕配置切换功能已激活');
               }
             };
 
