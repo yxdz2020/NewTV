@@ -2336,21 +2336,23 @@ function PlayPageClient() {
             .artplayer-plugin-danmuku .apd-config-panel {
               /* 改为绝对定位，相对于弹幕配置按钮 */
               position: absolute !important;
-              left: auto !important;
-              right: 0 !important; /* 右对齐弹幕配置按钮 */
+              left: 50% !important; /* 水平居中定位 */
+              right: auto !important;
               bottom: 100% !important; /* 显示在按钮上方 */
               margin-bottom: 8px !important; /* 与按钮保持8px间距 */
-              transform: none !important; /* 移除任何变换 */
+              transform: translateX(-50%) !important; /* 水平居中偏移 */
               z-index: 91 !important; /* 比ArtPlayer设置面板(90)稍高 */
             }
             
-            /* 全屏模式下保持相对于按钮的定位 */
+            /* 全屏模式下保持相对于按钮的居中定位 */
             .art-fullscreen .artplayer-plugin-danmuku .apd-config-panel,
             .art-fullscreen-web .artplayer-plugin-danmuku .apd-config-panel {
               position: absolute !important;
-              right: 0 !important;
+              left: 50% !important;
+              right: auto !important;
               bottom: 100% !important;
               margin-bottom: 8px !important;
+              transform: translateX(-50%) !important;
             }
           `;
             document.head.appendChild(style);
