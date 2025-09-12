@@ -3,7 +3,7 @@
 import { Redis } from '@upstash/redis';
 
 import { AdminConfig } from './admin.types';
-import { Favorite, IStorage, PlayRecord, SkipConfig } from './types';
+import { DanmakuConfig, Favorite, IStorage, PlayRecord, SkipConfig } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -235,6 +235,9 @@ export class UpstashRedisStorage implements IStorage {
     if (skipConfigKeys.length > 0) {
       await withRetry(() => this.client.del(...skipConfigKeys));
     }
+
+    // 删除弹幕配置
+    await withRetry(() => this.client.del(this.danmakuConfigKey(userName)));
   }
 
   // ---------- 搜索历史 ----------
@@ -359,6 +362,24 @@ export class UpstashRedisStorage implements IStorage {
     });
 
     return configs;
+  }
+
+  // ---------- 弹幕配置 ----------
+  private danmakuConfigKey(user: string) {
+    return `u:${user}:danmaku`;
+  }
+
+  async getDanmakuConfig(userName: string): Promise<DanmakuConfig | null> {
+    const val = await withRetry(() => this.client.get(this.danmakuConfigKey(userName)));
+    return val ? (val as DanmakuConfig) : null;
+  }
+
+  async setDanmakuConfig(userName: string, config: DanmakuConfig): Promise<void> {
+    await withRetry(() => this.client.set(this.danmakuConfigKey(userName), config));
+  }
+
+  async deleteDanmakuConfig(userName: string): Promise<void> {
+    await withRetry(() => this.client.del(this.danmakuConfigKey(userName)));
   }
 
   // 清空所有数据

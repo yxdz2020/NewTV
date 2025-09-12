@@ -3,7 +3,7 @@
 import { AdminConfig } from './admin.types';
 import { KvrocksStorage } from './kvrocks.db';
 import { RedisStorage } from './redis.db';
-import { Favorite, IStorage, PlayRecord, SkipConfig } from './types';
+import { DanmakuConfig, Favorite, IStorage, PlayRecord, SkipConfig } from './types';
 import { UpstashRedisStorage } from './upstash.db';
 
 // storage type 常量: 'localstorage' | 'redis' | 'upstash'，默认 'localstorage'
@@ -229,6 +229,33 @@ export class DbManager {
       return (this.storage as any).getAllSkipConfigs(userName);
     }
     return {};
+  }
+
+  // ---------- 弹幕配置 ----------
+  async getDanmakuConfig(
+    userName: string
+  ): Promise<DanmakuConfig | null> {
+    if (!this.storage) {
+      throw new Error('Storage not available');
+    }
+    return this.storage.getDanmakuConfig(userName);
+  }
+
+  async saveDanmakuConfig(
+    userName: string,
+    config: DanmakuConfig
+  ): Promise<void> {
+    if (!this.storage) {
+      throw new Error('Storage not available');
+    }
+    await this.storage.setDanmakuConfig(userName, config);
+  }
+
+  async deleteDanmakuConfig(userName: string): Promise<void> {
+    if (!this.storage) {
+      throw new Error('Storage not available');
+    }
+    await this.storage.deleteDanmakuConfig(userName);
   }
 
   // ---------- 数据清理 ----------

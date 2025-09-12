@@ -3,7 +3,7 @@
 import { createClient, RedisClientType } from 'redis';
 
 import { AdminConfig } from './admin.types';
-import { Favorite, IStorage, PlayRecord, SkipConfig } from './types';
+import { DanmakuConfig, Favorite, IStorage, PlayRecord, SkipConfig } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -331,6 +331,9 @@ export abstract class BaseRedisStorage implements IStorage {
     if (skipConfigKeys.length > 0) {
       await this.withRetry(() => this.client.del(skipConfigKeys));
     }
+
+    // 删除弹幕配置
+    await this.withRetry(() => this.client.del(this.danmakuConfigKey(userName)));
   }
 
   // ---------- 搜索历史 ----------
@@ -460,6 +463,26 @@ export abstract class BaseRedisStorage implements IStorage {
     });
 
     return configs;
+  }
+
+  // ---------- 弹幕配置 ----------
+  private danmakuConfigKey(user: string) {
+    return `u:${user}:danmaku`;
+  }
+
+  async getDanmakuConfig(userName: string): Promise<DanmakuConfig | null> {
+    const val = await this.withRetry(() => this.client.get(this.danmakuConfigKey(userName)));
+    return val ? (JSON.parse(val) as DanmakuConfig) : null;
+  }
+
+  async setDanmakuConfig(userName: string, config: DanmakuConfig): Promise<void> {
+    await this.withRetry(() =>
+      this.client.set(this.danmakuConfigKey(userName), JSON.stringify(config))
+    );
+  }
+
+  async deleteDanmakuConfig(userName: string): Promise<void> {
+    await this.withRetry(() => this.client.del(this.danmakuConfigKey(userName)));
   }
 
   // 清空所有数据
