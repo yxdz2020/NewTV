@@ -2561,12 +2561,12 @@ function PlayPageClient() {
                   isConfigVisible = !isConfigVisible;
 
                   if (isConfigVisible) {
-                    (configPanel as HTMLElement).style.display = 'block';
+                    (configPanel as HTMLElement).style.setProperty('display', 'block', 'important');
                     // 显示后立即调整位置
                     setTimeout(adjustPanelPosition, 10);
                     console.log('移动端弹幕配置面板：显示');
                   } else {
-                    (configPanel as HTMLElement).style.display = 'none';
+                    (configPanel as HTMLElement).style.setProperty('display', 'none', 'important');
                     console.log('移动端弹幕配置面板：隐藏');
                   }
                 });
@@ -2621,7 +2621,7 @@ function PlayPageClient() {
                     !configButton.contains(e.target as Node) &&
                     !configPanel.contains(e.target as Node)) {
                     isConfigVisible = false;
-                    (configPanel as HTMLElement).style.display = 'none';
+                    (configPanel as HTMLElement).style.setProperty('display', 'none', 'important');
                     console.log('点击外部区域，隐藏弹幕配置面板');
                   }
                 });
@@ -2641,10 +2641,10 @@ function PlayPageClient() {
                   isConfigVisible = !isConfigVisible;
 
                   if (isConfigVisible) {
-                    (configPanel as HTMLElement).style.display = 'block';
+                    (configPanel as HTMLElement).style.setProperty('display', 'block', 'important');
                     console.log('桌面端弹幕配置面板：显示');
                   } else {
-                    (configPanel as HTMLElement).style.display = 'none';
+                    (configPanel as HTMLElement).style.setProperty('display', 'none', 'important');
                     console.log('桌面端弹幕配置面板：隐藏');
                   }
                 });
@@ -2655,7 +2655,7 @@ function PlayPageClient() {
                     !configButton.contains(e.target as Node) &&
                     !configPanel.contains(e.target as Node)) {
                     isConfigVisible = false;
-                    (configPanel as HTMLElement).style.display = 'none';
+                    (configPanel as HTMLElement).style.setProperty('display', 'none', 'important');
                     console.log('点击外部区域，隐藏弹幕配置面板');
                   }
                 });
