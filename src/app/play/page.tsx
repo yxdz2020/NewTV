@@ -1923,86 +1923,7 @@ function PlayPageClient() {
                 return newVal ? '当前开启' : '当前关闭';
               },
             },
-            {
-              name: '外部弹幕',
-              html: '外部弹幕',
-              icon: '<text x="50%" y="50%" font-size="14" font-weight="bold" text-anchor="middle" dominant-baseline="middle" fill="#ffffff">外</text>',
-              tooltip: externalDanmuEnabled ? '外部弹幕已开启' : '外部弹幕已关闭',
-              switch: externalDanmuEnabled,
-              onSwitch: function (item: any) {
-                const nextState = !item.switch;
 
-                // 立即同步更新所有状态（确保UI响应速度）
-                externalDanmuEnabledRef.current = nextState;
-                setExternalDanmuEnabled(nextState);
-                item.tooltip = nextState ? '外部弹幕已开启' : '外部弹幕已关闭';
-
-                // 同步localStorage操作（快速）
-                try {
-                  localStorage.setItem('enable_external_danmu', String(nextState));
-                } catch (e) {
-                  console.warn('localStorage设置失败:', e);
-                }
-
-                // 异步处理弹幕数据（完全非阻塞）
-                Promise.resolve().then(async () => {
-                  try {
-                    if (artPlayerRef.current?.plugins?.artplayerPluginDanmuku) {
-                      const plugin = artPlayerRef.current.plugins.artplayerPluginDanmuku;
-
-                      if (nextState) {
-                        // 开启外部弹幕：清空当前数据再加载新数据
-                        console.log('开启外部弹幕，清空并加载新数据...');
-                        plugin.load([]); // 先清空
-                        const externalDanmu = await loadExternalDanmu();
-                        if (externalDanmuEnabledRef.current) { // 再次检查状态，防止快速切换
-                          plugin.load(externalDanmu);
-                          plugin.show();
-                          console.log('外部弹幕已加载:', externalDanmu.length, '条');
-                          if (artPlayerRef.current) {
-                            if (externalDanmu.length === 0) {
-                              artPlayerRef.current.notice.show = '暂无弹幕数据';
-                            }
-                          }
-                        }
-                      } else {
-                        // 关闭外部弹幕：清空数据并隐藏
-                        console.log('关闭外部弹幕，清空数据并隐藏...');
-                        plugin.load([]); // 清空弹幕数据
-                        plugin.hide();
-                        console.log('外部弹幕已关闭并清空');
-                        // 显示关闭提示
-                        if (artPlayerRef.current) {
-                          artPlayerRef.current.notice.show = '外部弹幕已关闭';
-                        }
-                      }
-                    }
-                  } catch (error) {
-                    console.error('异步处理外部弹幕失败:', error);
-                  }
-                });
-
-                return nextState; // 立即返回新状态
-              },
-            },
-            {
-              html: '弹幕开关',
-              icon: '<text x="50%" y="50%" font-size="16" font-weight="bold" text-anchor="middle" dominant-baseline="middle" fill="#ffffff">弹</text>',
-              tooltip: '弹幕显示/隐藏',
-              onClick() {
-                if (artPlayerRef.current?.plugins?.artplayerPluginDanmuku) {
-                  const plugin = artPlayerRef.current.plugins.artplayerPluginDanmuku;
-                  if (plugin.isHide) {
-                    plugin.show();
-                    return '弹幕已显示';
-                  } else {
-                    plugin.hide();
-                    return '弹幕已隐藏';
-                  }
-                }
-                return '弹幕功能未加载';
-              },
-            },
             {
               name: '跳过片头片尾',
               html: '跳过片头片尾',
@@ -2297,13 +2218,136 @@ function PlayPageClient() {
           const addMobileDanmakuToggle = () => {
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-            setTimeout(() => {
+            // 增加重试机制，确保弹幕插件完全加载
+            let retryCount = 0;
+            const maxRetries = 10;
+
+            const tryAddToggleButton = () => {
               const configButton = document.querySelector('.artplayer-plugin-danmuku .apd-config');
               const configPanel = document.querySelector('.artplayer-plugin-danmuku .apd-config-panel');
 
               if (!configButton || !configPanel) {
-                console.warn('弹幕配置按钮或面板未找到');
-                return;
+                retryCount++;
+                if (retryCount < maxRetries) {
+                  console.log(`弹幕配置按钮未找到，重试 ${retryCount}/${maxRetries}`);
+                  setTimeout(tryAddToggleButton, 500);
+                  return;
+                } else {
+                  console.warn('弹幕配置按钮或面板未找到，已达到最大重试次数');
+                  return;
+                }
+              }
+
+              console.log('找到弹幕配置按钮，开始创建开关按钮');
+
+              // 创建弹幕开关按钮
+              const createDanmakuToggleButton = () => {
+                const toggleButton = document.createElement('div');
+                toggleButton.className = 'art-danmaku-toggle-button';
+                toggleButton.style.cssText = `
+                  position: relative;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  width: 36px;
+                  height: 36px;
+                  margin-left: 8px;
+                  cursor: pointer;
+                  background: transparent;
+                  color: white;
+                  font-size: 14px;
+                  font-weight: bold;
+                  transition: all 0.2s ease;
+                  user-select: none;
+                  z-index: 90;
+                `;
+
+                // 更新按钮状态显示
+                const updateButtonState = () => {
+                  const isDanmakuVisible = artPlayerRef.current?.plugins?.artplayerPluginDanmuku && !artPlayerRef.current.plugins.artplayerPluginDanmuku.isHide;
+
+                  if (isDanmakuVisible) {
+                    // 弹幕开启（弹幕显示和外部弹幕同时开启）
+                    toggleButton.innerHTML = '<svg t="1757659936665" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="814" width="20" height="20"><path d="M663.04 457.6H610.133333v37.973333h52.906667v-37.973333z m-100.266667 0h-50.346666v37.973333h50.346666v-37.973333z m0 77.226667h-50.346666v35.84h50.346666v-35.84z m100.266667 0H610.133333v35.84h52.906667v-35.84z m-25.6-193.28l45.653333 16.213333c-9.386667 22.186667-20.053333 41.813333-31.573333 59.306667h53.76v194.133333h-95.573333v35.413333h113.493333v44.8l-0.426667 0.426667h-113.066666l-0.426667-0.426667c-29.013333-31.146667-77.653333-33.28-109.226667-4.266666l-4.693333 4.693333h-43.52v-45.226667h110.08v-35.413333h-93.44v-194.133333h55.466667a362.24 362.24 0 0 0-34.56-57.173334l43.946666-14.933333c12.8 18.346667 24.746667 37.973333 34.133334 58.88l-29.013334 12.8h64c13.653333-23.04 24.746667-48.64 34.986667-75.093333z m-198.826667 20.48v142.08H355.413333l-6.4 62.293333h92.586667c0 79.36-2.986667 132.266667-7.253333 159.146667-5.546667 26.88-29.013333 41.386667-71.253334 44.373333-11.946667 0-23.893333-0.853333-37.12-1.706667l-12.373333-44.8c11.946667 1.28 25.173333 2.133333 37.973333 2.133334 23.04 0 36.266667-7.253333 39.253334-22.186667 3.413333-14.933333 5.12-46.506667 5.12-95.573333H299.52l12.8-144.64h78.08v-59.733334H303.786667v-40.96h134.826666v-0.426666z" fill="#ffffff" p-id="815"></path><path d="M775.424 212.693333a170.666667 170.666667 0 0 1 170.496 162.133334l0.170667 8.533333v106.666667a42.666667 42.666667 0 0 1-85.034667 4.949333l-0.298667-4.992V383.36a85.333333 85.333333 0 0 0-78.933333-85.077333l-6.4-0.256H246.954667a85.333333 85.333333 0 0 0-85.12 78.976l-0.213334 6.4v400.597333a85.333333 85.333333 0 0 0 78.933334 85.12l6.4 0.213333h281.770666a42.666667 42.666667 0 0 1 4.992 85.034667l-4.992 0.298667H246.954667a170.666667 170.666667 0 0 1-170.453334-162.133334l-0.213333-8.533333v-400.64a170.666667 170.666667 0 0 1 162.133333-170.453333l8.533334-0.213334h528.469333z" fill="#ffffff" p-id="816"></path><path d="M300.842667 97.194667a42.666667 42.666667 0 0 1 56.32-3.541334l4.010666 3.541334 128 128a42.666667 42.666667 0 0 1-56.32 63.914666l-4.010666-3.541333-128-128a42.666667 42.666667 0 0 1 0-60.373333z" fill="#ffffff" p-id="817"></path><path d="M702.506667 97.194667a42.666667 42.666667 0 0 0-56.32-3.541334l-4.010667 3.541334-128 128a42.666667 42.666667 0 0 0 56.32 63.914666l4.010667-3.541333 128-128a42.666667 42.666667 0 0 0 0-60.373333z" fill="#ffffff" p-id="818"></path><path d="M872.362667 610.773333a42.666667 42.666667 0 0 1 65.578666 54.314667l-3.413333 4.138667-230.058667 244.608a42.666667 42.666667 0 0 1-57.685333 4.096l-4.096-3.712-110.634667-114.688a42.666667 42.666667 0 0 1 57.472-62.848l3.968 3.626666 79.488 82.389334 199.381334-211.925334z" fill="#00ff88" p-id="819"></path></svg>';
+                    toggleButton.title = '弹幕已开启';
+                  } else {
+                    // 弹幕关闭（弹幕显示和外部弹幕同时关闭）
+                    toggleButton.innerHTML = '<svg t="1757659973066" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="961" width="20" height="20"><path d="M663.04 457.6H610.133333v37.973333h52.906667v-37.973333z m-100.266667 0h-50.346666v37.973333h50.346666v-37.973333z m0 77.226667h-50.346666v35.84h50.346666v-35.84z m100.266667 0H610.133333v35.84h52.906667v-35.84z m-25.6-193.28l45.653333 16.213333c-9.386667 22.186667-20.053333 41.813333-31.573333 59.306667h53.76v194.133333h-95.573333v35.413333h41.813333l-14.08 45.226667h-27.733333l-0.426667-0.426667-113.92 0.426667h-43.52v-45.226667h110.08v-35.413333h-93.44v-194.133333h55.466667a362.24 362.24 0 0 0-34.56-57.173334l43.946666-14.933333c12.8 18.346667 24.746667 37.973333 34.133334 58.88l-29.013334 12.8h64c13.653333-23.04 24.746667-48.64 34.986667-75.093333z m-198.826667 20.48v142.08H355.413333l-6.4 62.293333h92.586667c0 79.36-2.986667 132.266667-7.253333 159.146667-5.546667 26.88-29.013333 41.386667-71.253334 44.373333-11.946667 0-23.893333-0.853333-37.12-1.706667l-12.373333-44.8c11.946667 1.28 25.173333 2.133333 37.973333 2.133334 23.04 0 36.266667-7.253333 39.253334-22.186667 3.413333-14.933333 5.12-46.506667 5.12-95.573333H299.52l12.8-144.64h78.08v-59.733334H303.786667v-40.96h134.826666v-0.426666z" fill="#ffffff" p-id="962"></path><path d="M775.424 212.693333a170.666667 170.666667 0 0 1 170.496 162.133334l0.170667 8.533333v74.24a42.666667 42.666667 0 0 1-85.034667 4.992l-0.298667-4.992v-74.24a85.333333 85.333333 0 0 0-78.933333-85.077333l-6.4-0.256H246.954667a85.333333 85.333333 0 0 0-85.12 78.976l-0.213334 6.4v400.597333a85.333333 85.333333 0 0 0 78.933334 85.12l6.4 0.213333h281.770666a42.666667 42.666667 0 0 1 4.992 85.034667l-4.992 0.298667H246.954667a170.666667 170.666667 0 0 1-170.453334-162.133334l-0.213333-8.533333v-400.64a170.666667 170.666667 0 0 1 162.133333-170.453333l8.533334-0.213334h528.469333z" fill="#ffffff" p-id="963"></path><path d="M300.842667 97.194667a42.666667 42.666667 0 0 1 56.32-3.541334l4.010666 3.541334 128 128a42.666667 42.666667 0 0 1-56.32 63.914666l-4.010666-3.541333-128-128a42.666667 42.666667 0 0 1 0-60.373333z" fill="#ffffff" p-id="964"></path><path d="M702.506667 97.194667a42.666667 42.666667 0 0 0-56.32-3.541334l-4.010667 3.541334-128 128a42.666667 42.666667 0 0 0 56.32 63.914666l4.010667-3.541333 128-128a42.666667 42.666667 0 0 0 0-60.373333z" fill="#ffffff" p-id="965"></path><path d="M768 512a213.333333 213.333333 0 1 0 0 426.666667 213.333333 213.333333 0 0 0 0-426.666667z m0 85.333333a128 128 0 1 1 0 256 128 128 0 0 1 0-256z" fill="#E73146" p-id="966"></path><path d="M848.512 588.245333a42.666667 42.666667 0 0 1 62.592 57.728l-3.626667 3.925334-214.954666 205.610666a42.666667 42.666667 0 0 1-62.592-57.728l3.626666-3.925333 214.954667-205.653333z" fill="#E73146" p-id="967"></path></svg>';
+                    toggleButton.title = '弹幕已关闭';
+                  }
+                };
+
+                // 点击事件处理
+                toggleButton.addEventListener('click', async (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+
+                  if (!artPlayerRef.current?.plugins?.artplayerPluginDanmuku) {
+                    console.warn('弹幕插件未加载');
+                    return;
+                  }
+
+                  const plugin = artPlayerRef.current.plugins.artplayerPluginDanmuku;
+                  const isDanmakuVisible = !plugin.isHide;
+
+                  if (isDanmakuVisible) {
+                    // 当前弹幕开启，点击关闭弹幕显示和外部弹幕
+                    plugin.hide();
+
+                    // 同时关闭外部弹幕
+                    externalDanmuEnabledRef.current = false;
+                    setExternalDanmuEnabled(false);
+                    localStorage.setItem('enable_external_danmu', 'false');
+                    plugin.load([]);
+
+                    if (artPlayerRef.current) {
+                      artPlayerRef.current.notice.show = '弹幕已关闭';
+                    }
+                  } else {
+                    // 当前弹幕关闭，点击开启弹幕显示和外部弹幕
+                    plugin.show();
+
+                    // 同时开启外部弹幕
+                    externalDanmuEnabledRef.current = true;
+                    setExternalDanmuEnabled(true);
+                    localStorage.setItem('enable_external_danmu', 'true');
+
+                    // 异步加载外部弹幕数据
+                    try {
+                      const externalDanmu = await loadExternalDanmu();
+                      if (externalDanmuEnabledRef.current) {
+                        plugin.load(externalDanmu);
+                        if (artPlayerRef.current) {
+                          if (externalDanmu.length === 0) {
+                            artPlayerRef.current.notice.show = '弹幕已开启';
+                          } else {
+                            artPlayerRef.current.notice.show = `弹幕已开启，已加载 ${externalDanmu.length} 条弹幕`;
+                          }
+                        }
+                      }
+                    } catch (error) {
+                      console.error('加载外部弹幕失败:', error);
+                      if (artPlayerRef.current) {
+                        artPlayerRef.current.notice.show = '弹幕已开启，外部弹幕加载失败';
+                      }
+                    }
+                  }
+
+                  updateButtonState();
+                });
+
+                // 初始化按钮状态
+                updateButtonState();
+
+                return toggleButton;
+              };
+
+              // 将弹幕开关按钮添加到弹幕配置按钮旁边
+              const danmakuContainer = configButton.parentElement;
+              if (danmakuContainer) {
+                const toggleButton = createDanmakuToggleButton();
+                danmakuContainer.appendChild(toggleButton);
+                console.log('弹幕开关按钮已添加');
               }
 
               console.log('设备类型:', isMobile ? '移动端' : '桌面端');
@@ -2395,7 +2439,10 @@ function PlayPageClient() {
                 // 桌面端：保持原有hover机制
                 console.log('桌面端保持原有hover机制');
               }
-            }, 2000); // 延迟2秒确保弹幕插件完全初始化
+            };
+
+            // 开始尝试添加按钮
+            tryAddToggleButton();
           };
 
           // 启用移动端弹幕配置切换
