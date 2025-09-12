@@ -374,6 +374,8 @@ function PlayPageClient() {
   // 弹幕加载状态管理，防止重复加载
   const danmuLoadingRef = useRef<boolean>(false);
   const lastDanmuLoadKeyRef = useRef<string>('');
+  // 防抖保存弹幕配置的定时器
+  const saveConfigTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const artPlayerRef = useRef<any>(null);
   const artRef = useRef<HTMLDivElement | null>(null);
@@ -2649,36 +2651,44 @@ function PlayPageClient() {
             console.log('弹幕隐藏状态已保存');
           });
 
-          // 监听弹幕插件的配置变更事件，自动保存所有设置到localStorage
-          artPlayerRef.current.on('artplayerPluginDanmuku:config', (option: any) => {
-            try {
-              // 保存所有弹幕配置到localStorage
-              if (typeof option.fontSize !== 'undefined') {
-                localStorage.setItem('danmaku_fontSize', option.fontSize.toString());
-              }
-              if (typeof option.opacity !== 'undefined') {
-                localStorage.setItem('danmaku_opacity', option.opacity.toString());
-              }
-              if (typeof option.speed !== 'undefined') {
-                localStorage.setItem('danmaku_speed', option.speed.toString());
-              }
-              if (typeof option.margin !== 'undefined') {
-                localStorage.setItem('danmaku_margin', JSON.stringify(option.margin));
-              }
-              if (typeof option.modes !== 'undefined') {
-                localStorage.setItem('danmaku_modes', JSON.stringify(option.modes));
-              }
-              if (typeof option.antiOverlap !== 'undefined') {
-                localStorage.setItem('danmaku_antiOverlap', option.antiOverlap.toString());
-              }
-              if (typeof option.visible !== 'undefined') {
-                localStorage.setItem('danmaku_visible', option.visible.toString());
-              }
-              console.log('弹幕配置已自动保存:', option);
-            } catch (error) {
-              console.error('保存弹幕配置失败:', error);
+          // 防抖保存弹幕配置的函数
+          const debouncedSaveConfig = (option: any) => {
+            if (saveConfigTimeoutRef.current) {
+              clearTimeout(saveConfigTimeoutRef.current);
             }
-          });
+            saveConfigTimeoutRef.current = setTimeout(() => {
+              try {
+                // 保存所有弹幕配置到localStorage
+                if (typeof option.fontSize !== 'undefined') {
+                  localStorage.setItem('danmaku_fontSize', option.fontSize.toString());
+                }
+                if (typeof option.opacity !== 'undefined') {
+                  localStorage.setItem('danmaku_opacity', option.opacity.toString());
+                }
+                if (typeof option.speed !== 'undefined') {
+                  localStorage.setItem('danmaku_speed', option.speed.toString());
+                }
+                if (typeof option.margin !== 'undefined') {
+                  localStorage.setItem('danmaku_margin', JSON.stringify(option.margin));
+                }
+                if (typeof option.modes !== 'undefined') {
+                  localStorage.setItem('danmaku_modes', JSON.stringify(option.modes));
+                }
+                if (typeof option.antiOverlap !== 'undefined') {
+                  localStorage.setItem('danmaku_antiOverlap', option.antiOverlap.toString());
+                }
+                if (typeof option.visible !== 'undefined') {
+                  localStorage.setItem('danmaku_visible', option.visible.toString());
+                }
+                console.log('弹幕配置已自动保存:', option);
+              } catch (error) {
+                console.error('保存弹幕配置失败:', error);
+              }
+            }, 300); // 300ms防抖延迟
+          };
+
+          // 监听弹幕插件的配置变更事件，使用防抖保存设置
+          artPlayerRef.current.on('artplayerPluginDanmuku:config', debouncedSaveConfig);
 
           // 监听播放进度跳转，优化弹幕重置
           artPlayerRef.current.on('seek', () => {
@@ -2941,6 +2951,11 @@ function PlayPageClient() {
       // 清理resize防抖定时器
       if (resizeResetTimeoutRef.current) {
         clearTimeout(resizeResetTimeoutRef.current);
+      }
+
+      // 清理弹幕配置保存防抖定时器
+      if (saveConfigTimeoutRef.current) {
+        clearTimeout(saveConfigTimeoutRef.current);
       }
 
       // 释放 Wake Lock
