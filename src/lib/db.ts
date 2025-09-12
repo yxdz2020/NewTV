@@ -248,7 +248,7 @@ export class DbManager {
     if (!this.storage) {
       throw new Error('Storage not available');
     }
-    await this.storage.saveDanmakuConfig(userName, config);
+    await this.storage.setDanmakuConfig(userName, config);
   }
 
   async deleteDanmakuConfig(userName: string): Promise<void> {
