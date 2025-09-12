@@ -204,7 +204,14 @@ function extractSearchKeywords(content: string): string[] {
 
 // 使用YouTube API搜索视频的辅助函数
 async function searchYouTubeVideos(keywords: string[]) {
-  const videos = [];
+  const videos: Array<{
+    id: string;
+    title: string;
+    description: string;
+    thumbnail: string;
+    channelTitle: string;
+    publishedAt: string;
+  }> = [];
   
   // 只使用第一个关键词进行搜索
   if (keywords.length === 0) {
