@@ -142,9 +142,10 @@ export interface SkipConfig {
 
 // 弹幕配置相关
 export interface DanmakuConfig {
-  enabled: boolean; // 弹幕是否开启
-  opacity: number; // 弹幕透明度 (0-1)
-  fontSize: number; // 弹幕字体大小
-  speed: number; // 弹幕速度
-  area: number; // 弹幕显示区域 (0-1)
+  externalDanmuEnabled: boolean; // 外部弹幕是否开启
+  enabled?: boolean; // 弹幕是否开启
+  opacity?: number; // 弹幕透明度 (0-1)
+  fontSize?: number; // 弹幕字体大小
+  speed?: number; // 弹幕速度
+  area?: number; // 弹幕显示区域 (0-1)
 }
