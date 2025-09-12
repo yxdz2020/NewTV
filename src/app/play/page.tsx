@@ -376,6 +376,7 @@ function PlayPageClient() {
   const lastDanmuLoadKeyRef = useRef<string>('');
   // 防抖保存弹幕配置的定时器
   const saveConfigTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const configUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const artPlayerRef = useRef<any>(null);
   const artRef = useRef<HTMLDivElement | null>(null);
@@ -2717,7 +2718,6 @@ function PlayPageClient() {
           };
 
           // 弹幕配置更新防抖处理
-          const configUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
           const debouncedConfigUpdate = (option: any) => {
             // 立即保存到localStorage（用户体验）
             debouncedSaveConfig(option);
