@@ -2615,16 +2615,8 @@ function PlayPageClient() {
                   window.removeEventListener('resize', handleOrientationChange);
                 };
 
-                // 点击其他地方自动隐藏
-                document.addEventListener('click', (e) => {
-                  if (isConfigVisible &&
-                    !configButton.contains(e.target as Node) &&
-                    !configPanel.contains(e.target as Node)) {
-                    isConfigVisible = false;
-                    (configPanel as HTMLElement).style.setProperty('display', 'none', 'important');
-                    console.log('点击外部区域，隐藏弹幕配置面板');
-                  }
-                });
+                // 移除点击外部区域自动隐藏功能，改为固定显示模式
+                // 弹幕设置菜单现在只能通过再次点击按钮来关闭，与显示设置保持一致
 
                 console.log('移动端弹幕配置切换功能已激活');
               } else {
@@ -2649,16 +2641,8 @@ function PlayPageClient() {
                   }
                 });
 
-                // 点击其他地方自动隐藏
-                document.addEventListener('click', (e) => {
-                  if (isConfigVisible &&
-                    !configButton.contains(e.target as Node) &&
-                    !configPanel.contains(e.target as Node)) {
-                    isConfigVisible = false;
-                    (configPanel as HTMLElement).style.setProperty('display', 'none', 'important');
-                    console.log('点击外部区域，隐藏弹幕配置面板');
-                  }
-                });
+                // 移除点击外部区域自动隐藏功能，改为固定显示模式
+                // 弹幕设置菜单现在只能通过再次点击按钮来关闭，与显示设置保持一致
 
                 console.log('桌面端弹幕配置切换功能已激活');
               }
