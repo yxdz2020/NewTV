@@ -2717,7 +2717,7 @@ function PlayPageClient() {
           };
 
           // 弹幕配置更新防抖处理
-          let configUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+          const configUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
           const debouncedConfigUpdate = (option: any) => {
             // 立即保存到localStorage（用户体验）
             debouncedSaveConfig(option);
