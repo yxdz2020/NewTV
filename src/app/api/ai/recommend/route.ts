@@ -128,14 +128,19 @@ KEYWORD:水煮牛肉教程`;
         const searchKeywords = extractSearchKeywords(aiContent);
         const youtubeVideos = await searchYouTubeVideos(searchKeywords);
         
+        // 从AI回复中移除KEYWORD:关键词部分，只保留自然语言回复
+        const cleanContent = aiContent.replace(/KEYWORD:[^\n]*/g, '').trim();
+        
         return NextResponse.json({
-          content: aiContent + (youtubeVideos.length > 0 ? `\n\n为您推荐以下${youtubeVideos.length}个YouTube视频：` : '\n\n抱歉，没有找到相关的YouTube视频，请尝试其他关键词。'),
+          content: cleanContent,
           youtubeVideos
         });
       } catch (error) {
         console.error('搜索YouTube视频失败:', error);
+        // 从AI回复中移除KEYWORD:关键词部分
+        const cleanContent = aiContent.replace(/KEYWORD:[^\n]*/g, '').trim();
         return NextResponse.json({
-          content: aiContent + '\n\n抱歉，YouTube视频搜索服务暂时不可用。',
+          content: cleanContent + '\n\n抱歉，YouTube视频搜索服务暂时不可用。',
           youtubeVideos: []
         });
       }
