@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await db.setDanmakuConfig(authInfo.username, danmakuConfig);
+    await db.saveDanmakuConfig(authInfo.username, danmakuConfig);
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (err) {
