@@ -2386,14 +2386,32 @@ function PlayPageClient() {
               right: auto !important;
               bottom: 100% !important; /* 显示在按钮上方 */
               margin-bottom: 8px !important; /* 与按钮保持8px间距 */
-              transform: translateX(-50%) !important; /* 水平居中偏移 */
+              transform: translateX(-50%) translateY(10px) !important; /* 水平居中偏移 + 初始向下偏移 */
               z-index: 91 !important; /* 比ArtPlayer设置面板(90)稍高 */
-              display: none !important; /* 默认隐藏，只能通过点击显示 */
+              display: none !important;
+              opacity: 0 !important;
+              transition: opacity 0.2s ease, transform 0.2s ease !important;
+              pointer-events: none !important;
             }
             
-            /* 移除hover显示效果，改为点击控制 */
-            .artplayer-plugin-danmuku .apd-config:hover .apd-config-panel {
-              display: none !important;
+            /* 显示状态 */
+            .artplayer-plugin-danmuku .apd-config-panel.show {
+              display: block !important;
+              opacity: 1 !important;
+              transform: translateX(-50%) translateY(0) !important;
+              pointer-events: auto !important;
+            }
+            
+            /* 添加安全区域，连接按钮和面板 */
+            .artplayer-plugin-danmuku .apd-config::before {
+              content: '' !important;
+              position: absolute !important;
+              top: -10px !important;
+              right: -10px !important;
+              bottom: -10px !important;
+              left: -10px !important;
+              z-index: 90 !important;
+              pointer-events: auto !important;
             }
             
             /* 全屏模式下保持相对于按钮的居中定位 */
@@ -2404,7 +2422,12 @@ function PlayPageClient() {
               right: auto !important;
               bottom: 100% !important;
               margin-bottom: 8px !important;
-              transform: translateX(-50%) !important;
+              transform: translateX(-50%) translateY(10px) !important;
+            }
+            
+            .art-fullscreen .artplayer-plugin-danmuku .apd-config-panel.show,
+            .art-fullscreen-web .artplayer-plugin-danmuku .apd-config-panel.show {
+              transform: translateX(-50%) translateY(0) !important;
             }
           `;
             document.head.appendChild(style);
@@ -2599,23 +2622,72 @@ function PlayPageClient() {
                   }
                 };
 
-                // 添加点击事件监听器
-                configButton.addEventListener('click', (e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
+                // 添加hover延迟交互
+                let showTimer: NodeJS.Timeout | null = null;
+                let hideTimer: NodeJS.Timeout | null = null;
 
-                  isConfigVisible = !isConfigVisible;
-
-                  if (isConfigVisible) {
+                const showPanel = () => {
+                  if (hideTimer) {
+                    clearTimeout(hideTimer);
+                    hideTimer = null;
+                  }
+                  
+                  if (!isConfigVisible) {
+                    isConfigVisible = true;
                     (configPanel as HTMLElement).style.setProperty('display', 'block', 'important');
-                    // 显示后立即调整位置
-                    setTimeout(adjustPanelPosition, 10);
+                    // 添加show类来触发动画
+                    setTimeout(() => {
+                      (configPanel as HTMLElement).classList.add('show');
+                      adjustPanelPosition();
+                    }, 10);
                     console.log('移动端弹幕配置面板：显示');
-                  } else {
-                    (configPanel as HTMLElement).style.setProperty('display', 'none', 'important');
+                  }
+                };
+
+                const hidePanel = () => {
+                  if (showTimer) {
+                    clearTimeout(showTimer);
+                    showTimer = null;
+                  }
+                  
+                  if (isConfigVisible) {
+                    isConfigVisible = false;
+                    (configPanel as HTMLElement).classList.remove('show');
+                    // 等待动画完成后隐藏
+                    setTimeout(() => {
+                      (configPanel as HTMLElement).style.setProperty('display', 'none', 'important');
+                    }, 200);
                     console.log('移动端弹幕配置面板：隐藏');
                   }
-                });
+                };
+
+                // 鼠标进入按钮或面板区域
+                const handleMouseEnter = () => {
+                  if (hideTimer) {
+                    clearTimeout(hideTimer);
+                    hideTimer = null;
+                  }
+                  
+                  showTimer = setTimeout(showPanel, 300); // 300ms延迟显示
+                };
+
+                // 鼠标离开按钮或面板区域
+                const handleMouseLeave = () => {
+                  if (showTimer) {
+                    clearTimeout(showTimer);
+                    showTimer = null;
+                  }
+                  
+                  hideTimer = setTimeout(hidePanel, 500); // 500ms延迟隐藏
+                };
+
+                // 为按钮添加hover事件
+                configButton.addEventListener('mouseenter', handleMouseEnter);
+                configButton.addEventListener('mouseleave', handleMouseLeave);
+                
+                // 为面板添加hover事件
+                configPanel.addEventListener('mouseenter', handleMouseEnter);
+                configPanel.addEventListener('mouseleave', handleMouseLeave);
 
                 // 监听ArtPlayer的resize事件，在每次resize后重新调整弹幕面板位置
                 if (artPlayerRef.current) {
@@ -2666,31 +2738,76 @@ function PlayPageClient() {
 
                 console.log('移动端弹幕配置切换功能已激活');
               } else {
-                // 桌面端：改为点击切换机制，与移动端保持一致
-                console.log('为桌面端添加弹幕配置按钮点击切换功能');
+                // 桌面端：使用hover延迟交互，与移动端保持一致
+                console.log('为桌面端添加弹幕配置按钮hover延迟交互功能');
 
                 let isConfigVisible = false;
+                let showTimer: NodeJS.Timeout | null = null;
+                let hideTimer: NodeJS.Timeout | null = null;
 
-                // 添加点击事件监听器
-                configButton.addEventListener('click', (e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-
-                  isConfigVisible = !isConfigVisible;
-
-                  if (isConfigVisible) {
+                const showPanel = () => {
+                  if (hideTimer) {
+                    clearTimeout(hideTimer);
+                    hideTimer = null;
+                  }
+                  
+                  if (!isConfigVisible) {
+                    isConfigVisible = true;
                     (configPanel as HTMLElement).style.setProperty('display', 'block', 'important');
+                    // 添加show类来触发动画
+                    setTimeout(() => {
+                      (configPanel as HTMLElement).classList.add('show');
+                    }, 10);
                     console.log('桌面端弹幕配置面板：显示');
-                  } else {
-                    (configPanel as HTMLElement).style.setProperty('display', 'none', 'important');
+                  }
+                };
+
+                const hidePanel = () => {
+                  if (showTimer) {
+                    clearTimeout(showTimer);
+                    showTimer = null;
+                  }
+                  
+                  if (isConfigVisible) {
+                    isConfigVisible = false;
+                    (configPanel as HTMLElement).classList.remove('show');
+                    // 等待动画完成后隐藏
+                    setTimeout(() => {
+                      (configPanel as HTMLElement).style.setProperty('display', 'none', 'important');
+                    }, 200);
                     console.log('桌面端弹幕配置面板：隐藏');
                   }
-                });
+                };
 
-                // 移除点击外部区域自动隐藏功能，改为固定显示模式
-                // 弹幕设置菜单现在只能通过再次点击按钮来关闭，与显示设置保持一致
+                // 鼠标进入按钮或面板区域
+                const handleMouseEnter = () => {
+                  if (hideTimer) {
+                    clearTimeout(hideTimer);
+                    hideTimer = null;
+                  }
+                  
+                  showTimer = setTimeout(showPanel, 300); // 300ms延迟显示
+                };
 
-                console.log('桌面端弹幕配置切换功能已激活');
+                // 鼠标离开按钮或面板区域
+                const handleMouseLeave = () => {
+                  if (showTimer) {
+                    clearTimeout(showTimer);
+                    showTimer = null;
+                  }
+                  
+                  hideTimer = setTimeout(hidePanel, 500); // 500ms延迟隐藏
+                };
+
+                // 为按钮添加hover事件
+                configButton.addEventListener('mouseenter', handleMouseEnter);
+                configButton.addEventListener('mouseleave', handleMouseLeave);
+                
+                // 为面板添加hover事件
+                configPanel.addEventListener('mouseenter', handleMouseEnter);
+                configPanel.addEventListener('mouseleave', handleMouseLeave);
+
+                console.log('桌面端弹幕配置hover延迟交互功能已激活');
               }
             };
 
