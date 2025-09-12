@@ -81,6 +81,11 @@ export interface IStorage {
   deleteSkipConfig(userName: string, source: string, id: string): Promise<void>;
   getAllSkipConfigs(userName: string): Promise<{ [key: string]: SkipConfig }>;
 
+  // 弹幕配置相关
+  getDanmakuConfig(userName: string): Promise<DanmakuConfig | null>;
+  setDanmakuConfig(userName: string, config: DanmakuConfig): Promise<void>;
+  deleteDanmakuConfig(userName: string): Promise<void>;
+
   // 数据清理相关
   clearAllData(): Promise<void>;
 }
@@ -128,9 +133,18 @@ export interface DoubanResult {
   list: DoubanItem[];
 }
 
-// 跳过片头片尾配置数据结构
+// 跳过片头片尾配置相关
 export interface SkipConfig {
   enable: boolean; // 是否启用跳过片头片尾
   intro_time: number; // 片头时间（秒）
   outro_time: number; // 片尾时间（秒）
+}
+
+// 弹幕配置相关
+export interface DanmakuConfig {
+  enabled: boolean; // 弹幕是否开启
+  opacity: number; // 弹幕透明度 (0-1)
+  fontSize: number; // 弹幕字体大小
+  speed: number; // 弹幕速度
+  area: number; // 弹幕显示区域 (0-1)
 }

@@ -23,8 +23,39 @@ import {
   saveSkipConfig,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
+import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import { getDoubanDetails } from '@/lib/douban.client';
-import { SearchResult } from '@/lib/types';
+import { SearchResult, DanmakuConfig } from '@/lib/types';
+
+// 弹幕配置相关函数
+const getDanmakuConfig = async (): Promise<DanmakuConfig | null> => {
+  try {
+    const response = await fetch('/api/danmaku-config');
+    if (response.ok) {
+      return await response.json();
+    }
+    return null;
+  } catch (error) {
+    console.error('获取弹幕配置失败:', error);
+    return null;
+  }
+};
+
+const saveDanmakuConfig = async (config: DanmakuConfig): Promise<boolean> => {
+  try {
+    const response = await fetch('/api/danmaku-config', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ config }),
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('保存弹幕配置失败:', error);
+    return false;
+  }
+};
 import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
 
 import EpisodeSelector from '@/components/EpisodeSelector';
@@ -110,18 +141,62 @@ function PlayPageClient() {
     blockAdEnabledRef.current = blockAdEnabled;
   }, [blockAdEnabled]);
 
-  // 外部弹幕开关（从 localStorage 继承，默认 true）
-  const [externalDanmuEnabled, setExternalDanmuEnabled] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const v = localStorage.getItem('enable_external_danmu');
-      if (v !== null) return v === 'true';
-    }
-    return true; // 默认开启外部弹幕
-  });
+  // 外部弹幕开关（从数据库读取，默认 true）
+  const [externalDanmuEnabled, setExternalDanmuEnabled] = useState<boolean>(true);
+  const [danmakuConfigLoaded, setDanmakuConfigLoaded] = useState<boolean>(false);
   const externalDanmuEnabledRef = useRef(externalDanmuEnabled);
   useEffect(() => {
     externalDanmuEnabledRef.current = externalDanmuEnabled;
   }, [externalDanmuEnabled]);
+
+  // 从数据库加载弹幕配置
+  useEffect(() => {
+    const loadDanmakuConfig = async () => {
+      const authInfo = getAuthInfoFromBrowserCookie();
+      if (!authInfo?.username) {
+        // 未登录用户，使用localStorage作为后备
+        if (typeof window !== 'undefined') {
+          const v = localStorage.getItem('enable_external_danmu');
+          if (v !== null) {
+            setExternalDanmuEnabled(v === 'true');
+          }
+        }
+        setDanmakuConfigLoaded(true);
+        return;
+      }
+
+      try {
+        const config = await getDanmakuConfig();
+        if (config) {
+          setExternalDanmuEnabled(config.externalDanmuEnabled);
+        } else {
+          // 数据库中没有配置，使用localStorage作为后备
+          if (typeof window !== 'undefined') {
+            const v = localStorage.getItem('enable_external_danmu');
+            if (v !== null) {
+              const enabled = v === 'true';
+              setExternalDanmuEnabled(enabled);
+              // 同步到数据库
+              await saveDanmakuConfig({ externalDanmuEnabled: enabled });
+            }
+          }
+        }
+      } catch (error) {
+        console.error('加载弹幕配置失败:', error);
+        // 出错时使用localStorage作为后备
+        if (typeof window !== 'undefined') {
+          const v = localStorage.getItem('enable_external_danmu');
+          if (v !== null) {
+            setExternalDanmuEnabled(v === 'true');
+          }
+        }
+      } finally {
+        setDanmakuConfigLoaded(true);
+      }
+    };
+
+    loadDanmakuConfig();
+  }, []);
 
 
   // 视频基本信息
@@ -2297,6 +2372,12 @@ function PlayPageClient() {
                     // 同时关闭外部弹幕
                     externalDanmuEnabledRef.current = false;
                     setExternalDanmuEnabled(false);
+                    
+                    // 保存到数据库和localStorage
+                    const authInfo = getAuthInfoFromBrowserCookie();
+                    if (authInfo?.username) {
+                      await saveDanmakuConfig({ externalDanmuEnabled: false });
+                    }
                     localStorage.setItem('enable_external_danmu', 'false');
                     plugin.load([]);
 
@@ -2310,6 +2391,12 @@ function PlayPageClient() {
                     // 同时开启外部弹幕
                     externalDanmuEnabledRef.current = true;
                     setExternalDanmuEnabled(true);
+                    
+                    // 保存到数据库和localStorage
+                    const authInfo = getAuthInfoFromBrowserCookie();
+                    if (authInfo?.username) {
+                      await saveDanmakuConfig({ externalDanmuEnabled: true });
+                    }
                     localStorage.setItem('enable_external_danmu', 'true');
 
                     // 异步加载外部弹幕数据
