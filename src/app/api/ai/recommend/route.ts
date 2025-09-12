@@ -51,7 +51,10 @@ export async function POST(request: NextRequest) {
 《片名》 (年份) [类型] - 简短描述
 
 #YouTube视频推荐格式：
-【视频标题】 - 简短描述
+对于YouTube视频推荐，你需要：
+- 从用户的描述中提取1个最核心的关键词
+- 用KEYWORD:关键词的格式输出这个关键词
+- 然后用自然语言简短回应用户
 
 #影视剧集推荐限制：
 - 严禁输出任何Markdown格式。
@@ -62,19 +65,18 @@ export async function POST(request: NextRequest) {
 - 每一部推荐的影片都必须独占一行，并以《》开始。
 
 #YouTube视频推荐限制：
-- 只推荐YouTube视频内容，如新闻、教程、解说、音乐、娱乐等
-- 不推荐影视剧集内容
-- 每次推荐1-4个视频
-- 描述要简洁明了
-- 必须严格按照指定格式输出，以【】开始
+- 只提取1个最核心的关键词
+- 关键词要准确反映用户需求
+- 格式：KEYWORD:关键词
 
 #影视剧集格式示例：
 《长长的季节》 (2023) [国产剧/悬疑] - 豆瓣9.4分，一部关于时间和真相的深刻故事。
 《繁城之下》 (2023) [古装/悬疑] - 明朝背景下的连环凶杀案，电影级质感。
 
 #YouTube视频格式示例：
-【如何学习编程】 - 适合初学者的编程入门教程
-【今日新闻速报】 - 最新国际新闻资讯`;
+用户：我想看水煮牛肉的视频
+回复：好嘞～水煮牛肉是经典川菜之一，口味麻辣鲜香，肉片滑嫩，汤汁红亮，这就为您推荐水煮牛肉相关视频。
+KEYWORD:水煮牛肉教程`;
 
     // 调用AI服务
     const apiUrl = config.AIConfig.apiUrl.endsWith('/')
@@ -118,7 +120,7 @@ export async function POST(request: NextRequest) {
     const aiContent = aiData.choices?.[0]?.message?.content || '抱歉，我现在无法为你推荐内容。';
 
     // 检测是否为YouTube视频推荐
-    const isYouTubeRecommendation = aiContent.includes('【') && aiContent.includes('】');
+    const isYouTubeRecommendation = aiContent.includes('KEYWORD:');
     
     if (isYouTubeRecommendation) {
       // 如果是YouTube视频推荐，直接搜索YouTube视频
@@ -126,14 +128,19 @@ export async function POST(request: NextRequest) {
         const searchKeywords = extractSearchKeywords(aiContent);
         const youtubeVideos = await searchYouTubeVideos(searchKeywords);
         
+        // 从AI回复中移除KEYWORD:关键词部分，只保留自然语言回复
+        const cleanContent = aiContent.replace(/KEYWORD:[^\n]*/g, '').trim();
+        
         return NextResponse.json({
-          content: aiContent + (youtubeVideos.length > 0 ? `\n\n为您推荐以下${youtubeVideos.length}个YouTube视频：` : '\n\n抱歉，没有找到相关的YouTube视频，请尝试其他关键词。'),
+          content: cleanContent,
           youtubeVideos
         });
       } catch (error) {
         console.error('搜索YouTube视频失败:', error);
+        // 从AI回复中移除KEYWORD:关键词部分
+        const cleanContent = aiContent.replace(/KEYWORD:[^\n]*/g, '').trim();
         return NextResponse.json({
-          content: aiContent + '\n\n抱歉，YouTube视频搜索服务暂时不可用。',
+          content: cleanContent + '\n\n抱歉，YouTube视频搜索服务暂时不可用。',
           youtubeVideos: []
         });
       }
@@ -183,38 +190,56 @@ function extractRecommendations(content: string) {
 // 从AI回复中提取搜索关键词的辅助函数
 function extractSearchKeywords(content: string): string[] {
   const keywords: string[] = [];
-  const videoPattern = /【([^】]+)】/g;
-  let match;
-
-  while ((match = videoPattern.exec(content)) !== null && keywords.length < 4) {
-    keywords.push(match[1].trim());
+  const lines = content.split('\n');
+  
+  for (const line of lines) {
+    if (keywords.length >= 4) break;
+    
+    const trimmedLine = line.trim();
+    if (trimmedLine.startsWith('KEYWORD:')) {
+      const keyword = trimmedLine.substring(8).trim(); // 移除 'KEYWORD:' 前缀
+      if (keyword) {
+        keywords.push(keyword);
+      }
+    }
   }
-
+  
   return keywords;
 }
 
 // 使用YouTube API搜索视频的辅助函数
 async function searchYouTubeVideos(keywords: string[]) {
-  const videos = [];
+  const videos: Array<{
+    id: string;
+    title: string;
+    description: string;
+    thumbnail: string;
+    channelTitle: string;
+    publishedAt: string;
+  }> = [];
+  
+  // 只使用第一个关键词进行搜索
+  if (keywords.length === 0) {
+    return videos;
+  }
+  
+  const keyword = keywords[0];
 
-  for (const keyword of keywords) {
-    if (videos.length >= 4) break;
+  try {
+    const searchUrl = new URL(`${YOUTUBE_API_BASE}/search`);
+    searchUrl.searchParams.set('key', YOUTUBE_API_KEY!);
+    searchUrl.searchParams.set('q', keyword);
+    searchUrl.searchParams.set('part', 'snippet');
+    searchUrl.searchParams.set('type', 'video');
+    searchUrl.searchParams.set('maxResults', '4');
+    searchUrl.searchParams.set('order', 'relevance');
 
-    try {
-      const searchUrl = new URL(`${YOUTUBE_API_BASE}/search`);
-      searchUrl.searchParams.set('key', YOUTUBE_API_KEY!);
-      searchUrl.searchParams.set('q', keyword);
-      searchUrl.searchParams.set('part', 'snippet');
-      searchUrl.searchParams.set('type', 'video');
-      searchUrl.searchParams.set('maxResults', '1');
-      searchUrl.searchParams.set('order', 'relevance');
-
-      const response = await fetch(searchUrl.toString());
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.items && data.items.length > 0) {
-          const video = data.items[0];
+    const response = await fetch(searchUrl.toString());
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.items && data.items.length > 0) {
+        for (const video of data.items) {
           videos.push({
             id: video.id.videoId,
             title: video.snippet.title,
@@ -225,9 +250,9 @@ async function searchYouTubeVideos(keywords: string[]) {
           });
         }
       }
-    } catch (error) {
-      console.error(`搜索关键词 "${keyword}" 失败:`, error);
     }
+  } catch (error) {
+    console.error(`搜索关键词 "${keyword}" 失败:`, error);
   }
 
   return videos;
