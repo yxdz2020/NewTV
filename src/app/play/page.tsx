@@ -2663,33 +2663,56 @@ function PlayPageClient() {
               await new Promise(resolve => setTimeout(resolve, 100));
             }
             
-            console.log('弹幕配置已加载，开始加载外部弹幕，当前开关状态:', externalDanmuEnabledRef.current);
+            console.log('弹幕配置已加载，开始同步弹幕状态，当前开关状态:', externalDanmuEnabledRef.current);
             
             try {
-              const externalDanmu = await loadExternalDanmu(); // 这里会检查开关状态
-              console.log('外部弹幕加载结果:', externalDanmu);
-
               if (artPlayerRef.current?.plugins?.artplayerPluginDanmuku) {
-                if (externalDanmu.length > 0) {
-                  console.log('向播放器插件加载弹幕数据:', externalDanmu.length, '条');
-                  artPlayerRef.current.plugins.artplayerPluginDanmuku.load(externalDanmu);
-                  if (externalDanmuEnabledRef.current) {
+                const plugin = artPlayerRef.current.plugins.artplayerPluginDanmuku;
+                
+                // 根据数据库配置同步弹幕插件的显示状态
+                if (externalDanmuEnabledRef.current) {
+                  // 外部弹幕开关开启，确保弹幕插件显示
+                  if (plugin.isHide) {
+                    plugin.show();
+                    console.log('根据配置开启弹幕显示');
+                  }
+                  
+                  // 加载外部弹幕数据
+                  const externalDanmu = await loadExternalDanmu();
+                  console.log('外部弹幕加载结果:', externalDanmu);
+                  
+                  if (externalDanmu.length > 0) {
+                    console.log('向播放器插件加载弹幕数据:', externalDanmu.length, '条');
+                    plugin.load(externalDanmu);
                     artPlayerRef.current.notice.show = `已加载 ${externalDanmu.length} 条弹幕`;
+                  } else {
+                    console.log('没有弹幕数据可加载');
+                    // 延迟显示无弹幕提示，避免在加载过程中误显示
+                    setTimeout(() => {
+                      if (externalDanmuEnabledRef.current && artPlayerRef.current) {
+                        artPlayerRef.current.notice.show = '暂无弹幕数据';
+                      }
+                    }, 2000);
                   }
                 } else {
-                  console.log('没有弹幕数据可加载');
-                  // 延迟显示无弹幕提示，避免在加载过程中误显示
-                  setTimeout(() => {
-                    if (externalDanmuEnabledRef.current && artPlayerRef.current) {
-                      artPlayerRef.current.notice.show = '暂无弹幕数据';
-                    }
-                  }, 2000);
+                  // 外部弹幕开关关闭，隐藏弹幕插件并清空数据
+                  if (!plugin.isHide) {
+                    plugin.hide();
+                    console.log('根据配置关闭弹幕显示');
+                  }
+                  plugin.load([]);
+                  console.log('弹幕开关关闭，已清空弹幕数据');
+                }
+                
+                // 更新按钮状态
+                if (updateButtonStateRef.current) {
+                  updateButtonStateRef.current();
                 }
               } else {
                 console.error('弹幕插件未找到');
               }
             } catch (error) {
-              console.error('加载外部弹幕失败:', error);
+              console.error('同步弹幕状态失败:', error);
             }
           };
           
