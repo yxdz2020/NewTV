@@ -2334,11 +2334,20 @@ function PlayPageClient() {
             
             .artplayer-plugin-danmuku .apd-config-panel {
               /* 改为绝对定位，相对于播放器容器 */
-              position: fixed !important;
+              position: absolute !important;
               left: auto !important;
               right: 10px !important; /* 与ArtPlayer --art-padding 一致 */
+              bottom: 50px !important; /* 距离底部控制栏的距离 */
               transform: none !important; /* 移除任何变换 */
               z-index: 91 !important; /* 比ArtPlayer设置面板(90)稍高 */
+            }
+            
+            /* 全屏模式下的特殊定位 */
+            .art-fullscreen .artplayer-plugin-danmuku .apd-config-panel,
+            .art-fullscreen-web .artplayer-plugin-danmuku .apd-config-panel {
+              position: fixed !important;
+              right: 10px !important;
+              bottom: 60px !important; /* 全屏时距离底部更远一些 */
             }
           `;
             document.head.appendChild(style);
@@ -2517,13 +2526,17 @@ function PlayPageClient() {
 
                   try {
                     const panelElement = configPanel as HTMLElement;
+                    const isFullscreen = player.classList.contains('art-fullscreen') || player.classList.contains('art-fullscreen-web');
 
-                    // 始终清除内联样式，使用CSS默认定位
+                    // 清除所有可能影响定位的内联样式，让CSS接管
                     panelElement.style.left = '';
                     panelElement.style.right = '';
+                    panelElement.style.top = '';
+                    panelElement.style.bottom = '';
                     panelElement.style.transform = '';
+                    panelElement.style.position = '';
 
-                    console.log('弹幕面板：使用CSS默认定位，自动适配屏幕方向');
+                    console.log('弹幕面板：使用CSS默认定位，自动适配', isFullscreen ? '全屏模式' : '普通模式');
                   } catch (error) {
                     console.warn('弹幕面板位置调整失败:', error);
                   }
@@ -2555,7 +2568,23 @@ function PlayPageClient() {
                       setTimeout(adjustPanelPosition, 50); // 短暂延迟确保resize完成
                     }
                   });
-                  console.log('已监听ArtPlayer resize事件，实现自动适配');
+                  
+                  // 监听全屏状态变化
+                  artPlayerRef.current.on('fullscreen', (fullscreen: boolean) => {
+                    if (isConfigVisible) {
+                      console.log('检测到全屏状态变化:', fullscreen ? '进入全屏' : '退出全屏');
+                      setTimeout(adjustPanelPosition, 100); // 延迟调整确保全屏切换完成
+                    }
+                  });
+                  
+                  artPlayerRef.current.on('fullscreenWeb', (fullscreen: boolean) => {
+                    if (isConfigVisible) {
+                      console.log('检测到网页全屏状态变化:', fullscreen ? '进入网页全屏' : '退出网页全屏');
+                      setTimeout(adjustPanelPosition, 100); // 延迟调整确保全屏切换完成
+                    }
+                  });
+                  
+                  console.log('已监听ArtPlayer resize和全屏事件，实现自动适配');
                 }
 
                 // 额外监听屏幕方向变化事件，确保完全自动适配
@@ -2684,11 +2713,31 @@ function PlayPageClient() {
               } catch (error) {
                 console.error('保存弹幕配置失败:', error);
               }
-            }, 300); // 300ms防抖延迟
+            }, 500); // 增加到500ms防抖延迟，减少频繁保存
+          };
+
+          // 弹幕配置更新防抖处理
+          let configUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+          const debouncedConfigUpdate = (option: any) => {
+            // 立即保存到localStorage（用户体验）
+            debouncedSaveConfig(option);
+            
+            // 防抖处理弹幕插件的配置更新（性能优化）
+            if (configUpdateTimeoutRef.current) {
+              clearTimeout(configUpdateTimeoutRef.current);
+            }
+            
+            // 对于字号调整，使用更长的防抖时间减少重新渲染
+            const debounceTime = typeof option.fontSize !== 'undefined' ? 800 : 300;
+            
+            configUpdateTimeoutRef.current = setTimeout(() => {
+              // 这里可以添加额外的弹幕更新逻辑，如果需要的话
+              console.log('弹幕配置更新防抖完成:', option);
+            }, debounceTime);
           };
 
           // 监听弹幕插件的配置变更事件，使用防抖保存设置
-          artPlayerRef.current.on('artplayerPluginDanmuku:config', debouncedSaveConfig);
+          artPlayerRef.current.on('artplayerPluginDanmuku:config', debouncedConfigUpdate);
 
           // 监听播放进度跳转，优化弹幕重置
           artPlayerRef.current.on('seek', () => {
@@ -2956,6 +3005,11 @@ function PlayPageClient() {
       // 清理弹幕配置保存防抖定时器
       if (saveConfigTimeoutRef.current) {
         clearTimeout(saveConfigTimeoutRef.current);
+      }
+
+      // 清理弹幕配置更新防抖定时器
+      if (configUpdateTimeoutRef.current) {
+        clearTimeout(configUpdateTimeoutRef.current);
       }
 
       // 释放 Wake Lock
