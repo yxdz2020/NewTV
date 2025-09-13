@@ -131,7 +131,7 @@ export default function CloudDiskPage() {
     try {
       await navigator.clipboard.writeText(url);
       setCopiedUrl(url);
-      setTimeout(() => setCopiedUrl(null), 8000);
+      setTimeout(() => setCopiedUrl(null), 3000);
     } catch (err) {
       console.error('复制失败:', err);
     }
