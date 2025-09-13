@@ -166,39 +166,44 @@ div[data-media-provider] video {
     display: none !important;
   }
 
-  .art-control-fullscreenWeb {
-    display: none !important;
-  }
-
   .art-control-volume {
     display: none !important;
   }
 
   /* 调整移动端控制栏按钮间距，确保所有图标都能正常显示和点击 */
   .art-controls-right {
-    gap: 1px !important;
-    padding-right: 2px !important;
-    margin-right: -4px !important;
+    gap: 2px !important;
+    padding-right: 4px !important;
+    margin-right: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
   }
 
   .art-controls-left {
-    gap: 1px !important;
+    gap: 2px !important;
     padding-left: 4px !important;
   }
 
   .art-control {
-    min-width: 28px !important;
-    width: 28px !important;
+    min-width: 32px !important;
+    width: 32px !important;
+    height: 32px !important;
     padding: 0 !important;
-    margin: 0 !important;
+    margin: 0 1px !important;
     font-size: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   /* 弹幕开关按钮在移动端的特殊样式 */
   .art-danmaku-toggle-button {
-    margin-left: 1px !important;
-    min-width: 28px !important;
-    width: 28px !important;
+    margin-left: 2px !important;
+    margin-right: 1px !important;
+    min-width: 32px !important;
+    width: 32px !important;
+    height: 32px !important;
     background: transparent !important;
     border-radius: 0 !important;
     box-shadow: none !important;
@@ -215,18 +220,19 @@ div[data-media-provider] video {
 
   /* 调整播放器控制栏整体间距 */
   .art-controls {
-    padding: 0 2px !important;
+    padding: 0 4px !important;
   }
 
   .art-bottom {
-    padding: 0 2px !important;
+    padding: 0 4px !important;
   }
 
   /* 确保全屏按钮可见 */
   .art-control-fullscreen,
   .art-control-fullscreenWeb {
     display: flex !important;
-    min-width: 28px !important;
-    width: 28px !important;
+    min-width: 32px !important;
+    width: 32px !important;
+    height: 32px !important;
   }
 }
