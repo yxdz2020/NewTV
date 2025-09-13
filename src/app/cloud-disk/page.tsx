@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Cloud, ExternalLink, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -33,6 +33,36 @@ export default function CloudDiskPage() {
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [quarkCollapsed, setQuarkCollapsed] = useState(false);
   const [baiduCollapsed, setBaiduCollapsed] = useState(false);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+
+  // 滚动监听 Effect
+  useEffect(() => {
+    const getScrollTop = () => {
+      return document.body.scrollTop || 0;
+    };
+
+    const handleScroll = () => {
+      const scrollTop = getScrollTop();
+      setShowScrollToTop(scrollTop > 300);
+    };
+
+    document.body.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      document.body.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  const scrollToTop = () => {
+    try {
+      document.body.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+    } catch (error) {
+      document.body.scrollTop = 0;
+    }
+  };
 
   const handleSearch = async () => {
     if (!keyword.trim()) return;
@@ -329,6 +359,21 @@ export default function CloudDiskPage() {
             )}
           </div>
         </div>
+
+        {/* 返回顶部悬浮按钮 */}
+        <button
+          onClick={scrollToTop}
+          className={`fixed bottom-20 md:bottom-6 right-6 z-[500] w-12 h-12 bg-green-500/90 hover:bg-green-500 text-white rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out flex items-center justify-center group ${
+            showScrollToTop
+              ? 'opacity-100 translate-y-0 pointer-events-auto'
+              : 'opacity-0 translate-y-4 pointer-events-none'
+          }`}
+          aria-label='返回顶部'
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+          </svg>
+        </button>
       </PageLayout>
     </ErrorBoundary>
   );
