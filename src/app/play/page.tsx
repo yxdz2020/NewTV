@@ -2756,7 +2756,7 @@ function PlayPageClient() {
                 configButton.addEventListener('click', (e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  
+
                   if (isConfigVisible) {
                     hidePanel();
                     console.log('移动端弹幕配置面板：点击关闭');
@@ -2888,7 +2888,7 @@ function PlayPageClient() {
                 configButton.addEventListener('click', (e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  
+
                   if (isConfigVisible) {
                     hidePanel();
                     console.log('桌面端弹幕配置面板：点击关闭');
