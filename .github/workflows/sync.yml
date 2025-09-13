@@ -1,0 +1,95 @@
+name: Upstream Sync
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # 每 6 小时运行一次
+  workflow_dispatch:       # 手动触发
+  push:
+    branches:
+      - main               # 当 main 分支有更新时触发
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  sync_latest_from_upstream:
+    name: Sync latest commits from upstream repo
+    runs-on: ubuntu-latest
+    if: ${{ github.event.repository.fork }}
+
+    steps:
+      # Step 1: run a standard checkout action
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Step 2: run the sync action
+      - name: Sync upstream changes
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+        with:
+          upstream_sync_repo: joyce677/LunaTV
+          upstream_sync_branch: main
+          target_sync_branch: main
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync check
+        if: failure()
+        run: |
+          echo "[Error] Due to a change in the workflow file of the upstream repository, GitHub has automatically suspended the scheduled automatic update. You need to manually sync your fork."
+          exit 1
+
+      # Step 3: 检查 VERSION.txt 和 CHANGELOG 是否更新
+      - name: Check if VERSION.txt or CHANGELOG changed
+        id: check_files
+        run: |
+          git fetch origin main
+          LAST_COMMIT=$(git log -1 --pretty=format:%H)
+          echo "Last commit: $LAST_COMMIT"
+
+          if git diff-tree --no-commit-id --name-only -r $LAST_COMMIT | grep -E '^(VERSION.txt|CHANGELOG)$'; then
+            echo "files_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "files_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Step 4: 读取 VERSION.txt 版本号
+      - name: Read VERSION.txt
+        id: read_version
+        if: steps.check_files.outputs.files_changed == 'true'
+        run: |
+          VERSION=$(cat VERSION.txt | tr -d ' \n')
+          echo "VERSION=$VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      # Step 5: 检查 tag 是否存在
+      - name: Check if tag exists
+        id: check_tag
+        if: steps.read_version.outputs.version != ''
+        run: |
+          if git rev-parse "refs/tags/${{ steps.read_version.outputs.version }}" >/dev/null 2>&1; then
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Step 6: 仅在满足条件时触发 release.yml
+      - name: Trigger Release workflow
+        if: steps.sync.outputs.has_new_commits == 'true' && steps.check_files.outputs.files_changed == 'true' && steps.check_tag.outputs.tag_exists == 'false'
+        run: |
+          echo "New version detected: ${{ steps.read_version.outputs.version }}. Triggering release.yml..."
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/release.yml/dispatches \
+            -d '{"ref":"main"}'
+
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          retain_days: 0
+          keep_minimum_runs: 2
