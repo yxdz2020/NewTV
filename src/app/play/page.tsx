@@ -2515,7 +2515,7 @@ function PlayPageClient() {
                   justify-content: center;
                   width: 36px;
                   height: 36px;
-                  margin-left: 8px;
+                  margin-left: 2px;
                   cursor: pointer;
                   background: transparent;
                   color: white;

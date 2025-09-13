@@ -199,7 +199,7 @@ div[data-media-provider] video {
 
   /* 弹幕开关按钮在移动端的特殊样式 */
   .art-danmaku-toggle-button {
-    margin-left: 0px !important;
+    margin-left: 1px !important;
     margin-right: 0px !important;
     min-width: 30px !important;
     width: 30px !important;
@@ -207,6 +207,19 @@ div[data-media-provider] video {
     background: transparent !important;
     border-radius: 0 !important;
     box-shadow: none !important;
+  }
+
+  /* 弹幕配置按钮样式优化 */
+  .artplayer-plugin-danmuku .apd-config {
+    margin-right: 4px !important;
+    min-width: 30px !important;
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  /* 弹幕按钮容器整体右移 */
+  .artplayer-plugin-danmuku {
+    margin-right: 2px !important;
   }
 
   /* 强制移除所有控制栏按钮的圆形背景 */
