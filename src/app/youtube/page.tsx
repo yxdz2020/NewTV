@@ -604,7 +604,7 @@ const YouTubePage = () => {
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">还未配置YouTube频道</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                <p className="text-gray-600 dark:text-gray-400 mb-12">
                   YouTube连接正常，但管理员还未配置任何频道。请联系管理员在后台添加YouTube频道和配置API密钥。
                 </p>
                 <div className="mb-4">
