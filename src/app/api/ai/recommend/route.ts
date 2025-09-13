@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
 如果用户想要的是：
 - 电影、电视剧、动漫、综艺等影视剧集内容 → 推荐影视剧集
 - 新闻、教程、解说、音乐、娱乐视频、学习内容等 → 推荐YouTube视频
+- 与以上内容无关拒绝回答！如果需要推荐影视剧集请先使用搜索工具后再回答
 
 你的回复必须遵循以下步骤：
 1. 首先用自然语言简单回应用户的需求。
@@ -121,16 +122,16 @@ KEYWORD:水煮牛肉教程`;
 
     // 检测是否为YouTube视频推荐
     const isYouTubeRecommendation = aiContent.includes('KEYWORD:');
-    
+
     if (isYouTubeRecommendation) {
       // 如果是YouTube视频推荐，直接搜索YouTube视频
       try {
         const searchKeywords = extractSearchKeywords(aiContent);
         const youtubeVideos = await searchYouTubeVideos(searchKeywords);
-        
+
         // 从AI回复中移除KEYWORD:关键词部分，只保留自然语言回复
         const cleanContent = aiContent.replace(/KEYWORD:[^\n]*/g, '').trim();
-        
+
         return NextResponse.json({
           content: cleanContent,
           youtubeVideos
@@ -191,10 +192,10 @@ function extractRecommendations(content: string) {
 function extractSearchKeywords(content: string): string[] {
   const keywords: string[] = [];
   const lines = content.split('\n');
-  
+
   for (const line of lines) {
     if (keywords.length >= 4) break;
-    
+
     const trimmedLine = line.trim();
     if (trimmedLine.startsWith('KEYWORD:')) {
       const keyword = trimmedLine.substring(8).trim(); // 移除 'KEYWORD:' 前缀
@@ -203,7 +204,7 @@ function extractSearchKeywords(content: string): string[] {
       }
     }
   }
-  
+
   return keywords;
 }
 
@@ -217,12 +218,12 @@ async function searchYouTubeVideos(keywords: string[]) {
     channelTitle: string;
     publishedAt: string;
   }> = [];
-  
+
   // 只使用第一个关键词进行搜索
   if (keywords.length === 0) {
     return videos;
   }
-  
+
   const keyword = keywords[0];
 
   try {
@@ -235,7 +236,7 @@ async function searchYouTubeVideos(keywords: string[]) {
     searchUrl.searchParams.set('order', 'relevance');
 
     const response = await fetch(searchUrl.toString());
-    
+
     if (response.ok) {
       const data = await response.json();
       if (data.items && data.items.length > 0) {
