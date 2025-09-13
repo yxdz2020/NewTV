@@ -2752,6 +2752,20 @@ function PlayPageClient() {
                 configPanel.addEventListener('mouseenter', handleMouseEnter);
                 configPanel.addEventListener('mouseleave', handleMouseLeave);
 
+                // 添加点击展开关闭功能
+                configButton.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  if (isConfigVisible) {
+                    hidePanel();
+                    console.log('移动端弹幕配置面板：点击关闭');
+                  } else {
+                    showPanel();
+                    console.log('移动端弹幕配置面板：点击展开');
+                  }
+                });
+
                 // 监听ArtPlayer的resize事件，在每次resize后重新调整弹幕面板位置
                 if (artPlayerRef.current) {
                   artPlayerRef.current.on('resize', () => {
@@ -2869,6 +2883,20 @@ function PlayPageClient() {
                 // 为面板添加hover事件
                 configPanel.addEventListener('mouseenter', handleMouseEnter);
                 configPanel.addEventListener('mouseleave', handleMouseLeave);
+
+                // 添加点击展开关闭功能
+                configButton.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  if (isConfigVisible) {
+                    hidePanel();
+                    console.log('桌面端弹幕配置面板：点击关闭');
+                  } else {
+                    showPanel();
+                    console.log('桌面端弹幕配置面板：点击展开');
+                  }
+                });
 
                 console.log('桌面端弹幕配置hover延迟交互功能已激活');
               }
