@@ -3030,7 +3030,7 @@ function PlayPageClient() {
             }
 
             // 对于字号调整，使用更长的防抖时间减少重新渲染
-            const debounceTime = typeof option.fontSize !== 'undefined' ? 5000 : 300;
+            const debounceTime = typeof option.fontSize !== 'undefined' ? 2000 : 300;
 
             configUpdateTimeoutRef.current = setTimeout(() => {
               // 这里可以添加额外的弹幕更新逻辑，如果需要的话
