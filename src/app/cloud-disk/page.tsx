@@ -131,7 +131,7 @@ export default function CloudDiskPage() {
     try {
       await navigator.clipboard.writeText(url);
       setCopiedUrl(url);
-      setTimeout(() => setCopiedUrl(null), 3000);
+      setTimeout(() => setCopiedUrl(null), 8000);
     } catch (err) {
       console.error('复制失败:', err);
     }
@@ -364,8 +364,8 @@ export default function CloudDiskPage() {
         <button
           onClick={scrollToTop}
           className={`fixed bottom-20 md:bottom-6 right-6 z-[500] w-12 h-12 bg-green-500/90 hover:bg-green-500 text-white rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out flex items-center justify-center group ${showScrollToTop
-              ? 'opacity-100 translate-y-0 pointer-events-auto'
-              : 'opacity-0 translate-y-4 pointer-events-none'
+            ? 'opacity-100 translate-y-0 pointer-events-auto'
+            : 'opacity-0 translate-y-4 pointer-events-none'
             }`}
           aria-label='返回顶部'
         >
