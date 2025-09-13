@@ -229,18 +229,4 @@ div[data-media-provider] video {
     min-width: 28px !important;
     width: 28px !important;
   }
-}/* 移动端样式 */
-@media (max-width: 768px) {
-  /* 右侧按钮组 */
-  .art-controls-right {
-    gap: -2px !important;           /* 按钮之间的间距 */
-    padding-right: 1px !important; /* 右侧内边距 */
-    margin-right: -4px !important; /* 右侧外边距（负值向右移动）*/
-  }
-  
-  /* 左侧按钮组 */
-  .art-controls-left {
-    gap: -2px !important;          /* 按钮之间的间距 */
-    padding-left: 1px !important; /* 左侧内边距 */
-  }
 }

@@ -2224,7 +2224,15 @@ function PlayPageClient() {
                   maxLength: 200,
                   lockTime: 5, // v5.2.0优化: 减少锁定时间，降低快进时的延迟
                   theme: 'dark' as const,
-                  width: 300,
+                  width: (() => {
+                    // 检测是否为全屏模式
+                    const checkFullscreen = () => {
+                      const player = document.querySelector('.artplayer');
+                      return player && (player.classList.contains('art-fullscreen') || player.classList.contains('art-fullscreen-web'));
+                    };
+                    // 全屏模式下缩短30%，从300px变为210px
+                    return checkFullscreen() ? 210 : 300;
+                  })(),
 
                   // 🧠 智能过滤器 - 只过滤有问题的弹幕，不减少数量
                   filter: (danmu: any) => {
@@ -2391,6 +2399,19 @@ function PlayPageClient() {
               font-size: 11px !important;
               color: #ffffff !important;
               opacity: 0.85 !important;
+            }
+            
+            /* 全屏模式下弹幕发射器宽度控制 */
+            .art-fullscreen .artplayer-plugin-danmuku .apd-emitter,
+            .art-fullscreen-web .artplayer-plugin-danmuku .apd-emitter {
+              width: 210px !important;
+              max-width: 210px !important;
+            }
+            
+            .art-fullscreen .artplayer-plugin-danmuku .apd-emitter input,
+            .art-fullscreen-web .artplayer-plugin-danmuku .apd-emitter input {
+              width: 100% !important;
+              max-width: 100% !important;
             }
             
             /* 弹幕配置面板自动适配定位 - 完全模仿ArtPlayer设置面板 */
