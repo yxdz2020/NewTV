@@ -2404,8 +2404,8 @@ function PlayPageClient() {
             /* 全屏模式下弹幕发射器宽度控制 */
             .art-fullscreen .artplayer-plugin-danmuku .apd-emitter,
             .art-fullscreen-web .artplayer-plugin-danmuku .apd-emitter {
-              width: 235px !important;
-              max-width: 235px !important;
+              width: 270px !important;
+              max-width: 270px !important;
             }
             
             .art-fullscreen .artplayer-plugin-danmuku .apd-emitter input,
