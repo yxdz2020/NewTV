@@ -6,7 +6,7 @@ on:
     branches:
       - main           # 当 main 分支更新时自动触发
   workflow_run:
-    workflows: ["sync.yml"]
+    workflows: ["Upstream Sync"]
     types:
       - completed     # 在 sync.yml 运行完成后自动触发
 
