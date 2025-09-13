@@ -11,6 +11,17 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    "version": "6.5.4",
+    "date": "2025-09-13",
+    "added": ["🎬 新增PC和移动端原生弹幕发送功能：统一使用ArtPlayer原生弹幕发射器，快来发射弹幕吧！"],
+    "changed": [
+      "🖥️ 优化PC端弹幕菜单展示逻辑：采用更长延迟避免鼠标滑动导致无法选中菜单项",
+      "🎛️ 优化ArtPlayer播放器功能按钮排版：调整控制栏按钮布局，提升用户操作体验",
+      "🤖 继续优化AI推荐prompt：进一步提升AI推荐的准确性和相关性"
+    ],
+    "fixed": []
+  },
+  {
     "version": "6.5.3",
     "date": "2025-09-12",
     "added": ["🎬 新增弹幕开关：在播放器中添加弹幕显示/隐藏切换功能，支持状态持久化保存"],
