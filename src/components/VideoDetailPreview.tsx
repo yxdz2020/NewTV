@@ -165,19 +165,19 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
                   <div className="text-gray-900 dark:text-white">{detail.source_name}</div>
                 </div>
               )}
-              {(doubanDetail?.genres?.length || detail.type_name) && (
+              {(doubanDetail?.genres?.length > 0 ? doubanDetail.genres.join('、') : (detail.class || detail.type_name)) && (
                 <div className="space-y-2">
                   <div className="text-gray-400">类型</div>
                   <div className="text-gray-900 dark:text-white">
-                    {doubanDetail?.genres?.join('、') || detail.type_name}
+                    {doubanDetail?.genres?.length > 0 ? doubanDetail.genres.join('、') : (detail.class || detail.type_name)}
                   </div>
                 </div>
               )}
-              {(doubanDetail?.countries?.length || detail.class) && (
+              {(doubanDetail?.countries?.length > 0 ? doubanDetail.countries.join('、') : detail.class) && (
                 <div className="space-y-2">
-                  <div className="text-gray-400">地区</div>
+                  <div className="text-gray-400">地区/分类</div>
                   <div className="text-gray-900 dark:text-white">
-                    {doubanDetail?.countries?.join('、') || detail.class}
+                    {doubanDetail?.countries?.length > 0 ? doubanDetail.countries.join('、') : detail.class}
                   </div>
                 </div>
               )}
@@ -193,6 +193,9 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
                     {doubanDetail?.episode_length && (
                       <span className="text-gray-500 ml-2">({doubanDetail.episode_length}分钟/集)</span>
                     )}
+                    {!doubanDetail?.episodes && detail.episodes_titles && detail.episodes_titles.length > 0 && (
+                      <span className="text-gray-500 ml-2">({detail.episodes_titles[0]})</span>
+                    )}
                   </div>
                 </div>
               )}
@@ -200,6 +203,12 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
                 <div className="space-y-2">
                   <div className="text-gray-400">导演</div>
                   <div className="text-gray-900 dark:text-white">{doubanDetail.directors.join('、')}</div>
+                </div>
+              )}
+              {!doubanDetail?.directors && detail.type_name && (
+                <div className="space-y-2">
+                  <div className="text-gray-400">影片类型</div>
+                  <div className="text-gray-900 dark:text-white">{detail.type_name}</div>
                 </div>
               )}
               {doubanDetail?.cast && doubanDetail.cast.length > 0 && (
@@ -241,6 +250,11 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                   {doubanDetail?.plot_summary || detail.desc}
                 </p>
+                {!doubanDetail?.plot_summary && detail.desc && (
+                  <div className="text-xs text-gray-500 mt-2">
+                    来源：{detail.source_name}
+                  </div>
+                )}
               </div>
             )}
             
