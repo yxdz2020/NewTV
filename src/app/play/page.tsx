@@ -1372,7 +1372,7 @@ function PlayPageClient() {
         if (!detailData.episodes || detailData.episodes.length === 0) {
           setLoadingMessage('🔗 正在获取播放链接...');
           
-          let sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
+          const sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
           if (sourcesInfo.length > 0) {
             // 使用第一个资源站的播放链接，但保留豆瓣的其他信息
             const sourceData = sourcesInfo[0];
