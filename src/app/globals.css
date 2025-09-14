@@ -42,7 +42,6 @@
 
   .glass-button:hover {
     background: var(--glass-bg-strong);
-    transform: translateY(-1px);
     box-shadow: var(--shadow-elevated);
   }
 
