@@ -106,22 +106,6 @@ body {
   --glass-shadow: rgba(0, 0, 0, 0.3);
 }
 
-/* Dark mode navigation with enhanced layering */
-.dark .glass-nav {
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.7) 0%,
-    rgba(10, 10, 10, 0.8) 25%,
-    rgba(20, 20, 20, 0.85) 50%,
-    rgba(10, 10, 10, 0.8) 75%,
-    rgba(0, 0, 0, 0.7) 100%
-  );
-  backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.2);
-  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.2);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.4);
-}
-
 html:not(.dark) body {
   background: linear-gradient(
     180deg,
