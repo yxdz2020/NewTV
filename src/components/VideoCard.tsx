@@ -24,8 +24,10 @@ import {
 import { processImageUrl } from '@/lib/utils';
 import { useLongPress } from '@/hooks/useLongPress';
 
+import { getDoubanDetails } from '@/lib/douban.client';
 import { ImagePlaceholder } from '@/components/ImagePlaceholder';
 import MobileActionSheet from '@/components/MobileActionSheet';
+import DoubanDetailModal from './DoubanDetailModal';
 import VideoDetailPreview from '@/components/VideoDetailPreview';
 import { SearchResult } from '@/lib/types';
 
@@ -89,6 +91,8 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const [showDetailPreview, setShowDetailPreview] = useState(false);
   const [previewDetail, setPreviewDetail] = useState<SearchResult | null>(null);
   const [isSearchingDetail, setIsSearchingDetail] = useState(false);
+  const [showDoubanDetail, setShowDoubanDetail] = useState(false);
+  const [doubanDetail, setDoubanDetail] = useState<any | null>(null);
 
   // 可外部修改的可控字段
   const [dynamicEpisodes, setDynamicEpisodes] = useState<number | undefined>(
@@ -323,8 +327,11 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   }, [actualTitle, isSearchingDetail, navigateToPlay]);
 
   const handleClick = useCallback(() => {
-    // 如果是豆瓣来源且没有具体的source和id（即搜索源状态），先展示资源站详情
-    if (from === 'douban' && !actualSource && !actualId) {
+    // 如果是豆瓣来源，展示豆瓣详情
+    if (from === 'douban') {
+      handleDoubanClick();
+    } else if (isAggregate && !actualSource && !actualId) {
+      // 如果是聚合搜索且没有具体的source和id（即搜索源状态），先展示资源站详情
       // 添加点击反馈动画
       setIsLoading(true);
       searchFirstSourceDetail();
@@ -334,11 +341,27 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     }
   }, [
     from,
+    isAggregate,
     actualSource,
     actualId,
     searchFirstSourceDetail,
     navigateToPlay,
+    handleDoubanClick,
   ]);
+
+  const handleDoubanClick = useCallback(async () => {
+    if (actualDoubanId) {
+      const details = await getDoubanDetails(actualDoubanId.toString());
+      if (details.code === 200 && details.data) {
+        setDoubanDetail(details.data);
+        setShowDoubanDetail(true);
+      } else {
+        navigateToPlay();
+      }
+    } else {
+      navigateToPlay();
+    }
+  }, [actualDoubanId, navigateToPlay]);
 
   // 新标签页播放处理函数
   const handlePlayInNewTab = useCallback(() => {
@@ -1150,6 +1173,20 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         onTimeout={() => {
           setShowDetailPreview(false);
           setPreviewDetail(null);
+          navigateToPlay();
+        }}
+        duration={5000}
+      />
+      <DoubanDetailModal
+        detail={doubanDetail}
+        isVisible={showDoubanDetail}
+        onClose={() => {
+          setShowDoubanDetail(false);
+          setDoubanDetail(null);
+        }}
+        onTimeout={() => {
+          setShowDoubanDetail(false);
+          setDoubanDetail(null);
           navigateToPlay();
         }}
         duration={5000}
