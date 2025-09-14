@@ -181,6 +181,18 @@ html:not(.dark) body {
   body::-webkit-scrollbar {
     display: none; /* Chrome Safari */
   }
+
+  /* 移动端字体大小缩小30% */
+  .text-xs { font-size: 0.525rem; line-height: 0.7rem; } /* 原 0.75rem */
+  .text-sm { font-size: 0.7rem; line-height: 0.875rem; } /* 原 0.875rem */
+  .text-base { font-size: 0.7rem; line-height: 1.05rem; } /* 原 1rem */
+  .text-lg { font-size: 0.875rem; line-height: 1.225rem; } /* 原 1.125rem */
+  .text-xl { font-size: 0.875rem; line-height: 1.4rem; } /* 原 1.25rem */
+  .text-2xl { font-size: 1.05rem; line-height: 1.4rem; } /* 原 1.5rem */
+  .text-3xl { font-size: 1.33rem; line-height: 1.75rem; } /* 原 1.875rem */
+  .text-4xl { font-size: 1.575rem; line-height: 2.1rem; } /* 原 2.25rem */
+  .text-5xl { font-size: 2.1rem; line-height: 2.1rem; } /* 原 3rem */
+  .text-6xl { font-size: 2.625rem; line-height: 2.625rem; } /* 原 3.75rem */
 }
 
 /* 隐藏所有滚动条（兼容 WebKit、Firefox、IE/Edge） */
