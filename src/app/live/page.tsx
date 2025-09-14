@@ -1003,7 +1003,7 @@ function LivePageClient() {
           fullscreen: true,
           fullscreenWeb: true,
           subtitleOffset: false,
-          miniProgressBar: true,
+          miniProgressBar: false,
           mutex: true,
           playsInline: true,
           autoPlayback: false,
