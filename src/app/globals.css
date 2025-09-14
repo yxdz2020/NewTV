@@ -30,6 +30,10 @@
     box-shadow: var(--shadow-floating);
     transition: all var(--duration-normal) var(--transition-smooth);
   }
+  
+  .glass-strong.rounded-apple-xl {
+    @apply rounded-apple-xl;
+  }
 
   .glass-card {
     @apply glass rounded-apple-xl;
