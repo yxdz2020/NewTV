@@ -88,14 +88,8 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
     }
   }, [isCollapsed]);
 
-  const [active, setActive] = useState(() => {
-    // 初始化时就获取完整路径，避免默认'/'导致的闪烁
-    if (typeof window !== 'undefined') {
-      const queryString = searchParams.toString();
-      return queryString ? `${pathname}?${queryString}` : pathname;
-    }
-    return '/';
-  });
+  const [active, setActive] = useState<string>('');
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const getCurrentFullPath = () => {
@@ -104,13 +98,26 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
     };
     const fullPath = getCurrentFullPath();
     
-    // 使用setTimeout避免快速路由切换时的状态冲突
-    const timeoutId = setTimeout(() => {
-      setActive(fullPath);
-    }, 0);
-    
-    return () => clearTimeout(timeoutId);
+    if (fullPath && pathname) {
+      // 使用setTimeout避免快速路由切换时的状态冲突
+      const timeoutId = setTimeout(() => {
+        setActive(fullPath);
+        setIsInitialized(true);
+      }, 0);
+      
+      return () => clearTimeout(timeoutId);
+    }
   }, [pathname, searchParams]);
+
+  // 初始化时设置当前路径
+  useEffect(() => {
+    if (!isInitialized && pathname) {
+      const queryString = searchParams.toString();
+      const initialActive = queryString ? `${pathname}?${queryString}` : pathname;
+      setActive(initialActive);
+      setIsInitialized(true);
+    }
+  }, [pathname, searchParams, isInitialized]);
 
   const handleToggle = useCallback(() => {
     const newState = !isCollapsed;
@@ -230,7 +237,7 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
             <nav className='px-2 mt-4 space-y-1'>
               <Link
                 href='/'
-                data-active={active === '/'}
+                data-active={isInitialized && active === '/'}
                 className={`group flex items-center rounded-apple-lg px-2 py-2 pl-4 text-gray-700 hover:bg-white/20 hover:text-blue-600 data-[active=true]:glass-button data-[active=true]:text-blue-700 font-medium transition-all duration-200 min-h-[40px] dark:text-gray-300 dark:hover:text-blue-400 dark:data-[active=true]:text-blue-400 ${isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
                   } gap-3 justify-start`}
               >
@@ -249,7 +256,7 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
                   e.preventDefault();
                   handleSearchClick();
                 }}
-                data-active={active === '/search'}
+                data-active={isInitialized && active.startsWith('/search')}
                 className={`group flex items-center rounded-apple-lg px-2 py-2 pl-4 text-gray-700 hover:bg-white/20 hover:text-blue-600 data-[active=true]:glass-button data-[active=true]:text-blue-700 font-medium transition-all duration-200 min-h-[40px] dark:text-gray-300 dark:hover:text-blue-400 dark:data-[active=true]:text-blue-400 ${isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
                   } gap-3 justify-start`}
               >
@@ -275,11 +282,11 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
                   const decodedActive = decodeURIComponent(active);
                   const decodedItemHref = decodeURIComponent(item.href);
 
-                  const isActive = item.href.startsWith('/douban')
+                  const isActive = isInitialized && (item.href.startsWith('/douban')
                     ? typeMatch && decodedActive.includes(`type=${typeMatch}`)
                     : item.href === '/youtube'
                     ? decodedActive.startsWith('/youtube')
-                    : decodedActive === decodedItemHref;
+                    : decodedActive === decodedItemHref);
                   const Icon = item.icon;
                   return (
                     <Link
