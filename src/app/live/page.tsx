@@ -1008,7 +1008,7 @@ function LivePageClient() {
           playsInline: true,
           autoPlayback: false,
           airplay: true,
-          theme: '#22c55e',
+          theme: '#ffffff',
           lang: 'zh-cn',
           hotkey: false,
           fastForward: false, // 直播不需要快进

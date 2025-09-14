@@ -1999,7 +1999,7 @@ function PlayPageClient() {
           mutex: true,
           playsInline: true,
           autoPlayback: false,
-          theme: '#22c55e',
+          theme: '#ffffff',
           lang: 'zh-cn',
           hotkey: false,
           fastForward: true,
