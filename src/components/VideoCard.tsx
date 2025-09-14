@@ -503,7 +503,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   return (
     <>
       <div
-        className={`group relative w-full ${from === 'douban' ? 'glass-strong rounded-apple-xl' : 'glass-card'} cursor-pointer transition-transform duration-200 ease-out hover:scale-105 hover:shadow-elevated hover:z-[500] flex flex-col h-full`}
+        className={`group relative w-full ${from === 'douban' ? 'glass-strong' : 'glass-card'} cursor-pointer transition-transform duration-200 ease-out hover:scale-105 hover:shadow-elevated hover:z-[500] flex flex-col h-80`}
         onClick={handleClick}
         {...longPressProps}
         style={{
@@ -941,7 +941,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
 
         {/* 标题与来源 */}
         <div
-          className='h-16 flex flex-col justify-center px-2 py-2 text-center'
+          className='h-20 flex flex-col justify-center px-2 py-3 text-center'
           style={{
             WebkitUserSelect: 'none',
             userSelect: 'none',
@@ -961,14 +961,12 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             } as React.CSSProperties}
           >
             <span
-              className='block font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300 ease-in-out group-hover:text-black dark:group-hover:text-white peer text-sm leading-tight line-clamp-2 overflow-hidden'
+              className='block font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300 ease-in-out group-hover:text-black dark:group-hover:text-white peer text-xs leading-tight line-clamp-2 break-words px-1'
               style={{
                 WebkitUserSelect: 'none',
                 userSelect: 'none',
                 WebkitTouchCallout: 'none',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
+                fontSize: actualTitle.length > 12 ? '0.65rem' : '0.75rem',
               } as React.CSSProperties}
               onContextMenu={(e) => {
                 e.preventDefault();

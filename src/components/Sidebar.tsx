@@ -97,14 +97,14 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
       return queryString ? `${pathname}?${queryString}` : pathname;
     };
     const fullPath = getCurrentFullPath();
-    
+
     if (fullPath && pathname) {
       // 使用setTimeout避免快速路由切换时的状态冲突
       const timeoutId = setTimeout(() => {
         setActive(fullPath);
         setIsInitialized(true);
       }, 0);
-      
+
       return () => clearTimeout(timeoutId);
     }
   }, [pathname, searchParams]);
@@ -285,8 +285,8 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
                   const isActive = isInitialized && (item.href.startsWith('/douban')
                     ? typeMatch && decodedActive.includes(`type=${typeMatch}`)
                     : item.href === '/youtube'
-                    ? decodedActive.startsWith('/youtube')
-                    : decodedActive === decodedItemHref);
+                      ? decodedActive.startsWith('/youtube')
+                      : decodedActive === decodedItemHref);
                   const Icon = item.icon;
                   return (
                     <Link

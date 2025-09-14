@@ -88,7 +88,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
     if (href.startsWith('/douban?type=')) {
       // 提取导航项的type参数
       const hrefTypeMatch = href.match(/type=([^&]+)/)?.[1];
-      
+
       if (hrefTypeMatch && decodedActive.startsWith('/douban')) {
         // 解析当前URL的查询参数
         const [, queryString] = decodedActive.split('?');
@@ -146,8 +146,8 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                   />
                   <span
                     className={`transition-colors duration-200 ${active
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : 'text-gray-600 dark:text-gray-300'
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-gray-600 dark:text-gray-300'
                       } ${item.label === 'YouTube' ? 'text-[10px]' : 'text-xs'}`}
                   >
                     {item.label}
