@@ -32,7 +32,7 @@
   }
 
   .glass-card {
-    @apply glass rounded-xl;
+    @apply glass rounded-apple-xl;
   }
 
   .glass-button {

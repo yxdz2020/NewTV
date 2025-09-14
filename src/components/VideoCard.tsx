@@ -503,7 +503,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   return (
     <>
       <div
-        className='group relative w-full glass-card cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-elevated hover:z-[500]'
+        className='group relative w-full glass-card cursor-pointer transition-transform duration-200 ease-out hover:scale-105 hover:shadow-elevated hover:z-[500]'
         onClick={handleClick}
         {...longPressProps}
         style={{

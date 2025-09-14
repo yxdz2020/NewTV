@@ -99,18 +99,18 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
         minHeight: 'calc(3.5rem + env(safe-area-inset-bottom))',
       }}
     >
-      <ul className='flex items-center justify-between w-full px-2'>
+      <ul className='grid grid-cols-6 w-full'>
         {navItems.map((item) => {
           const active = isActive(item.href);
           return (
             <li
               key={item.href}
-              className='flex-1 flex justify-center'
+              className='flex justify-center items-center'
             >
               {item.label !== '更多' ? (
                 <Link
                   href={item.href}
-                  className='flex flex-col items-center justify-center px-3 py-2 h-14 gap-1 text-xs transition-all duration-200 hover:bg-white/10 dark:hover:bg-white/5 rounded-lg'
+                  className='flex flex-col items-center justify-center w-full h-14 gap-1 text-xs transition-all duration-200 hover:bg-white/10 dark:hover:bg-white/5 rounded-lg'
                 >
                   <item.icon
                     className={`h-6 w-6 transition-colors duration-200 ${active
@@ -131,7 +131,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                 <button
                   type='button'
                   onClick={() => setShowMore((v) => !v)}
-                  className='flex flex-col items-center justify-center px-3 py-2 h-14 gap-1 text-xs transition-all duration-200 hover:bg-white/10 dark:hover:bg-white/5 rounded-lg'
+                  className='flex flex-col items-center justify-center w-full h-14 gap-1 text-xs transition-all duration-200 hover:bg-white/10 dark:hover:bg-white/5 rounded-lg'
                 >
                   <item.icon
                     className={`h-6 w-6 transition-colors duration-200 ${moreActive
