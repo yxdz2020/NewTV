@@ -11,10 +11,80 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none; /* Chrome, Safari and Opera */
   }
+
+  /* Glass Morphism Utilities */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-glass);
+    transition: all var(--duration-normal) var(--transition-smooth);
+  }
+
+  .glass-strong {
+    background: var(--glass-bg-strong);
+    backdrop-filter: blur(var(--glass-blur-strong));
+    -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-floating);
+    transition: all var(--duration-normal) var(--transition-smooth);
+  }
+
+  .glass-card {
+    @apply glass rounded-xl;
+  }
+
+  .glass-button {
+    @apply glass rounded-lg;
+    transition: all var(--duration-fast) var(--transition-smooth);
+  }
+
+  .glass-button:hover {
+    background: var(--glass-bg-strong);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .glass-nav {
+    @apply glass;
+    backdrop-filter: blur(var(--glass-blur-strong));
+    -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+  }
 }
 
 :root {
   --foreground-rgb: 255, 255, 255;
+  
+  /* Apple Design System Variables */
+  /* Glass Morphism Effects */
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-bg-strong: rgba(255, 255, 255, 0.2);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-shadow: rgba(0, 0, 0, 0.1);
+  --glass-blur: 20px;
+  --glass-blur-strong: 40px;
+  
+  /* Apple-style Border Radius */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-3xl: 32px;
+  
+  /* Apple-style Shadows */
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-floating: 0 12px 48px rgba(0, 0, 0, 0.18);
+  
+  /* Apple-style Transitions */
+  --transition-smooth: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --transition-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
 }
 
 html,
@@ -29,6 +99,14 @@ body {
   color: rgb(var(--foreground-rgb));
 }
 
+/* Dark mode variables */
+.dark {
+  --glass-bg: rgba(0, 0, 0, 0.2);
+  --glass-bg-strong: rgba(0, 0, 0, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: rgba(0, 0, 0, 0.3);
+}
+
 html:not(.dark) body {
   background: linear-gradient(
     180deg,
@@ -38,6 +116,19 @@ html:not(.dark) body {
     #e9ecef 60%,
     #dbe3ea 80%,
     #d3dde6 100%
+  );
+  background-attachment: fixed;
+}
+
+/* Enhanced dark mode background with Apple-style gradient */
+.dark body {
+  background: linear-gradient(
+    180deg,
+    #0a0a0a 0%,
+    #1a1a1a 25%,
+    #2a2a2a 50%,
+    #1a1a1a 75%,
+    #0a0a0a 100%
   );
   background-attachment: fixed;
 }

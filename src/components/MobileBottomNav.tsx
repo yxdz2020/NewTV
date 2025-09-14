@@ -91,7 +91,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
 
   return (
     <nav
-      className='md:hidden fixed left-0 right-0 z-[600] bg-white/90 backdrop-blur-xl border-t border-gray-200/50 overflow-visible dark:bg-gray-900/80 dark:border-gray-700/50'
+      className='md:hidden fixed left-0 right-0 z-[600] glass-nav border-t border-white/20 overflow-visible dark:border-white/10'
       style={{
         /* 紧贴视口底部，同时在内部留出安全区高度 */
         bottom: 0,
@@ -115,13 +115,13 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                 >
                   <item.icon
                     className={`h-6 w-6 ${active
-                      ? 'text-green-600 dark:text-green-400'
+                      ? 'text-blue-600 dark:text-blue-400'
                       : 'text-gray-500 dark:text-gray-400'
                       }`}
                   />
                   <span
                     className={`${active
-                        ? 'text-green-600 dark:text-green-400'
+                        ? 'text-blue-600 dark:text-blue-400'
                         : 'text-gray-600 dark:text-gray-300'
                       } ${item.label === 'YouTube' ? 'text-[10px]' : 'text-xs'}`}
                   >
@@ -136,11 +136,11 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                 >
                   <item.icon
                     className={`h-6 w-6 ${moreActive
-                      ? 'text-green-600 dark:text-green-400'
+                      ? 'text-blue-600 dark:text-blue-400'
                       : 'text-gray-500 dark:text-gray-400'
                       }`}
                   />
-                  <span className={`${moreActive ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-300'} text-xs`}>
+                  <span className={`${moreActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300'} text-xs`}>
                     更多
                   </span>
                 </button>
@@ -152,25 +152,25 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
 
       {showMore && (
         <div className='absolute bottom-[calc(3.5rem+env(safe-area-inset-bottom)+0.5rem)] left-0 right-0 z-[650] px-4'>
-          <div className='mx-auto max-w-sm rounded-xl border border-gray-200/60 bg-white/95 dark:border-gray-700/60 dark:bg-gray-900/95 shadow-lg backdrop-blur-xl'>
+          <div className='mx-auto max-w-sm glass-strong border border-white/20 dark:border-white/10 shadow-floating rounded-apple-xl'>
             <div className='flex divide-x divide-gray-200/60 dark:divide-gray-700/60'>
               <Link
                 href='/douban?type=short-drama'
-                className='flex-1 px-2 py-3 flex items-center justify-center gap-1 text-xs text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
+                className='flex-1 px-2 py-3 flex items-center justify-center gap-1 text-xs text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400'
                 onClick={() => setShowMore(false)}
               >
                 <Clapperboard className='h-4 w-4' /> 短剧
               </Link>
               <Link
                 href='/douban?type=anime'
-                className='flex-1 px-2 py-3 flex items-center justify-center gap-1 text-xs text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
+                className='flex-1 px-2 py-3 flex items-center justify-center gap-1 text-xs text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400'
                 onClick={() => setShowMore(false)}
               >
                 <Cat className='h-4 w-4' /> 动漫
               </Link>
               <Link
                 href='/douban?type=show'
-                className='flex-1 px-2 py-3 flex items-center justify-center gap-1 text-xs text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
+                className='flex-1 px-2 py-3 flex items-center justify-center gap-1 text-xs text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400'
                 onClick={() => setShowMore(false)}
               >
                 <Clover className='h-4 w-4' /> 综艺
@@ -178,7 +178,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
               {hasCustom && (
                 <Link
                   href='/douban?type=custom'
-                  className='flex-1 px-2 py-3 flex items-center justify-center gap-1 text-xs text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
+                  className='flex-1 px-2 py-3 flex items-center justify-center gap-1 text-xs text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400'
                   onClick={() => setShowMore(false)}
                 >
                   <Star className='h-4 w-4' /> 纪录
@@ -187,7 +187,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
               {hasCloudDisk && (
                 <Link
                   href='/cloud-disk'
-                  className='flex-1 px-2 py-3 flex items-center justify-center gap-1 text-xs text-gray-700 dark:text-gray-200 hover:text-green-600 dark:hover:text-green-400'
+                  className='flex-1 px-2 py-3 flex items-center justify-center gap-1 text-xs text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400'
                   onClick={() => setShowMore(false)}
                 >
                   <Cloud className='h-4 w-4' /> {cloudDiskName}
