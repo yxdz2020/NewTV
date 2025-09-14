@@ -503,7 +503,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   return (
     <>
       <div
-        className='group relative w-full glass-card cursor-pointer transition-transform duration-200 ease-out hover:scale-105 hover:shadow-elevated hover:z-[500]'
+        className='group relative w-full glass-card cursor-pointer transition-transform duration-200 ease-out hover:scale-105 hover:shadow-elevated hover:z-[500] flex flex-col h-full'
         onClick={handleClick}
         {...longPressProps}
         style={{
@@ -540,7 +540,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       >
         {/* 海报容器 */}
         <div
-          className={`relative aspect-[2/3] overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-800 transition-all duration-300 ease-in-out group-hover:shadow-lg group-hover:shadow-black/20 dark:group-hover:shadow-black/20 ${origin === 'live' ? 'ring-1 ring-gray-300/80 dark:ring-gray-600/80' : ''}`}
+          className={`relative aspect-[3/4] overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-800 transition-all duration-300 ease-in-out group-hover:shadow-lg group-hover:shadow-black/20 dark:group-hover:shadow-black/20 ${origin === 'live' ? 'ring-1 ring-gray-300/80 dark:ring-gray-600/80' : ''}`}
           style={{
             WebkitUserSelect: 'none',
             userSelect: 'none',
@@ -941,7 +941,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
 
         {/* 标题与来源 */}
         <div
-          className='mt-2 text-center'
+          className='flex-1 flex flex-col justify-center px-2 py-3 text-center'
           style={{
             WebkitUserSelect: 'none',
             userSelect: 'none',
