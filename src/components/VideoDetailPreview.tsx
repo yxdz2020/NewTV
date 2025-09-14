@@ -35,6 +35,7 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
       const response = await fetch(`/api/douban/details?id=${doubanId}`);
       if (response.ok) {
         const data = await response.json();
+        console.log('豆瓣API返回数据:', data); // 调试日志
         if (data.code === 200) {
           setDoubanDetail(data.data);
         }
@@ -195,13 +196,13 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
                   </div>
                 </div>
               )}
-              {doubanDetail?.directors?.length && (
+              {doubanDetail?.directors?.length > 0 && (
                 <div className="space-y-2">
                   <div className="text-gray-400">导演</div>
                   <div className="text-gray-900 dark:text-white">{doubanDetail.directors.join('、')}</div>
                 </div>
               )}
-              {doubanDetail?.cast?.length && (
+              {doubanDetail?.cast?.length > 0 && (
                 <div className="space-y-2">
                   <div className="text-gray-400">主演</div>
                   <div className="text-gray-900 dark:text-white line-clamp-2">
@@ -216,14 +217,29 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
                   <div className="text-gray-900 dark:text-white">{doubanDetail.first_aired}</div>
                 </div>
               )}
+              {doubanDetail?.screenwriters?.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-gray-400">编剧</div>
+                  <div className="text-gray-900 dark:text-white line-clamp-2">
+                    {doubanDetail.screenwriters.slice(0, 4).join('、')}
+                    {doubanDetail.screenwriters.length > 4 && '等'}
+                  </div>
+                </div>
+              )}
+              {doubanDetail?.languages?.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-gray-400">语言</div>
+                  <div className="text-gray-900 dark:text-white">{doubanDetail.languages.join('、')}</div>
+                </div>
+              )}
             </div>
 
             {/* 简介 */}
-            {(doubanDetail?.plot_summary || detail.desc) && (
-              <div className="space-y-2">
-                <div className="text-gray-400">简介</div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-4">
-                  {doubanDetail?.plot_summary || detail.desc}
+            {(doubanDetail?.plot_summary || detail.description) && (
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">简介</h3>
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {doubanDetail?.plot_summary || detail.description}
                 </p>
               </div>
             )}
