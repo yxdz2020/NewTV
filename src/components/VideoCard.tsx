@@ -26,6 +26,7 @@ import { useLongPress } from '@/hooks/useLongPress';
 
 import { ImagePlaceholder } from '@/components/ImagePlaceholder';
 import MobileActionSheet from '@/components/MobileActionSheet';
+import VideoDetailPreview from '@/components/VideoDetailPreview';
 import { SearchResult } from '@/lib/types';
 
 export interface VideoCardProps {
@@ -85,7 +86,9 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const [isLoading, setIsLoading] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
   const [searchFavorited, setSearchFavorited] = useState<boolean | null>(null); // 搜索结果的收藏状态
-
+  const [showDetailPreview, setShowDetailPreview] = useState(false);
+  const [previewDetail, setPreviewDetail] = useState<SearchResult | null>(null);
+  const [isSearchingDetail, setIsSearchingDetail] = useState(false);
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
 
   // 可外部修改的可控字段
@@ -260,12 +263,66 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     actualDoubanId,
   ]);
 
+  // 搜索第一个资源站的详情
+  const searchFirstSourceDetail = useCallback(async () => {
+    if (isSearchingDetail) return;
+
+    setIsSearchingDetail(true);
+    setShowLoadingOverlay(true); // 立即显示加载状态
+
+    try {
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: actualTitle,
+          year: actualYear,
+          type: actualSearchType,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('搜索失败');
+      }
+
+      const data = await response.json();
+      if (data.results && data.results.length > 0) {
+        const firstResult = data.results[0];
+        setPreviewDetail(firstResult);
+        setShowDetailPreview(true);
+      } else {
+        // 如果没有搜索结果，直接跳转到播放页面
+        navigateToPlay();
+      }
+    } catch (error) {
+      console.error('获取资源站详情失败:', error);
+      // 如果获取失败，直接跳转到播放页面
+      navigateToPlay();
+    } finally {
+      setIsSearchingDetail(false);
+      setShowLoadingOverlay(false); // 清除加载状态
+    }
+  }, [actualTitle, actualYear, actualSearchType, isSearchingDetail, navigateToPlay]);
+
 
 
   const handleClick = useCallback(() => {
-    // 所有情况都直接跳转到播放页面
-    navigateToPlay();
-  }, [navigateToPlay]);
+    // 如果是豆瓣来源且没有具体的source和id（即搜索源状态），先展示资源站详情
+    if (from === 'douban' && !actualSource && !actualId) {
+      searchFirstSourceDetail();
+    } else {
+      // 其他情况直接跳转
+      navigateToPlay();
+    }
+  }, [
+    from,
+    actualSource,
+    actualId,
+    searchFirstSourceDetail,
+    navigateToPlay,
+  ]);
 
   // 新标签页播放处理函数
   const handlePlayInNewTab = useCallback(() => {
@@ -1058,6 +1115,22 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         currentEpisode={currentEpisode}
         totalEpisodes={actualEpisodes}
         origin={origin}
+      />
+
+      {/* 资源站详情预览 */}
+      <VideoDetailPreview
+        detail={previewDetail}
+        isVisible={showDetailPreview}
+        onClose={() => {
+          setShowDetailPreview(false);
+          setPreviewDetail(null);
+        }}
+        onTimeout={() => {
+          setShowDetailPreview(false);
+          setPreviewDetail(null);
+          navigateToPlay();
+        }}
+        duration={5000}
       />
 
       {/* 加载覆盖层 */}
