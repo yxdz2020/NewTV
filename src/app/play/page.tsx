@@ -1305,7 +1305,6 @@ function PlayPageClient() {
               poster: response.data.poster || '',
               desc: response.data.plot_summary || '',
               episodes: [], // 豆瓣不提供播放链接，需要从资源站获取
-              episodes_titles: [], // 豆瓣不提供剧集标题
               douban_id: videoDoubanIdRef.current,
               source_name: '豆瓣'
             };
