@@ -391,8 +391,18 @@ export abstract class BaseRedisStorage implements IStorage {
 
   async setAdminConfig(config: AdminConfig): Promise<void> {
     await this.withRetry(() =>
-      this.client.set(this.adminConfigKey(), JSON.stringify(config))
+      this.client.set(this.adminConfigKey(), JSON.stringify(config), {
+        // 管理员配置永不过期，确保数据持久化
+        KEEPTTL: true
+      })
     );
+    
+    // 额外保险：如果上述选项不支持，显式移除TTL
+    try {
+      await this.withRetry(() => this.client.persist(this.adminConfigKey()));
+    } catch (error) {
+      console.warn('移除管理员配置TTL失败，但数据已保存:', error);
+    }
   }
 
   // ---------- 跳过片头片尾配置 ----------
