@@ -120,8 +120,8 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                   />
                   <span
                     className={`transition-colors duration-200 ${active
-                      ? 'text-blue-600 dark:text-blue-400'
-                      : 'text-gray-600 dark:text-gray-300'
+                        ? 'text-blue-600 dark:text-blue-400'
+                        : 'text-gray-600 dark:text-gray-300'
                       } ${item.label === 'YouTube' ? 'text-[10px]' : 'text-xs'}`}
                   >
                     {item.label}
@@ -151,7 +151,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
 
       {showMore && (
         <div className='absolute bottom-[calc(3.5rem+env(safe-area-inset-bottom)+0.5rem)] left-0 right-0 z-[650] px-4'>
-          <div className='mx-auto max-w-sm glass-strong border border-white/20 dark:border-white/10 shadow-floating rounded-apple-xl'>
+          <div className='mx-auto max-w-sm glass-nav border border-white/20 dark:border-white/10 shadow-floating rounded-apple-xl'>
             <div className='flex divide-x divide-gray-200/60 dark:divide-gray-700/60'>
               <Link
                 href='/douban?type=short-drama'
