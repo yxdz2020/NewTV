@@ -227,6 +227,41 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     [from, actualSource, actualId, onDelete]
   );
 
+  // 跳转到播放页面的函数
+  const navigateToPlay = useCallback(() => {
+    // 构建豆瓣ID参数
+    const doubanIdParam = actualDoubanId && actualDoubanId > 0 ? `&douban_id=${actualDoubanId}` : '';
+
+    if (origin === 'live' && actualSource && actualId) {
+      // 直播内容跳转到直播页面
+      const url = `/live?source=${actualSource.replace('live_', '')}&id=${actualId.replace('live_', '')}`;
+      router.push(url);
+    } else if (from === 'douban' || (isAggregate && !actualSource && !actualId)) {
+      const url = `/play?title=${encodeURIComponent(actualTitle.trim())}${actualYear ? `&year=${actualYear}` : ''
+        }${doubanIdParam}${actualSearchType ? `&stype=${actualSearchType}` : ''}${isAggregate ? '&prefer=true' : ''}${actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''}`;
+      router.push(url);
+    } else if (actualSource && actualId) {
+      const url = `/play?source=${actualSource}&id=${actualId}&title=${encodeURIComponent(
+        actualTitle
+      )}${actualYear ? `&year=${actualYear}` : ''}${doubanIdParam}${isAggregate ? '&prefer=true' : ''
+        }${actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
+        }${actualSearchType ? `&stype=${actualSearchType}` : ''}`;
+      router.push(url);
+    }
+  }, [
+    origin,
+    from,
+    actualSource,
+    actualId,
+    router,
+    actualTitle,
+    actualYear,
+    isAggregate,
+    actualQuery,
+    actualSearchType,
+    actualDoubanId,
+  ]);
+
   // 搜索第一个资源站的详情
   const searchFirstSourceDetail = useCallback(async () => {
     if (isSearchingDetail) return;
@@ -268,41 +303,6 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       setIsSearchingDetail(false);
     }
   }, [actualTitle, isSearchingDetail, navigateToPlay]);
-
-  // 跳转到播放页面的函数
-  const navigateToPlay = useCallback(() => {
-    // 构建豆瓣ID参数
-    const doubanIdParam = actualDoubanId && actualDoubanId > 0 ? `&douban_id=${actualDoubanId}` : '';
-
-    if (origin === 'live' && actualSource && actualId) {
-      // 直播内容跳转到直播页面
-      const url = `/live?source=${actualSource.replace('live_', '')}&id=${actualId.replace('live_', '')}`;
-      router.push(url);
-    } else if (from === 'douban' || (isAggregate && !actualSource && !actualId)) {
-      const url = `/play?title=${encodeURIComponent(actualTitle.trim())}${actualYear ? `&year=${actualYear}` : ''
-        }${doubanIdParam}${actualSearchType ? `&stype=${actualSearchType}` : ''}${isAggregate ? '&prefer=true' : ''}${actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''}`;
-      router.push(url);
-    } else if (actualSource && actualId) {
-      const url = `/play?source=${actualSource}&id=${actualId}&title=${encodeURIComponent(
-        actualTitle
-      )}${actualYear ? `&year=${actualYear}` : ''}${doubanIdParam}${isAggregate ? '&prefer=true' : ''
-        }${actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
-        }${actualSearchType ? `&stype=${actualSearchType}` : ''}`;
-      router.push(url);
-    }
-  }, [
-    origin,
-    from,
-    actualSource,
-    actualId,
-    router,
-    actualTitle,
-    actualYear,
-    isAggregate,
-    actualQuery,
-    actualSearchType,
-    actualDoubanId,
-  ]);
 
   const handleClick = useCallback(() => {
     // 如果是豆瓣来源且没有具体的source和id（即搜索源状态），先展示资源站详情
