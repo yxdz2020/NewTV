@@ -111,16 +111,16 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
               {item.label !== '更多' ? (
                 <Link
                   href={item.href}
-                  className='flex flex-col items-center justify-center w-full h-14 gap-1 text-xs'
+                  className='flex flex-col items-center justify-center w-full h-14 gap-1 text-xs transition-all duration-200 hover:bg-white/10 dark:hover:bg-white/5 rounded-lg'
                 >
                   <item.icon
-                    className={`h-6 w-6 ${active
+                    className={`h-6 w-6 transition-colors duration-200 ${active
                       ? 'text-blue-600 dark:text-blue-400'
                       : 'text-gray-500 dark:text-gray-400'
                       }`}
                   />
                   <span
-                    className={`${active
+                    className={`transition-colors duration-200 ${active
                         ? 'text-blue-600 dark:text-blue-400'
                         : 'text-gray-600 dark:text-gray-300'
                       } ${item.label === 'YouTube' ? 'text-[10px]' : 'text-xs'}`}
@@ -132,15 +132,15 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                 <button
                   type='button'
                   onClick={() => setShowMore((v) => !v)}
-                  className='flex flex-col items-center justify-center w-full h-14 gap-1 text-xs'
+                  className='flex flex-col items-center justify-center w-full h-14 gap-1 text-xs transition-all duration-200 hover:bg-white/10 dark:hover:bg-white/5 rounded-lg'
                 >
                   <item.icon
-                    className={`h-6 w-6 ${moreActive
+                    className={`h-6 w-6 transition-colors duration-200 ${moreActive
                       ? 'text-blue-600 dark:text-blue-400'
                       : 'text-gray-500 dark:text-gray-400'
                       }`}
                   />
-                  <span className={`${moreActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300'} text-xs`}>
+                  <span className={`transition-colors duration-200 ${moreActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300'} text-xs`}>
                     更多
                   </span>
                 </button>
