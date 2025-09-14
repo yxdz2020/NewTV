@@ -347,8 +347,8 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
   };
 
   // 使用Portal将菜单渲染到body外层，避免被虚拟滚动容器的overflow限制
-  return typeof window !== 'undefined'
-    ? createPortal(renderContent(), document.body)
+  return typeof window !== 'undefined' 
+    ? createPortal(renderContent(), document.body) 
     : null;
 };
 

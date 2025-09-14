@@ -100,8 +100,8 @@ body {
 
 /* Dark mode variables */
 .dark {
-  --glass-bg: rgba(0, 0, 0, 0.6);
-  --glass-bg-strong: rgba(0, 0, 0, 0.8);
+  --glass-bg: rgba(0, 0, 0, 0.85);
+  --glass-bg-strong: rgba(0, 0, 0, 0.95);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-shadow: rgba(0, 0, 0, 0.3);
 }
