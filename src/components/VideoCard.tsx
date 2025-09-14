@@ -961,7 +961,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             } as React.CSSProperties}
           >
             <span
-              className={`block font-semibold truncate text-gray-900 dark:text-gray-100 transition-colors duration-300 ease-in-out group-hover:text-black dark:group-hover:text-white peer ${
+              className={`block font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300 ease-in-out group-hover:text-black dark:group-hover:text-white peer ${
                 from === 'douban' && actualTitle.length > 5 ? 'text-xs' : 'text-sm'
               }`}
               style={{
@@ -974,7 +974,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                 return false;
               }}
             >
-              {actualTitle}
+              {actualTitle.length <= 7 ? actualTitle : `${actualTitle.slice(0, 6)}...`}
             </span>
             {/* 自定义 tooltip */}
             <div
