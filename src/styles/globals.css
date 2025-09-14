@@ -47,32 +47,32 @@
 
   /* #region  /**=========== Typography =========== */
   .h0 {
-    @apply font-primary text-xl font-bold md:text-5xl;
+    @apply font-primary text-3xl font-bold md:text-5xl;
   }
 
   h1,
   .h1 {
-    @apply font-primary text-lg font-bold md:text-4xl;
+    @apply font-primary text-2xl font-bold md:text-4xl;
   }
 
   h2,
   .h2 {
-    @apply font-primary text-base font-bold md:text-3xl;
+    @apply font-primary text-xl font-bold md:text-3xl;
   }
 
   h3,
   .h3 {
-    @apply font-primary text-sm font-bold md:text-2xl;
+    @apply font-primary text-lg font-bold md:text-2xl;
   }
 
   h4,
   .h4 {
-    @apply font-primary text-xs font-bold md:text-lg;
+    @apply font-primary text-base font-bold md:text-lg;
   }
 
   body,
   .p {
-    @apply font-primary text-xs md:text-base;
+    @apply font-primary text-sm md:text-base;
   }
   /* #endregion  /**======== Typography =========== */
 
@@ -114,5 +114,12 @@
   .animated-underline:hover,
   .animated-underline:focus-visible {
     background-size: 0 2px, 100% 2px;
+  }
+
+  /* 移动端字体缩小30% */
+  @media (max-width: 767px) {
+    html {
+      font-size: 70%; /* 缩小30% */
+    }
   }
 }
