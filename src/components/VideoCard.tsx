@@ -89,7 +89,6 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const [showDetailPreview, setShowDetailPreview] = useState(false);
   const [previewDetail, setPreviewDetail] = useState<SearchResult | null>(null);
   const [isSearchingDetail, setIsSearchingDetail] = useState(false);
-  const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
 
   // 可外部修改的可控字段
   const [dynamicEpisodes, setDynamicEpisodes] = useState<number | undefined>(
@@ -263,35 +262,52 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     actualDoubanId,
   ]);
 
-  // 搜索第一个资源站的详情
+  // 搜索采集站详情，实现fallback机制
   const searchFirstSourceDetail = useCallback(async () => {
     if (isSearchingDetail) return;
-
+    
     setIsSearchingDetail(true);
-    setShowLoadingOverlay(true); // 立即显示加载状态
-
     try {
-      const response = await fetch('/api/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: actualTitle,
-          year: actualYear,
-          type: actualSearchType,
-        }),
-      });
-
+      const response = await fetch(
+        `/api/search?q=${encodeURIComponent(actualTitle.trim())}`
+      );
       if (!response.ok) {
         throw new Error('搜索失败');
       }
-
       const data = await response.json();
-      if (data.results && data.results.length > 0) {
-        const firstResult = data.results[0];
-        setPreviewDetail(firstResult);
-        setShowDetailPreview(true);
+      
+      if (data && data.results && data.results.length > 0) {
+        // 依次尝试每个搜索结果，直到找到有效数据
+        let foundValidDetail = false;
+        
+        for (const result of data.results) {
+          try {
+            const detailResponse = await fetch(
+              `/api/detail?source=${result.source}&id=${result.id}`
+            );
+            
+            if (detailResponse.ok) {
+              const detailData = await detailResponse.json();
+              // 检查详情数据是否有效（有播放链接）
+              if (detailData && detailData.episodes && detailData.episodes.length > 0) {
+                setPreviewDetail(detailData);
+                setShowDetailPreview(true);
+                foundValidDetail = true;
+                break;
+              }
+            }
+          } catch (detailError) {
+            console.warn(`获取${result.source_name || result.source}详情失败:`, detailError);
+            // 继续尝试下一个源
+            continue;
+          }
+        }
+        
+        // 如果所有源都没有有效详情，使用第一个搜索结果作为预览数据
+        if (!foundValidDetail) {
+          setPreviewDetail(data.results[0]);
+          setShowDetailPreview(true);
+        }
       } else {
         // 如果没有搜索结果，直接跳转到播放页面
         navigateToPlay();
@@ -302,15 +318,15 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       navigateToPlay();
     } finally {
       setIsSearchingDetail(false);
-      setShowLoadingOverlay(false); // 清除加载状态
+      setIsLoading(false);
     }
-  }, [actualTitle, actualYear, actualSearchType, isSearchingDetail, navigateToPlay]);
-
-
+  }, [actualTitle, isSearchingDetail, navigateToPlay]);
 
   const handleClick = useCallback(() => {
     // 如果是豆瓣来源且没有具体的source和id（即搜索源状态），先展示资源站详情
     if (from === 'douban' && !actualSource && !actualId) {
+      // 添加点击反馈动画
+      setIsLoading(true);
       searchFirstSourceDetail();
     } else {
       // 其他情况直接跳转
@@ -608,7 +624,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       >
         {/* 海报容器 */}
         <div
-          className={`relative aspect-[3/4] overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-800 transition-all duration-300 ease-in-out group-hover:shadow-lg group-hover:shadow-black/20 dark:group-hover:shadow-black/20 ${origin === 'live' ? 'ring-1 ring-gray-300/80 dark:ring-gray-600/80' : ''}`}
+          className={`relative aspect-[3/4] overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-800 transition-all duration-300 ease-in-out group-hover:shadow-lg group-hover:shadow-black/20 dark:group-hover:shadow-black/20 ${origin === 'live' ? 'ring-1 ring-gray-300/80 dark:ring-gray-600/80' : ''} ${isSearchingDetail ? 'opacity-75' : ''}`}
           style={{
             WebkitUserSelect: 'none',
             userSelect: 'none',
@@ -686,20 +702,26 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                 return false;
               }}
             >
-              <PlayCircleIcon
-                size={50}
-                strokeWidth={0.8}
-                className='text-white fill-transparent transition-all duration-300 ease-out hover:fill-blue-500 hover:scale-[1.1]'
-                style={{
-                  WebkitUserSelect: 'none',
-                  userSelect: 'none',
-                  WebkitTouchCallout: 'none',
-                } as React.CSSProperties}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  return false;
-                }}
-              />
+              {isSearchingDetail ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+                </div>
+              ) : (
+                <PlayCircleIcon
+                  size={50}
+                  strokeWidth={0.8}
+                  className='text-white fill-transparent transition-all duration-300 ease-out hover:fill-blue-500 hover:scale-[1.1]'
+                  style={{
+                    WebkitUserSelect: 'none',
+                    userSelect: 'none',
+                    WebkitTouchCallout: 'none',
+                  } as React.CSSProperties}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    return false;
+                  }}
+                />
+              )}
             </div>
           )}
 
@@ -1132,18 +1154,6 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         }}
         duration={5000}
       />
-
-      {/* 加载覆盖层 */}
-      {showLoadingOverlay && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50 rounded-lg">
-          <div className="flex flex-col items-center space-y-2">
-            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-white text-sm">加载中...</span>
-          </div>
-        </div>
-      )}
-
-
     </>
   );
 }

@@ -1363,13 +1363,8 @@ function PlayPageClient() {
       newUrl.searchParams.delete('prefer');
       window.history.replaceState({}, '', newUrl.toString());
 
-      setLoadingStage('ready');
-      setLoadingMessage('✨ 准备就绪，即将开始播放...');
-
-      // 短暂延迟让用户看到完成状态
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+      // 直接结束loading，跳过准备就绪页面
+      setLoading(false);
     };
 
     initAll();
