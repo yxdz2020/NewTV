@@ -225,7 +225,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const handleClick = useCallback(() => {
     // 构建豆瓣ID参数
     const doubanIdParam = actualDoubanId && actualDoubanId > 0 ? `&douban_id=${actualDoubanId}` : '';
-    
+
     if (origin === 'live' && actualSource && actualId) {
       // 直播内容跳转到直播页面
       const url = `/live?source=${actualSource.replace('live_', '')}&id=${actualId.replace('live_', '')}`;
@@ -260,7 +260,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const handlePlayInNewTab = useCallback(() => {
     // 构建豆瓣ID参数
     const doubanIdParam = actualDoubanId && actualDoubanId > 0 ? `&douban_id=${actualDoubanId}` : '';
-    
+
     if (origin === 'live' && actualSource && actualId) {
       // 直播内容跳转到直播页面
       const url = `/live?source=${actualSource.replace('live_', '')}&id=${actualId.replace('live_', '')}`;
@@ -961,9 +961,8 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             } as React.CSSProperties}
           >
             <span
-              className={`block font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300 ease-in-out group-hover:text-black dark:group-hover:text-white peer ${
-                from === 'douban' && actualTitle.length > 8 ? 'text-xs' : 'text-sm'
-              }`}
+              className={`block font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300 ease-in-out group-hover:text-black dark:group-hover:text-white peer ${from === 'douban' && actualTitle.length > 8 ? 'text-xs' : 'text-sm'
+                }`}
               style={{
                 WebkitUserSelect: 'none',
                 userSelect: 'none',

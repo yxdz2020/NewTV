@@ -120,8 +120,8 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                   />
                   <span
                     className={`transition-colors duration-200 ${active
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : 'text-gray-600 dark:text-gray-300'
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-gray-600 dark:text-gray-300'
                       } ${item.label === 'YouTube' ? 'text-[10px]' : 'text-xs'}`}
                   >
                     {item.label}
