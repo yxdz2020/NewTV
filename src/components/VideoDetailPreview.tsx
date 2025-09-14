@@ -196,13 +196,13 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
                   </div>
                 </div>
               )}
-              {doubanDetail?.directors?.length > 0 && (
+              {doubanDetail?.directors && doubanDetail.directors.length > 0 && (
                 <div className="space-y-2">
                   <div className="text-gray-400">导演</div>
                   <div className="text-gray-900 dark:text-white">{doubanDetail.directors.join('、')}</div>
                 </div>
               )}
-              {doubanDetail?.cast?.length > 0 && (
+              {doubanDetail?.cast && doubanDetail.cast.length > 0 && (
                 <div className="space-y-2">
                   <div className="text-gray-400">主演</div>
                   <div className="text-gray-900 dark:text-white line-clamp-2">
@@ -217,7 +217,7 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
                   <div className="text-gray-900 dark:text-white">{doubanDetail.first_aired}</div>
                 </div>
               )}
-              {doubanDetail?.screenwriters?.length > 0 && (
+              {doubanDetail?.screenwriters && doubanDetail.screenwriters.length > 0 && (
                 <div className="space-y-2">
                   <div className="text-gray-400">编剧</div>
                   <div className="text-gray-900 dark:text-white line-clamp-2">
@@ -226,7 +226,7 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
                   </div>
                 </div>
               )}
-              {doubanDetail?.languages?.length > 0 && (
+              {doubanDetail?.languages && doubanDetail.languages.length > 0 && (
                 <div className="space-y-2">
                   <div className="text-gray-400">语言</div>
                   <div className="text-gray-900 dark:text-white">{doubanDetail.languages.join('、')}</div>
