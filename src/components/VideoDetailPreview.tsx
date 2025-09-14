@@ -140,11 +140,11 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
             )}
 
             {/* 简介 */}
-            {detail.plot_summary && (
+            {detail.desc && (
               <div className="space-y-2">
                 <h3 className="font-medium text-gray-900 dark:text-white">剧情简介</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-4">
-                  {detail.plot_summary}
+                  {detail.desc}
                 </p>
               </div>
             )}
