@@ -225,7 +225,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const handleClick = useCallback(() => {
     // 构建豆瓣ID参数
     const doubanIdParam = actualDoubanId && actualDoubanId > 0 ? `&douban_id=${actualDoubanId}` : '';
-
+    
     if (origin === 'live' && actualSource && actualId) {
       // 直播内容跳转到直播页面
       const url = `/live?source=${actualSource.replace('live_', '')}&id=${actualId.replace('live_', '')}`;
@@ -260,7 +260,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const handlePlayInNewTab = useCallback(() => {
     // 构建豆瓣ID参数
     const doubanIdParam = actualDoubanId && actualDoubanId > 0 ? `&douban_id=${actualDoubanId}` : '';
-
+    
     if (origin === 'live' && actualSource && actualId) {
       // 直播内容跳转到直播页面
       const url = `/live?source=${actualSource.replace('live_', '')}&id=${actualId.replace('live_', '')}`;
@@ -503,7 +503,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   return (
     <>
       <div
-        className='group relative w-full glass-card cursor-pointer transition-transform duration-200 ease-out hover:scale-105 hover:shadow-elevated hover:z-[500] flex flex-col h-full'
+        className={`group relative w-full ${from === 'douban' ? 'glass-strong' : 'glass-card'} cursor-pointer transition-transform duration-200 ease-out hover:scale-105 hover:shadow-elevated hover:z-[500] flex flex-col h-full`}
         onClick={handleClick}
         {...longPressProps}
         style={{
@@ -941,7 +941,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
 
         {/* 标题与来源 */}
         <div
-          className='flex-1 flex flex-col justify-center px-2 py-3 text-center'
+          className='h-16 flex flex-col justify-center px-2 py-2 text-center'
           style={{
             WebkitUserSelect: 'none',
             userSelect: 'none',
@@ -961,19 +961,21 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             } as React.CSSProperties}
           >
             <span
-              className={`block font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300 ease-in-out group-hover:text-black dark:group-hover:text-white peer ${from === 'douban' && actualTitle.length > 8 ? 'text-xs' : 'text-sm'
-                }`}
+              className='block font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300 ease-in-out group-hover:text-black dark:group-hover:text-white peer text-sm leading-tight line-clamp-2 overflow-hidden'
               style={{
                 WebkitUserSelect: 'none',
                 userSelect: 'none',
                 WebkitTouchCallout: 'none',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
               } as React.CSSProperties}
               onContextMenu={(e) => {
                 e.preventDefault();
                 return false;
               }}
             >
-              {actualTitle.length <= 10 ? actualTitle : `${actualTitle.slice(0, 10)}...`}
+              {actualTitle}
             </span>
             {/* 自定义 tooltip */}
             <div

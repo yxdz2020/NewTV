@@ -13,7 +13,7 @@ interface PageLayoutProps {
 
 const PageLayout = ({ children, activePath }: PageLayoutProps) => {
   return (
-    <div className='w-full min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-100/50 dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900'>
+    <div className='w-full min-h-screen'>
       {/* 移动端头部 */}
       <MobileHeader showBackButton={false} />
 

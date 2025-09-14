@@ -1003,7 +1003,7 @@ function LivePageClient() {
           fullscreen: true,
           fullscreenWeb: true,
           subtitleOffset: false,
-          miniProgressBar: false,
+          miniProgressBar: true,
           mutex: true,
           playsInline: true,
           autoPlayback: false,
@@ -1189,16 +1189,19 @@ function LivePageClient() {
             <div className='mb-6 w-80 mx-auto'>
               <div className='flex justify-center space-x-2 mb-4'>
                 <div
-                  className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'loading' ? 'bg-blue-500 scale-125' : 'bg-blue-500'
-                    }`}
+                  className={`w-3 h-3 rounded-full transition-all duration-500 ${
+                    loadingStage === 'loading' ? 'bg-blue-500 scale-125' : 'bg-blue-500'
+                  }`}
                 ></div>
                 <div
-                  className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'fetching' ? 'bg-blue-500 scale-125' : 'bg-blue-500'
-                    }`}
+                  className={`w-3 h-3 rounded-full transition-all duration-500 ${
+                    loadingStage === 'fetching' ? 'bg-blue-500 scale-125' : 'bg-blue-500'
+                  }`}
                 ></div>
                 <div
-                  className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'ready' ? 'bg-blue-500 scale-125' : 'bg-gray-300'
-                    }`}
+                  className={`w-3 h-3 rounded-full transition-all duration-500 ${
+                    loadingStage === 'ready' ? 'bg-blue-500 scale-125' : 'bg-gray-300'
+                  }`}
                 ></div>
               </div>
 
