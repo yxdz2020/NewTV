@@ -16,15 +16,26 @@ interface MobileBottomNavProps {
 
 const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
   const pathname = usePathname();
-  const [currentActive, setCurrentActive] = useState(activePath ?? pathname);
+  const [currentActive, setCurrentActive] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
 
   // 监听路径变化，确保状态同步
   useEffect(() => {
     const newActive = activePath ?? pathname;
-    setCurrentActive(newActive);
-    setIsInitialized(true);
+    if (newActive) {
+      setCurrentActive(newActive);
+      setIsInitialized(true);
+    }
   }, [activePath, pathname]);
+
+  // 初始化时设置当前路径
+  useEffect(() => {
+    if (!isInitialized && pathname) {
+      const initialActive = activePath ?? pathname;
+      setCurrentActive(initialActive);
+      setIsInitialized(true);
+    }
+  }, [pathname, activePath, isInitialized]);
 
   const [navItems, setNavItems] = useState([
     { icon: Home, label: '首页', href: '/' },
@@ -96,12 +107,13 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
     return false;
   };
 
-  const moreActive =
+  const moreActive = isInitialized && currentActive ? (
     currentActive.includes('type=anime') ||
     currentActive.includes('type=show') ||
     currentActive.includes('type=short-drama') ||
     currentActive.includes('type=custom') ||
-    currentActive.includes('/cloud-disk');
+    currentActive.includes('/cloud-disk')
+  ) : false;
 
   return (
     <nav
