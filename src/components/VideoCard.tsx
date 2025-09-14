@@ -962,7 +962,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
           >
             <span
               className={`block font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300 ease-in-out group-hover:text-black dark:group-hover:text-white peer ${
-                from === 'douban' && actualTitle.length > 5 ? 'text-xs' : 'text-sm'
+                from === 'douban' && actualTitle.length > 8 ? 'text-xs' : 'text-sm'
               }`}
               style={{
                 WebkitUserSelect: 'none',
@@ -974,7 +974,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                 return false;
               }}
             >
-              {actualTitle.length <= 7 ? actualTitle : `${actualTitle.slice(0, 6)}...`}
+              {actualTitle.length <= 10 ? actualTitle : `${actualTitle.slice(0, 10)}...`}
             </span>
             {/* 自定义 tooltip */}
             <div
