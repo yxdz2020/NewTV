@@ -266,49 +266,69 @@ div[data-media-provider] video {
   background-color: #000 !important; /* 其余区域填充为黑色 */
 }
 
-/* PC端播放器控制栏自适应缩放 */
+/* PC端播放器控制栏按16:9比例自适应缩放 */
 @media (min-width: 769px) {
-  /* 播放器控制栏按钮根据容器宽度自适应缩放 */
-  .art-control {
-    min-width: clamp(32px, 3.5vw, 48px) !important;
-    width: clamp(32px, 3.5vw, 48px) !important;
-    height: clamp(32px, 3.5vw, 48px) !important;
-    font-size: clamp(14px, 1.5vw, 20px) !important;
-    padding: 0 !important;
-    margin: 0 clamp(2px, 0.3vw, 6px) !important;
+  /* 播放器容器基础样式 */
+  .artplayer {
+    container-type: inline-size;
   }
 
-  /* 控制栏左右两侧间距自适应 */
+  /* 播放器控制栏按钮根据容器宽度按16:9比例缩放 */
+  .art-control {
+    min-width: clamp(24px, 4cqw, 56px) !important;
+    width: clamp(24px, 4cqw, 56px) !important;
+    height: clamp(24px, 4cqw, 56px) !important;
+    font-size: clamp(10px, 2cqw, 24px) !important;
+    padding: 0 !important;
+    margin: 0 clamp(1px, 0.3cqw, 5px) !important;
+  }
+
+  /* 控制栏左右两侧间距按容器比例缩放 */
   .art-controls-right {
-    gap: clamp(4px, 0.8vw, 12px) !important;
-    padding-right: clamp(8px, 1vw, 16px) !important;
+    gap: clamp(2px, 1cqw, 10px) !important;
+    padding-right: clamp(4px, 1.5cqw, 18px) !important;
   }
 
   .art-controls-left {
-    gap: clamp(4px, 0.8vw, 12px) !important;
-    padding-left: clamp(8px, 1vw, 16px) !important;
+    gap: clamp(2px, 1cqw, 10px) !important;
+    padding-left: clamp(4px, 1.5cqw, 18px) !important;
   }
 
-  /* 播放器底部控制栏整体间距 */
+  /* 播放器底部控制栏整体间距按容器比例缩放 */
   .art-controls {
-    padding: clamp(4px, 0.8vw, 12px) clamp(8px, 1vw, 16px) !important;
+    padding: clamp(2px, 1cqw, 12px) clamp(4px, 1.5cqw, 18px) !important;
   }
 
   .art-bottom {
-    padding: clamp(4px, 0.8vw, 12px) clamp(8px, 1vw, 16px) !important;
+    padding: clamp(2px, 1cqw, 12px) clamp(4px, 1.5cqw, 18px) !important;
   }
 
-  /* 进度条高度自适应 */
+  /* 进度条高度按容器比例缩放 */
   .art-progress {
-    height: clamp(4px, 0.5vw, 8px) !important;
+    height: clamp(2px, 0.8cqw, 8px) !important;
   }
 
-  /* 弹幕开关按钮PC端样式 */
+  /* 弹幕开关按钮PC端样式按容器比例缩放 */
   .art-danmaku-toggle-button {
-    min-width: clamp(32px, 3.5vw, 48px) !important;
-    width: clamp(32px, 3.5vw, 48px) !important;
-    height: clamp(32px, 3.5vw, 48px) !important;
-    font-size: clamp(14px, 1.5vw, 20px) !important;
+    min-width: clamp(24px, 4cqw, 56px) !important;
+    width: clamp(24px, 4cqw, 56px) !important;
+    height: clamp(24px, 4cqw, 56px) !important;
+    font-size: clamp(10px, 2cqw, 24px) !important;
+  }
+
+  /* 播放时间显示文字大小按容器比例缩放 */
+  .art-time {
+    font-size: clamp(10px, 1.8cqw, 20px) !important;
+  }
+
+  /* 音量滑块按容器比例缩放 */
+  .art-volume-panel {
+    width: clamp(60px, 12cqw, 120px) !important;
+  }
+
+  /* 设置面板按钮按容器比例缩放 */
+  .art-setting {
+    font-size: clamp(10px, 1.8cqw, 20px) !important;
   }
 }
 
