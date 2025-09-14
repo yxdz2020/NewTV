@@ -88,7 +88,14 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
     }
   }, [isCollapsed]);
 
-  const [active, setActive] = useState('/');
+  const [active, setActive] = useState(() => {
+    // 初始化时就获取完整路径，避免默认'/'导致的闪烁
+    if (typeof window !== 'undefined') {
+      const queryString = searchParams.toString();
+      return queryString ? `${pathname}?${queryString}` : pathname;
+    }
+    return '/';
+  });
 
   useEffect(() => {
     const getCurrentFullPath = () => {
@@ -96,7 +103,13 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
       return queryString ? `${pathname}?${queryString}` : pathname;
     };
     const fullPath = getCurrentFullPath();
-    setActive(fullPath);
+    
+    // 使用setTimeout避免快速路由切换时的状态冲突
+    const timeoutId = setTimeout(() => {
+      setActive(fullPath);
+    }, 0);
+    
+    return () => clearTimeout(timeoutId);
   }, [pathname, searchParams]);
 
   const handleToggle = useCallback(() => {
