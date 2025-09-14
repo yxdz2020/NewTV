@@ -241,9 +241,9 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       }
       const data = await response.json();
       
-      if (data && data.length > 0) {
+      if (data && data.results && data.results.length > 0) {
         // 获取第一个搜索结果的详情
-        const firstResult = data[0];
+        const firstResult = data.results[0];
         const detailResponse = await fetch(
           `/api/detail?source=${firstResult.source}&id=${firstResult.id}`
         );
@@ -251,7 +251,14 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
           const detailData = await detailResponse.json();
           setPreviewDetail(detailData);
           setShowDetailPreview(true);
+        } else {
+          // 如果获取详情失败，直接使用搜索结果作为预览数据
+          setPreviewDetail(firstResult);
+          setShowDetailPreview(true);
         }
+      } else {
+        // 如果没有搜索结果，直接跳转到播放页面
+        navigateToPlay();
       }
     } catch (error) {
       console.error('获取资源站详情失败:', error);
@@ -260,7 +267,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     } finally {
       setIsSearchingDetail(false);
     }
-  }, [actualTitle, isSearchingDetail]);
+  }, [actualTitle, isSearchingDetail, navigateToPlay]);
 
   // 跳转到播放页面的函数
   const navigateToPlay = useCallback(() => {
