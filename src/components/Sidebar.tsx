@@ -203,7 +203,7 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
       <div className='hidden md:flex'>
         <aside
           data-sidebar
-          className={`fixed top-0 left-0 h-screen bg-white dark:bg-dark transition-all duration-300 z-10 ${isCollapsed ? 'w-16' : 'w-64'
+          className={`fixed top-0 left-0 h-screen glass-nav transition-all duration-300 z-10 ${isCollapsed ? 'w-16' : 'w-64'
             }`}
         >
           <div className='flex h-full flex-col'>

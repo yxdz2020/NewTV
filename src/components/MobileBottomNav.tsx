@@ -48,19 +48,19 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
     const decodedActive = decodeURIComponent(currentActive);
     const decodedItemHref = decodeURIComponent(href);
 
-    // 首页完全匹配
-    if (href === '/' && decodedActive === '/') {
-      return true;
+    // 首页严格匹配 - 只有完全是根路径时才激活
+    if (href === '/') {
+      return decodedActive === '/';
     }
 
     // 直播页面匹配
-    if (href === '/live' && decodedActive.startsWith('/live')) {
-      return true;
+    if (href === '/live') {
+      return decodedActive.startsWith('/live');
     }
 
     // YouTube页面匹配
-    if (href === '/youtube' && decodedActive.startsWith('/youtube')) {
-      return true;
+    if (href === '/youtube') {
+      return decodedActive.startsWith('/youtube');
     }
 
     // 处理豆瓣类型页面的匹配
@@ -74,8 +74,8 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
           const activeType = params.get('type');
           return activeType === typeMatch;
         }
-        // 如果没有查询字符串，回退到字符串包含检查
-        return decodedActive.includes(`type=${typeMatch}`);
+        // 如果没有查询字符串但URL包含type参数，则不匹配
+        return false;
       }
     }
 
@@ -120,8 +120,8 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                   />
                   <span
                     className={`transition-colors duration-200 ${active
-                      ? 'text-blue-600 dark:text-blue-400'
-                      : 'text-gray-600 dark:text-gray-300'
+                        ? 'text-blue-600 dark:text-blue-400'
+                        : 'text-gray-600 dark:text-gray-300'
                       } ${item.label === 'YouTube' ? 'text-[10px]' : 'text-xs'}`}
                   >
                     {item.label}
