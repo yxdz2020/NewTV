@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 
-import { SearchResult, DoubanItem } from '@/lib/types';
+import { SearchResult } from '@/lib/types';
 import { processImageUrl } from '@/lib/utils';
 
 interface VideoDetailPreviewProps {
@@ -24,40 +24,13 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
 }) => {
   const [countdown, setCountdown] = useState(duration / 1000);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [doubanDetail, setDoubanDetail] = useState<DoubanItem | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  // 获取豆瓣详情
-  const fetchDoubanDetail = async (doubanId: number) => {
-    if (loading) return;
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/douban/details?id=${doubanId}`);
-      if (response.ok) {
-        const data = await response.json();
-        console.log('豆瓣API返回数据:', data); // 调试日志
-        if (data.code === 200) {
-          setDoubanDetail(data.data);
-        }
-      }
-    } catch (error) {
-      console.error('获取豆瓣详情失败:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   useEffect(() => {
     if (isVisible && detail) {
       setIsAnimating(true);
       setCountdown(duration / 1000);
-      
-      // 如果有豆瓣ID，获取详细信息
-      if (detail.douban_id) {
-        fetchDoubanDetail(detail.douban_id);
-      } else {
-        setDoubanDetail(null);
-      }
       
       // 倒计时
       const countdownInterval = setInterval(() => {
@@ -79,10 +52,9 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
       }, duration);
 
       return () => {
-      clearInterval(countdownInterval);
-      clearTimeout(timeoutId);
-      setDoubanDetail(null);
-    };
+        clearInterval(countdownInterval);
+        clearTimeout(timeoutId);
+      };
     }
   }, [isVisible, detail, duration, onTimeout]);
 
@@ -98,7 +70,7 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
   }
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-all duration-300 ${
+    <div className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm transition-all duration-300 ${
       isAnimating ? 'opacity-100' : 'opacity-0'
     }`}>
       <div className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full mx-4 overflow-hidden transform transition-all duration-300 ${
@@ -120,10 +92,10 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
         <div className="flex flex-col lg:flex-row">
           {/* 海报图片 */}
           <div className="lg:w-1/3 w-full aspect-[16/9] lg:aspect-[3/4] relative bg-gray-200 dark:bg-gray-700 flex-shrink-0">
-            {(doubanDetail?.poster || detail.poster) ? (
+            {detail.poster ? (
               <Image
-                src={processImageUrl(doubanDetail?.poster || detail.poster)}
-                alt={doubanDetail?.title || detail.title}
+                src={processImageUrl(detail.poster)}
+                alt={detail.title}
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 33vw"
@@ -139,24 +111,15 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
           <div className="lg:w-2/3 w-full p-4 lg:p-6 space-y-4 overflow-y-auto max-h-[70vh] lg:max-h-none">
             {/* 标题 */}
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white line-clamp-2">
-              {doubanDetail?.title || detail.title}
+              {detail.title}
             </h2>
             
-            {/* 评分 */}
-            {doubanDetail?.rate && (
-              <div className="flex items-center gap-2">
-                <span className="text-yellow-500 text-lg">⭐</span>
-                <span className="text-lg font-semibold text-gray-900 dark:text-white">{doubanDetail.rate}</span>
-                <span className="text-sm text-gray-500">豆瓣评分</span>
-              </div>
-            )}
-
             {/* 基本信息网格布局 */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 text-sm">
-              {(doubanDetail?.year || detail.year) && (
+              {detail.year && (
                 <div className="space-y-2">
                   <div className="text-gray-400">年份</div>
-                  <div className="text-gray-900 dark:text-white">{doubanDetail?.year || detail.year}</div>
+                  <div className="text-gray-900 dark:text-white">{detail.year}</div>
                 </div>
               )}
               {detail.source_name && (
@@ -165,19 +128,19 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
                   <div className="text-gray-900 dark:text-white">{detail.source_name}</div>
                 </div>
               )}
-              {(doubanDetail?.genres?.length > 0 ? doubanDetail.genres.join('、') : (detail.class || detail.type_name)) && (
+              {(detail.class || detail.type_name) && (
                 <div className="space-y-2">
                   <div className="text-gray-400">类型</div>
                   <div className="text-gray-900 dark:text-white">
-                    {doubanDetail?.genres?.length > 0 ? doubanDetail.genres.join('、') : (detail.class || detail.type_name)}
+                    {detail.class || detail.type_name}
                   </div>
                 </div>
               )}
-              {(doubanDetail?.countries?.length > 0 ? doubanDetail.countries.join('、') : detail.class) && (
+              {detail.class && (
                 <div className="space-y-2">
-                  <div className="text-gray-400">地区/分类</div>
+                  <div className="text-gray-400">分类</div>
                   <div className="text-gray-900 dark:text-white">
-                    {doubanDetail?.countries?.length > 0 ? doubanDetail.countries.join('、') : detail.class}
+                    {detail.class}
                   </div>
                 </div>
               )}
@@ -185,84 +148,35 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
 
             {/* 扩展信息网格 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4 text-sm">
-              {(doubanDetail?.episodes || (detail.episodes && detail.episodes.length > 0)) && (
+              {(detail.episodes && detail.episodes.length > 0) && (
                 <div className="space-y-2">
                   <div className="text-gray-400">集数</div>
                   <div className="text-gray-900 dark:text-white">
-                    共 {doubanDetail?.episodes || detail.episodes.length} 集
-                    {doubanDetail?.episode_length && (
-                      <span className="text-gray-500 ml-2">({doubanDetail.episode_length}分钟/集)</span>
-                    )}
-                    {!doubanDetail?.episodes && detail.episodes_titles && detail.episodes_titles.length > 0 && (
+                    共 {detail.episodes.length} 集
+                    {detail.episodes_titles && detail.episodes_titles.length > 0 && (
                       <span className="text-gray-500 ml-2">({detail.episodes_titles[0]})</span>
                     )}
                   </div>
                 </div>
               )}
-              {doubanDetail?.directors && doubanDetail.directors.length > 0 && (
-                <div className="space-y-2">
-                  <div className="text-gray-400">导演</div>
-                  <div className="text-gray-900 dark:text-white">{doubanDetail.directors.join('、')}</div>
-                </div>
-              )}
-              {!doubanDetail?.directors && detail.type_name && (
+              {detail.type_name && (
                 <div className="space-y-2">
                   <div className="text-gray-400">影片类型</div>
                   <div className="text-gray-900 dark:text-white">{detail.type_name}</div>
                 </div>
               )}
-              {doubanDetail?.cast && doubanDetail.cast.length > 0 && (
-                <div className="space-y-2">
-                  <div className="text-gray-400">主演</div>
-                  <div className="text-gray-900 dark:text-white line-clamp-2">
-                    {doubanDetail.cast.slice(0, 6).join('、')}
-                    {doubanDetail.cast.length > 6 && '等'}
-                  </div>
-                </div>
-              )}
-              {doubanDetail?.first_aired && (
-                <div className="space-y-2">
-                  <div className="text-gray-400">首播</div>
-                  <div className="text-gray-900 dark:text-white">{doubanDetail.first_aired}</div>
-                </div>
-              )}
-              {doubanDetail?.screenwriters && doubanDetail.screenwriters.length > 0 && (
-                <div className="space-y-2">
-                  <div className="text-gray-400">编剧</div>
-                  <div className="text-gray-900 dark:text-white line-clamp-2">
-                    {doubanDetail.screenwriters.slice(0, 4).join('、')}
-                    {doubanDetail.screenwriters.length > 4 && '等'}
-                  </div>
-                </div>
-              )}
-              {doubanDetail?.languages && doubanDetail.languages.length > 0 && (
-                <div className="space-y-2">
-                  <div className="text-gray-400">语言</div>
-                  <div className="text-gray-900 dark:text-white">{doubanDetail.languages.join('、')}</div>
-                </div>
-              )}
             </div>
 
             {/* 简介 */}
-            {(doubanDetail?.plot_summary || detail.desc) && (
+            {detail.desc && (
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">简介</h3>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {doubanDetail?.plot_summary || detail.desc}
+                  {detail.desc}
                 </p>
-                {!doubanDetail?.plot_summary && detail.desc && (
-                  <div className="text-xs text-gray-500 mt-2">
-                    来源：{detail.source_name}
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {/* 加载状态 */}
-            {loading && detail.douban_id && (
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                <span>正在获取详细信息...</span>
+                <div className="text-xs text-gray-500 mt-2">
+                  来源：{detail.source_name}
+                </div>
               </div>
             )}
 

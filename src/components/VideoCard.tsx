@@ -26,7 +26,6 @@ import { useLongPress } from '@/hooks/useLongPress';
 
 import { ImagePlaceholder } from '@/components/ImagePlaceholder';
 import MobileActionSheet from '@/components/MobileActionSheet';
-import VideoDetailPreview from '@/components/VideoDetailPreview';
 import { SearchResult } from '@/lib/types';
 
 export interface VideoCardProps {
@@ -86,9 +85,8 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const [isLoading, setIsLoading] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
   const [searchFavorited, setSearchFavorited] = useState<boolean | null>(null); // 搜索结果的收藏状态
-  const [showDetailPreview, setShowDetailPreview] = useState(false);
-  const [previewDetail, setPreviewDetail] = useState<SearchResult | null>(null);
-  const [isSearchingDetail, setIsSearchingDetail] = useState(false);
+
+  const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
 
   // 可外部修改的可控字段
   const [dynamicEpisodes, setDynamicEpisodes] = useState<number | undefined>(
@@ -262,63 +260,12 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     actualDoubanId,
   ]);
 
-  // 搜索第一个资源站的详情
-  const searchFirstSourceDetail = useCallback(async () => {
-    if (isSearchingDetail) return;
-    
-    setIsSearchingDetail(true);
-    try {
-      const response = await fetch(
-        `/api/search?q=${encodeURIComponent(actualTitle.trim())}`
-      );
-      if (!response.ok) {
-        throw new Error('搜索失败');
-      }
-      const data = await response.json();
-      
-      if (data && data.results && data.results.length > 0) {
-        // 获取第一个搜索结果的详情
-        const firstResult = data.results[0];
-        const detailResponse = await fetch(
-          `/api/detail?source=${firstResult.source}&id=${firstResult.id}`
-        );
-        if (detailResponse.ok) {
-          const detailData = await detailResponse.json();
-          setPreviewDetail(detailData);
-          setShowDetailPreview(true);
-        } else {
-          // 如果获取详情失败，直接使用搜索结果作为预览数据
-          setPreviewDetail(firstResult);
-          setShowDetailPreview(true);
-        }
-      } else {
-        // 如果没有搜索结果，直接跳转到播放页面
-        navigateToPlay();
-      }
-    } catch (error) {
-      console.error('获取资源站详情失败:', error);
-      // 如果获取失败，直接跳转到播放页面
-      navigateToPlay();
-    } finally {
-      setIsSearchingDetail(false);
-    }
-  }, [actualTitle, isSearchingDetail, navigateToPlay]);
+
 
   const handleClick = useCallback(() => {
-    // 如果是豆瓣来源且没有具体的source和id（即搜索源状态），先展示资源站详情
-    if (from === 'douban' && !actualSource && !actualId) {
-      searchFirstSourceDetail();
-    } else {
-      // 其他情况直接跳转
-      navigateToPlay();
-    }
-  }, [
-    from,
-    actualSource,
-    actualId,
-    searchFirstSourceDetail,
-    navigateToPlay,
-  ]);
+    // 所有情况都直接跳转到播放页面
+    navigateToPlay();
+  }, [navigateToPlay]);
 
   // 新标签页播放处理函数
   const handlePlayInNewTab = useCallback(() => {
@@ -1113,21 +1060,17 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         origin={origin}
       />
 
-      {/* 资源站详情预览 */}
-      <VideoDetailPreview
-        detail={previewDetail}
-        isVisible={showDetailPreview}
-        onClose={() => {
-          setShowDetailPreview(false);
-          setPreviewDetail(null);
-        }}
-        onTimeout={() => {
-          setShowDetailPreview(false);
-          setPreviewDetail(null);
-          navigateToPlay();
-        }}
-        duration={5000}
-      />
+      {/* 加载覆盖层 */}
+      {showLoadingOverlay && (
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50 rounded-lg">
+          <div className="flex flex-col items-center space-y-2">
+            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-white text-sm">加载中...</span>
+          </div>
+        </div>
+      )}
+
+
     </>
   );
 }
