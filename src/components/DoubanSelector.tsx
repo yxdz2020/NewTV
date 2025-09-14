@@ -317,7 +317,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
     return (
       <div
         ref={containerRef}
-        className='relative inline-flex bg-gray-200/60 rounded-full p-0.5 sm:p-1 dark:bg-gray-700/60 backdrop-blur-sm'
+        className='relative inline-flex glass-light rounded-full p-0.5 sm:p-1'
       >
         {/* 滑动的白色背景指示器 */}
         {indicatorStyle.width > 0 && (

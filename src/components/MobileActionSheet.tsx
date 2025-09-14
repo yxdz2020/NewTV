@@ -173,7 +173,7 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
 
       {/* 操作表单 */}
       <div
-        className="relative w-full max-w-lg mx-4 mb-4 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl transition-all duration-200 ease-out"
+        className="relative w-full max-w-lg mx-4 mb-4 glass-strong rounded-2xl shadow-2xl transition-all duration-200 ease-out"
         onTouchMove={(e) => {
           // 允许操作表单内部滚动，阻止事件冒泡到外层
           e.stopPropagation();
@@ -347,8 +347,8 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
   };
 
   // 使用Portal将菜单渲染到body外层，避免被虚拟滚动容器的overflow限制
-  return typeof window !== 'undefined'
-    ? createPortal(renderContent(), document.body)
+  return typeof window !== 'undefined' 
+    ? createPortal(renderContent(), document.body) 
     : null;
 };
 
