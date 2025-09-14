@@ -16,9 +16,15 @@ interface MobileBottomNavProps {
 
 const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
   const pathname = usePathname();
+  const [currentActive, setCurrentActive] = useState(activePath ?? pathname);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // 当前激活路径：优先使用传入的 activePath，否则回退到浏览器地址
-  const currentActive = activePath ?? pathname;
+  // 监听路径变化，确保状态同步
+  useEffect(() => {
+    const newActive = activePath ?? pathname;
+    setCurrentActive(newActive);
+    setIsInitialized(true);
+  }, [activePath, pathname]);
 
   const [navItems, setNavItems] = useState([
     { icon: Home, label: '首页', href: '/' },
@@ -44,6 +50,11 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
   }, []);
 
   const isActive = (href: string) => {
+    // 如果组件未初始化或currentActive为空，不激活任何项
+    if (!isInitialized || !currentActive) {
+      return false;
+    }
+
     // 解码URL以进行正确的比较
     const decodedActive = decodeURIComponent(currentActive);
 
@@ -54,12 +65,12 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
 
     // 直播页面匹配
     if (href === '/live') {
-      return decodedActive.startsWith('/live');
+      return decodedActive === '/live' || decodedActive.startsWith('/live/');
     }
 
     // YouTube页面匹配
     if (href === '/youtube') {
-      return decodedActive.startsWith('/youtube');
+      return decodedActive === '/youtube' || decodedActive.startsWith('/youtube/');
     }
 
     // 处理豆瓣类型页面的匹配
@@ -76,6 +87,8 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
           // 严格匹配type参数
           return currentType === hrefTypeMatch;
         }
+        // 如果豆瓣页面没有type参数，不匹配任何导航项
+        return false;
       }
       return false;
     }
