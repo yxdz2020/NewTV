@@ -278,16 +278,45 @@ function PlayPageClient() {
         const response = await getDoubanDetails(videoDoubanId.toString());
         if (response.code === 200 && response.data) {
           setMovieDetails(response.data);
+        } else {
+          // 豆瓣API失败时的回滚机制：使用detail.class作为genres
+          if (detail?.class) {
+            const fallbackData = {
+              id: videoDoubanId.toString(),
+              title: detail.title || '',
+              poster: '',
+              rate: '',
+              year: detail.year || '',
+              genres: [detail.class], // 使用class作为genres的回滚
+              plot_summary: detail.desc || '' // 使用desc作为plot_summary的回滚
+            };
+            setMovieDetails(fallbackData);
+            console.log('使用回滚数据:', fallbackData);
+          }
         }
       } catch (error) {
         console.error('Failed to load movie details:', error);
+        // 豆瓣API异常时的回滚机制：使用detail.class作为genres
+        if (detail?.class) {
+          const fallbackData = {
+            id: videoDoubanId.toString(),
+            title: detail.title || '',
+            poster: '',
+            rate: '',
+            year: detail.year || '',
+            genres: [detail.class], // 使用class作为genres的回滚
+            plot_summary: detail.desc || '' // 使用desc作为plot_summary的回滚
+          };
+          setMovieDetails(fallbackData);
+          console.log('使用异常回滚数据:', fallbackData);
+        }
       } finally {
         setLoadingMovieDetails(false);
       }
     };
 
     loadMovieDetails();
-  }, [videoDoubanId, loadingMovieDetails, movieDetails]);
+  }, [videoDoubanId, loadingMovieDetails, movieDetails, detail]);
 
   // 视频播放地址
   const [videoUrl, setVideoUrl] = useState('');
@@ -3725,6 +3754,11 @@ function PlayPageClient() {
 
                       {/* 标签信息 */}
                       <div className='flex flex-wrap gap-2 mt-3'>
+                        {movieDetails.genres && movieDetails.genres.slice(0, 3).map((genre: string, index: number) => (
+                          <span key={index} className='bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 px-2 py-1 rounded-full text-xs'>
+                            {genre}
+                          </span>
+                        ))}
                         {movieDetails.countries && movieDetails.countries.slice(0, 2).map((country: string, index: number) => (
                           <span key={index} className='bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full text-xs'>
                             {country}
