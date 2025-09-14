@@ -266,57 +266,7 @@ function PlayPageClient() {
     videoDoubanId,
   ]);
 
-  // 加载豆瓣详情
-  useEffect(() => {
-    const loadMovieDetails = async () => {
-      if (!videoDoubanId || videoDoubanId === 0 || loadingMovieDetails || movieDetails) {
-        return;
-      }
-
-      setLoadingMovieDetails(true);
-      try {
-        const response = await getDoubanDetails(videoDoubanId.toString());
-        if (response.code === 200 && response.data) {
-          setMovieDetails(response.data);
-        } else {
-          // 豆瓣API失败时的回滚机制：使用detail.class作为genres
-          if (detail?.class) {
-            const fallbackData = {
-              id: videoDoubanId.toString(),
-              title: detail.title || '',
-              poster: '',
-              rate: '',
-              year: detail.year || '',
-              genres: [detail.class], // 使用class作为genres的回滚
-              plot_summary: detail.desc || '' // 使用desc作为plot_summary的回滚
-            };
-            setMovieDetails(fallbackData);
-            console.log('使用回滚数据:', fallbackData);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load movie details:', error);
-        // 豆瓣API异常时的回滚机制：使用detail.class作为genres
-        if (detail?.class) {
-          const fallbackData = {
-            id: videoDoubanId.toString(),
-            title: detail.title || '',
-            poster: '',
-            rate: '',
-            year: detail.year || '',
-            genres: [detail.class], // 使用class作为genres的回滚
-            plot_summary: detail.desc || '' // 使用desc作为plot_summary的回滚
-          };
-          setMovieDetails(fallbackData);
-          console.log('使用异常回滚数据:', fallbackData);
-        }
-      } finally {
-        setLoadingMovieDetails(false);
-      }
-    };
-
-    loadMovieDetails();
-  }, [videoDoubanId, loadingMovieDetails, movieDetails, detail]);
+  // 豆瓣详情加载已集成到initAll函数中，不再需要单独的useEffect
 
   // 视频播放地址
   const [videoUrl, setVideoUrl] = useState('');
@@ -1289,7 +1239,7 @@ function PlayPageClient() {
         const data = await response.json();
 
         // 处理搜索结果，根据规则过滤
-        const results = data.results.filter(
+        const filteredResults = data.results.filter(
           (result: SearchResult) =>
             result.title.replaceAll(' ', '').toLowerCase() ===
             videoTitleRef.current.replaceAll(' ', '').toLowerCase() &&
@@ -1301,6 +1251,20 @@ function PlayPageClient() {
               (searchType === 'movie' && result.episodes.length === 1)
               : true)
         );
+
+        // 优化资源站选择：优先选择desc不为空的资源站
+        const resultsWithDesc = filteredResults.filter(
+          (result: SearchResult) => result.desc && result.desc.trim() !== ''
+        );
+        const resultsWithoutDesc = filteredResults.filter(
+          (result: SearchResult) => !result.desc || result.desc.trim() === ''
+        );
+
+        // 如果有desc不为空的资源站，优先使用这些；否则使用所有资源站
+        const results = resultsWithDesc.length > 0 ? resultsWithDesc : filteredResults;
+        
+        console.log(`资源站筛选结果: 总共${filteredResults.length}个，有desc的${resultsWithDesc.length}个，最终使用${results.length}个`);
+        
         setAvailableSources(results);
         return results;
       } catch (err) {
@@ -1319,53 +1283,110 @@ function PlayPageClient() {
         return;
       }
       setLoading(true);
-      setLoadingStage(currentSource && currentId ? 'fetching' : 'searching');
-      setLoadingMessage(
-        currentSource && currentId
-          ? '🎬 正在获取视频详情...'
-          : '🔍 正在搜索播放源...'
-      );
-
-      let sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
-      if (
-        currentSource &&
-        currentId &&
-        !sourcesInfo.some(
-          (source) => source.source === currentSource && source.id === currentId
-        )
-      ) {
-        sourcesInfo = await fetchSourceDetail(currentSource, currentId);
+      
+      let detailData: SearchResult | null = null;
+      
+      // 优先尝试豆瓣API获取详情
+      if (videoDoubanIdRef.current && videoDoubanIdRef.current !== 0) {
+        setLoadingStage('fetching');
+        setLoadingMessage('🎬 正在从豆瓣获取详情...');
+        
+        try {
+          const response = await getDoubanDetails(videoDoubanIdRef.current.toString());
+          if (response.code === 200 && response.data) {
+            setMovieDetails(response.data);
+            
+            // 从豆瓣数据构造SearchResult对象
+            detailData = {
+              source: currentSource || 'douban',
+              id: currentId || videoDoubanIdRef.current.toString(),
+              title: response.data.title || videoTitleRef.current,
+              year: response.data.year || videoYearRef.current || '',
+              poster: response.data.poster || '',
+              desc: response.data.plot_summary || '',
+              episodes: [], // 豆瓣不提供播放链接，需要从资源站获取
+              douban_id: videoDoubanIdRef.current,
+              source_name: '豆瓣'
+            };
+            
+            console.log('豆瓣API获取成功，使用豆瓣数据');
+          }
+        } catch (error) {
+          console.warn('豆瓣API获取失败，将使用资源站API:', error);
+        }
       }
-      if (sourcesInfo.length === 0) {
-        setError('未找到匹配结果');
-        setLoading(false);
-        return;
-      }
-
-      let detailData: SearchResult = sourcesInfo[0];
-      // 指定源和id且无需优选
-      if (currentSource && currentId && !needPreferRef.current) {
-        const target = sourcesInfo.find(
-          (source) => source.source === currentSource && source.id === currentId
+      
+      // 如果豆瓣API失败或没有豆瓣ID，使用资源站API
+      if (!detailData) {
+        setLoadingStage(currentSource && currentId ? 'fetching' : 'searching');
+        setLoadingMessage(
+          currentSource && currentId
+            ? '🎬 正在获取视频详情...'
+            : '🔍 正在搜索播放源...'
         );
-        if (target) {
-          detailData = target;
-        } else {
+
+        let sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
+        if (
+          currentSource &&
+          currentId &&
+          !sourcesInfo.some(
+            (source) => source.source === currentSource && source.id === currentId
+          )
+        ) {
+          sourcesInfo = await fetchSourceDetail(currentSource, currentId);
+        }
+        if (sourcesInfo.length === 0) {
           setError('未找到匹配结果');
           setLoading(false);
           return;
         }
+
+        detailData = sourcesInfo[0];
+        // 指定源和id且无需优选
+        if (currentSource && currentId && !needPreferRef.current) {
+          const target = sourcesInfo.find(
+            (source) => source.source === currentSource && source.id === currentId
+          );
+          if (target) {
+            detailData = target;
+          } else {
+            setError('未找到匹配结果');
+            setLoading(false);
+            return;
+          }
+        }
+
+        // 未指定源和 id 或需要优选，且开启优选开关
+        if (
+          (!currentSource || !currentId || needPreferRef.current) &&
+          optimizationEnabled
+        ) {
+          setLoadingStage('preferring');
+          setLoadingMessage('⚡ 正在优选最佳播放源...');
+
+          detailData = await preferBestSource(sourcesInfo);
+        }
+      } else {
+        // 豆瓣API成功但没有播放链接，需要获取播放源
+        if (!detailData.episodes || detailData.episodes.length === 0) {
+          setLoadingMessage('🔗 正在获取播放链接...');
+          
+          let sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
+          if (sourcesInfo.length > 0) {
+            // 使用第一个资源站的播放链接，但保留豆瓣的其他信息
+            const sourceData = sourcesInfo[0];
+            detailData.episodes = sourceData.episodes;
+            detailData.source = sourceData.source;
+            detailData.id = sourceData.id;
+            detailData.source_name = sourceData.source_name;
+          }
+        }
       }
 
-      // 未指定源和 id 或需要优选，且开启优选开关
-      if (
-        (!currentSource || !currentId || needPreferRef.current) &&
-        optimizationEnabled
-      ) {
-        setLoadingStage('preferring');
-        setLoadingMessage('⚡ 正在优选最佳播放源...');
-
-        detailData = await preferBestSource(sourcesInfo);
+      if (!detailData) {
+        setError('获取详情失败');
+        setLoading(false);
+        return;
       }
 
       console.log(detailData.source, detailData.id);
@@ -1392,8 +1413,13 @@ function PlayPageClient() {
       newUrl.searchParams.delete('prefer');
       window.history.replaceState({}, '', newUrl.toString());
 
-      // 直接结束loading，跳过准备就绪页面
-      setLoading(false);
+      setLoadingStage('ready');
+      setLoadingMessage('✨ 准备就绪，即将开始播放...');
+
+      // 短暂延迟让用户看到完成状态
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
     };
 
     initAll();
@@ -3754,11 +3780,6 @@ function PlayPageClient() {
 
                       {/* 标签信息 */}
                       <div className='flex flex-wrap gap-2 mt-3'>
-                        {movieDetails.genres && movieDetails.genres.slice(0, 3).map((genre: string, index: number) => (
-                          <span key={index} className='bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 px-2 py-1 rounded-full text-xs'>
-                            {genre}
-                          </span>
-                        ))}
                         {movieDetails.countries && movieDetails.countries.slice(0, 2).map((country: string, index: number) => (
                           <span key={index} className='bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full text-xs'>
                             {country}
