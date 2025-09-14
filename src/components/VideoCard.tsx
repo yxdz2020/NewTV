@@ -540,7 +540,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       >
         {/* 海报容器 */}
         <div
-          className={`relative aspect-[2/3] overflow-hidden bg-gray-100 dark:bg-gray-800 transition-all duration-300 ease-in-out group-hover:shadow-lg group-hover:shadow-black/20 dark:group-hover:shadow-black/20 ${origin === 'live' ? 'ring-1 ring-gray-300/80 dark:ring-gray-600/80' : ''}`}
+          className={`relative aspect-[2/3] overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-800 transition-all duration-300 ease-in-out group-hover:shadow-lg group-hover:shadow-black/20 dark:group-hover:shadow-black/20 ${origin === 'live' ? 'ring-1 ring-gray-300/80 dark:ring-gray-600/80' : ''}`}
           style={{
             WebkitUserSelect: 'none',
             userSelect: 'none',
@@ -621,7 +621,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
               <PlayCircleIcon
                 size={50}
                 strokeWidth={0.8}
-                className='text-white fill-transparent transition-all duration-300 ease-out hover:fill-black hover:scale-[1.1]'
+                className='text-white fill-transparent transition-all duration-300 ease-out hover:fill-blue-500 hover:scale-[1.1]'
                 style={{
                   WebkitUserSelect: 'none',
                   userSelect: 'none',
@@ -941,7 +941,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
 
         {/* 标题与来源 */}
         <div
-          className='mt-4 text-center'
+          className='mt-2 text-center'
           style={{
             WebkitUserSelect: 'none',
             userSelect: 'none',
