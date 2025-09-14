@@ -71,7 +71,7 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
     <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-all duration-300 ${
       isAnimating ? 'opacity-100' : 'opacity-0'
     }`}>
-      <div className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden transform transition-all duration-300 ${
+      <div className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full mx-4 overflow-hidden transform transition-all duration-300 ${
         isAnimating ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'
       }`}>
         {/* 关闭按钮 */}
@@ -87,9 +87,9 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
           {countdown}s 后自动播放
         </div>
 
-        <div className="flex flex-col md:flex-row">
+        <div className="flex flex-col lg:flex-row">
           {/* 海报图片 */}
-          <div className="md:w-1/3 aspect-[3/4] relative bg-gray-200 dark:bg-gray-700">
+          <div className="lg:w-1/3 w-full aspect-[16/9] lg:aspect-[3/4] relative bg-gray-200 dark:bg-gray-700 flex-shrink-0">
             {detail.poster ? (
               <Image
                 src={processImageUrl(detail.poster)}
@@ -106,43 +106,72 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
           </div>
 
           {/* 详情信息 */}
-          <div className="md:w-2/3 p-6 space-y-4">
+          <div className="lg:w-2/3 w-full p-4 lg:p-6 space-y-4 overflow-y-auto max-h-[70vh] lg:max-h-none">
             {/* 标题 */}
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white line-clamp-2">
               {detail.title}
             </h2>
 
-            {/* 基本信息 */}
-            <div className="flex flex-wrap gap-2 text-sm">
+            {/* 基本信息网格布局 */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 text-sm">
               {detail.year && (
-                <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
-                  {detail.year}
-                </span>
-              )}
-              {detail.type_name && (
-                <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">
-                  {detail.type_name}
-                </span>
+                <div className="space-y-2">
+                  <div className="text-gray-400">年份</div>
+                  <div className="text-gray-900 dark:text-white">{detail.year}</div>
+                </div>
               )}
               {detail.source_name && (
-                <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded">
-                  {detail.source_name}
-                </span>
+                <div className="space-y-2">
+                  <div className="text-gray-400">来源</div>
+                  <div className="text-gray-900 dark:text-white">{detail.source_name}</div>
+                </div>
+              )}
+              {detail.type_name && (
+                <div className="space-y-2">
+                  <div className="text-gray-400">类型</div>
+                  <div className="text-gray-900 dark:text-white">{detail.type_name}</div>
+                </div>
+              )}
+              {detail.class && (
+                <div className="space-y-2">
+                  <div className="text-gray-400">分类</div>
+                  <div className="text-gray-900 dark:text-white">{detail.class}</div>
+                </div>
               )}
             </div>
 
-            {/* 集数信息 */}
-            {detail.episodes && detail.episodes.length > 0 && (
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                <span className="font-medium">总集数：</span>
-                <span className="text-blue-600 dark:text-blue-400">{detail.episodes.length} 集</span>
-              </div>
-            )}
+            {/* 扩展信息网格 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4 text-sm">
+              {detail.episodes && detail.episodes.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-gray-400">集数</div>
+                  <div className="text-gray-900 dark:text-white">共 {detail.episodes.length} 集</div>
+                </div>
+              )}
+              {detail.douban_id && (
+                <div className="space-y-2">
+                  <div className="text-gray-400">豆瓣ID</div>
+                  <div className="text-gray-900 dark:text-white">{detail.douban_id}</div>
+                </div>
+              )}
+              {detail.director && (
+                <div className="space-y-2">
+                  <div className="text-gray-400">导演</div>
+                  <div className="text-gray-900 dark:text-white">{detail.director}</div>
+                </div>
+              )}
+              {detail.actor && (
+                <div className="space-y-2">
+                  <div className="text-gray-400">演员</div>
+                  <div className="text-gray-900 dark:text-white line-clamp-2">{detail.actor}</div>
+                </div>
+              )}
+            </div>
 
             {/* 简介 */}
             {detail.desc && (
               <div className="space-y-2">
-                <h3 className="font-medium text-gray-900 dark:text-white">剧情简介</h3>
+                <div className="text-gray-400">简介</div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-4">
                   {detail.desc}
                 </p>
@@ -166,16 +195,16 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
             </div>
 
             {/* 操作按钮 */}
-            <div className="flex gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <button
                 onClick={handleClose}
-                className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors duration-200"
+                className="flex-1 px-4 py-3 sm:py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors duration-200 text-center"
               >
                 立即播放
               </button>
               <button
                 onClick={handleClose}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                className="flex-1 sm:flex-none px-4 py-3 sm:py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 text-center"
               >
                 取消
               </button>
