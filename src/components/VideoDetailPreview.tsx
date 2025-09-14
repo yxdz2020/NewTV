@@ -235,11 +235,11 @@ const VideoDetailPreview: React.FC<VideoDetailPreviewProps> = ({
             </div>
 
             {/* 简介 */}
-            {(doubanDetail?.plot_summary || detail.description) && (
+            {(doubanDetail?.plot_summary || detail.desc) && (
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">简介</h3>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {doubanDetail?.plot_summary || detail.description}
+                  {doubanDetail?.plot_summary || detail.desc}
                 </p>
               </div>
             )}
