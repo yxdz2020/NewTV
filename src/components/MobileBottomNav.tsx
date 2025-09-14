@@ -46,7 +46,6 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
   const isActive = (href: string) => {
     // 解码URL以进行正确的比较
     const decodedActive = decodeURIComponent(currentActive);
-    const decodedItemHref = decodeURIComponent(href);
 
     // 首页严格匹配 - 只有完全是根路径时才激活
     if (href === '/') {
@@ -65,18 +64,20 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
 
     // 处理豆瓣类型页面的匹配
     if (href.startsWith('/douban?type=')) {
-      const typeMatch = href.match(/type=([^&]+)/)?.[1];
-      if (typeMatch && decodedActive.startsWith('/douban')) {
-        // 使用更简单可靠的方法：直接解析查询字符串
-        const queryString = decodedActive.split('?')[1];
+      // 提取导航项的type参数
+      const hrefTypeMatch = href.match(/type=([^&]+)/)?.[1];
+      
+      if (hrefTypeMatch && decodedActive.startsWith('/douban')) {
+        // 解析当前URL的查询参数
+        const [, queryString] = decodedActive.split('?');
         if (queryString) {
           const params = new URLSearchParams(queryString);
-          const activeType = params.get('type');
-          return activeType === typeMatch;
+          const currentType = params.get('type');
+          // 严格匹配type参数
+          return currentType === hrefTypeMatch;
         }
-        // 如果没有查询字符串但URL包含type参数，则不匹配
-        return false;
       }
+      return false;
     }
 
     return false;
