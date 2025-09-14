@@ -326,6 +326,20 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     }
   }, [actualTitle, isSearchingDetail, navigateToPlay]);
 
+  const handleDoubanClick = useCallback(async () => {
+    if (actualDoubanId) {
+      const details = await getDoubanDetails(actualDoubanId.toString());
+      if (details.code === 200 && details.data) {
+        setDoubanDetail(details.data);
+        setShowDoubanDetail(true);
+      } else {
+        navigateToPlay();
+      }
+    } else {
+      navigateToPlay();
+    }
+  }, [actualDoubanId, navigateToPlay]);
+
   const handleClick = useCallback(() => {
     // 如果是豆瓣来源，展示豆瓣详情
     if (from === 'douban') {
@@ -348,20 +362,6 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     navigateToPlay,
     handleDoubanClick,
   ]);
-
-  const handleDoubanClick = useCallback(async () => {
-    if (actualDoubanId) {
-      const details = await getDoubanDetails(actualDoubanId.toString());
-      if (details.code === 200 && details.data) {
-        setDoubanDetail(details.data);
-        setShowDoubanDetail(true);
-      } else {
-        navigateToPlay();
-      }
-    } else {
-      navigateToPlay();
-    }
-  }, [actualDoubanId, navigateToPlay]);
 
   // 新标签页播放处理函数
   const handlePlayInNewTab = useCallback(() => {
