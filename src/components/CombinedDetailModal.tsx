@@ -174,7 +174,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4">
                   {renderDetailItem('年份', doubanDetail?.year || videoDetail?.year)}
                   {renderDetailItem('豆瓣评分', doubanDetail?.rate)}
-                  {renderDetailItem('类型', doubanDetail?.genres || videoDetail?.type)}
+                  {renderDetailItem('类型', doubanDetail?.genres || videoDetail?.type_name)}
                   {renderDetailItem('制片国家/地区', doubanDetail?.countries)}
                   {renderDetailItem('语言', doubanDetail?.languages)}
                   {videoDetail?.source_name && renderDetailItem('来源', videoDetail.source_name)}
