@@ -218,12 +218,12 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
           />
         </div>
 
-        <div className="w-full md:w-2/3 p-3 md:p-8 flex flex-col justify-between overflow-y-auto relative z-10">
-          <div>
+        <div className="w-full md:w-2/3 p-3 md:p-8 flex flex-col relative z-10">
+          <div className="flex-1 overflow-y-auto">
             <h2 className="text-base md:text-3xl font-bold text-white mb-1 md:mb-6">{doubanDetail?.title || videoDetail?.title || title}</h2>
 
             {isLoading && !doubanDetail && !videoDetail ? (
-              <div className="flex flex-col items-center justify-center h-40 md:h-80">
+              <div className="flex flex-col items-center justify-center h-32 md:h-80">
                 <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 md:h-12 md:w-12 mb-4"></div>
                 <div className="text-white text-sm md:text-base text-center">
                   影片信息获取中，请稍等片刻
@@ -241,14 +241,16 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
                 </div>
 
                 <h3 className="text-xs md:text-lg font-semibold text-white mt-1 md:mt-6 mb-1">简介</h3>
-                <p className="text-gray-300 text-xs md:text-sm leading-tight md:leading-relaxed max-h-20 md:max-h-48 overflow-y-auto">
-                  {doubanDetail?.plot_summary || videoDetail?.desc || '暂无简介信息'}
-                </p>
+                <div className="h-16 md:h-32 overflow-y-auto">
+                  <p className="text-gray-300 text-xs md:text-sm leading-tight md:leading-relaxed">
+                    {doubanDetail?.plot_summary || videoDetail?.desc || '暂无简介信息'}
+                  </p>
+                </div>
               </>
             )}
           </div>
 
-          <div className="mt-1 md:mt-8">
+          <div className="flex-shrink-0 mt-2 md:mt-4">
             {(doubanDetail || videoDetail) && !isLoading && (
               <div className="w-full mb-2 md:mb-4">
                 <div className="flex justify-between text-xs text-gray-400 mb-1">
