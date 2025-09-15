@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import { X } from 'lucide-react';
 import { DoubanDetail, SearchResult } from '@/lib/types';
@@ -29,6 +29,8 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
   const [progress, setProgress] = useState(0);
   const [currentPosterUrl, setCurrentPosterUrl] = useState<string>('');
   const [fallbackIndex, setFallbackIndex] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 创建fallback URL数组
   const fallbackUrls = useMemo(() => {
@@ -80,15 +82,27 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
     if (!isOpen) {
       setCountdown(5);
       setProgress(0);
+      // 清除现有定时器
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current);
+        progressTimerRef.current = null;
+      }
       return;
     }
 
     // 当有豆瓣数据或搜索数据且不在加载状态时启动倒计时
     if ((doubanDetail || videoDetail) && !isLoading) {
-      const timer = setInterval(() => {
+      timerRef.current = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
-            clearInterval(timer);
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
             onPlay();
             return 0;
           }
@@ -96,10 +110,13 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
         });
       }, 1000);
 
-      const progressInterval = setInterval(() => {
+      progressTimerRef.current = setInterval(() => {
         setProgress((oldProgress) => {
           if (oldProgress >= 100) {
-            clearInterval(progressInterval);
+            if (progressTimerRef.current) {
+              clearInterval(progressTimerRef.current);
+              progressTimerRef.current = null;
+            }
             return 100;
           }
           return oldProgress + 100 / 50; // 5s * 10 frames/s
@@ -107,8 +124,14 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
       }, 100); // update progress every 100ms
 
       return () => {
-        clearInterval(timer);
-        clearInterval(progressInterval);
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        if (progressTimerRef.current) {
+          clearInterval(progressTimerRef.current);
+          progressTimerRef.current = null;
+        }
       };
     }
   }, [isOpen, doubanDetail, videoDetail, isLoading, onPlay]);
@@ -132,7 +155,18 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-2 md:p-4">
       <div className="bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-full max-w-4xl h-auto max-h-[85vh] md:max-h-[80vh] flex flex-col md:flex-row overflow-hidden relative">
         <button
-          onClick={onClose}
+          onClick={() => {
+            // 清除倒计时定时器
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
+            if (progressTimerRef.current) {
+              clearInterval(progressTimerRef.current);
+              progressTimerRef.current = null;
+            }
+            onClose();
+          }}
           className="absolute top-2 right-2 md:top-4 md:right-4 text-gray-400 hover:text-white z-20 bg-black bg-opacity-50 rounded-full p-1"
         >
           <X size={20} className="md:w-6 md:h-6" />
@@ -211,7 +245,18 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
                 立即播放
               </button>
               <button
-                onClick={onClose}
+                onClick={() => {
+                  // 清除倒计时定时器
+                  if (timerRef.current) {
+                    clearInterval(timerRef.current);
+                    timerRef.current = null;
+                  }
+                  if (progressTimerRef.current) {
+                    clearInterval(progressTimerRef.current);
+                    progressTimerRef.current = null;
+                  }
+                  onClose();
+                }}
                 className="flex-1 bg-gray-700 text-white py-2 md:py-3 rounded-lg hover:bg-gray-600 transition text-sm md:text-base"
               >
                 取消
