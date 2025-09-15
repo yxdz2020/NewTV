@@ -266,6 +266,20 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     actualDoubanId,
   ]);
 
+  const handleDoubanClick = useCallback(async () => {
+    if (actualDoubanId) {
+      const details = await getDoubanDetails(actualDoubanId.toString());
+      if (details.code === 200 && details.data) {
+        setDoubanDetail(details.data);
+        setShowDoubanDetail(true);
+      } else {
+        navigateToPlay();
+      }
+    } else {
+      navigateToPlay();
+    }
+  }, [actualDoubanId, navigateToPlay]);
+
   // 搜索采集站详情，实现fallback机制
   const searchFirstSourceDetail = useCallback(async () => {
     if (isSearchingDetail) return;
@@ -325,20 +339,6 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       setIsLoading(false);
     }
   }, [actualTitle, isSearchingDetail, navigateToPlay]);
-
-  const handleDoubanClick = useCallback(async () => {
-    if (actualDoubanId) {
-      const details = await getDoubanDetails(actualDoubanId.toString());
-      if (details.code === 200 && details.data) {
-        setDoubanDetail(details.data);
-        setShowDoubanDetail(true);
-      } else {
-        navigateToPlay();
-      }
-    } else {
-      navigateToPlay();
-    }
-  }, [actualDoubanId, navigateToPlay]);
 
   const handleClick = useCallback(() => {
     // 如果是豆瓣来源，展示豆瓣详情
