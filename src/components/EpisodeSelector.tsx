@@ -508,7 +508,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                 <div className='text-center'>
                   <div className='text-gray-400 text-2xl mb-2'>📺</div>
                   <p className='text-sm text-gray-600 dark:text-gray-300'>
-                    暂无可用的换源
+                    暂无可用的换源,尝试加载更多中··
                   </p>
                 </div>
               </div>
