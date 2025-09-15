@@ -220,7 +220,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
 
         <div className="w-full md:w-2/3 relative z-10 h-full">
           {/* 内容区域 - 绝对定位，为底部按钮留出空间 */}
-          <div className="absolute inset-0 p-3 md:p-8 pb-20 md:pb-24 overflow-y-auto">
+          <div className="absolute inset-0 p-3 md:p-8 pb-32 md:pb-40 overflow-y-auto">
             <h2 className="text-base md:text-3xl font-bold text-white mb-1 md:mb-6">{doubanDetail?.title || videoDetail?.title || title}</h2>
 
             {isLoading && !doubanDetail && !videoDetail ? (
