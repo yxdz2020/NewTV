@@ -174,7 +174,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
         }
       }}
     >
-      <div className="bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-[90vw] max-w-4xl h-[70vh] flex flex-col md:flex-row overflow-hidden relative">
+      <div className="bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-[95vw] max-w-4xl h-[90vh] md:h-[70vh] flex flex-col md:flex-row overflow-hidden relative">
         <button
           onClick={() => {
             // 清除倒计时定时器
@@ -195,7 +195,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
           <X size={20} className="md:w-6 md:h-6" />
         </button>
 
-        <div className="w-full md:w-1/3 h-32 md:h-auto flex-shrink-0 relative z-0">
+        <div className="w-full md:w-1/3 h-40 md:h-auto flex-shrink-0 relative z-0">
           <Image
             src={posterUrl}
             alt={title}
@@ -218,7 +218,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
           />
         </div>
 
-        <div className="w-full md:w-2/3 p-3 md:p-8 flex flex-col justify-between overflow-y-auto relative z-10">
+        <div className="w-full md:w-2/3 p-4 md:p-8 flex flex-col justify-between overflow-y-auto relative z-10">
           <div>
             <h2 className="text-lg md:text-3xl font-bold text-white mb-2 md:mb-6">{doubanDetail?.title || videoDetail?.title || title}</h2>
 
@@ -241,7 +241,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
                 </div>
 
                 <h3 className="text-sm md:text-lg font-semibold text-white mt-2 md:mt-6 mb-1">简介</h3>
-                <p className="text-gray-300 text-xs md:text-sm leading-tight md:leading-relaxed max-h-20 md:max-h-48 overflow-y-auto">
+                <p className="text-gray-300 text-xs md:text-sm leading-tight md:leading-relaxed max-h-32 md:max-h-48 overflow-y-auto">
                   {doubanDetail?.plot_summary || videoDetail?.desc || '暂无简介信息'}
                 </p>
               </>
