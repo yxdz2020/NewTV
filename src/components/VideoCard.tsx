@@ -268,6 +268,30 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     actualDoubanId,
   ]);
 
+  // 搜索采集站详情，实现fallback机制
+  const searchFirstSourceDetail = useCallback(async () => {
+    if (isSearchingDetail) return;
+    
+    setIsSearchingDetail(true);
+    try {
+      const response = await fetch(
+        `/api/search?q=${encodeURIComponent(actualTitle.trim())}`
+      );
+      if (!response.ok) {
+        throw new Error('搜索失败');
+      }
+      const data = await response.json();
+      
+      if (data.results && data.results.length > 0) {
+        setVideoDetail(data.results[0]);
+      }
+    } catch (error) {
+      console.error('搜索失败:', error);
+    } finally {
+      setIsSearchingDetail(false);
+    }
+  }, [actualTitle, isSearchingDetail]);
+
   const handleDoubanClick = useCallback(async () => {
     // 立即显示模态框和加载状态
     setIsLoading(true);
@@ -303,64 +327,6 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     setIsLoadingModal(false);
     setIsLoading(false);
   }, [actualDoubanId, searchFirstSourceDetail]);
-
-  // 搜索采集站详情，实现fallback机制
-  const searchFirstSourceDetail = useCallback(async () => {
-    if (isSearchingDetail) return;
-    
-    setIsSearchingDetail(true);
-    try {
-      const response = await fetch(
-        `/api/search?q=${encodeURIComponent(actualTitle.trim())}`
-      );
-      if (!response.ok) {
-        throw new Error('搜索失败');
-      }
-      const data = await response.json();
-      
-      if (data && data.results && data.results.length > 0) {
-        // 依次尝试每个搜索结果，直到找到有效数据
-        let foundValidDetail = false;
-        
-        for (const result of data.results) {
-          try {
-            const detailResponse = await fetch(
-              `/api/detail?source=${result.source}&id=${result.id}`
-            );
-            
-            if (detailResponse.ok) {
-              const detailData = await detailResponse.json();
-              // 检查详情数据是否有效（有播放链接）
-              if (detailData && detailData.episodes && detailData.episodes.length > 0) {
-                setVideoDetail(detailData);
-                foundValidDetail = true;
-                break;
-              }
-            }
-          } catch (detailError) {
-            console.warn(`获取${result.source_name || result.source}详情失败:`, detailError);
-            // 继续尝试下一个源
-            continue;
-          }
-        }
-        
-        // 如果所有源都没有有效详情，使用第一个搜索结果作为预览数据
-        if (!foundValidDetail) {
-          setVideoDetail(data.results[0]);
-        }
-      } else {
-        // 如果没有搜索结果，直接跳转到播放页面
-        navigateToPlay();
-      }
-    } catch (error) {
-      console.error('获取资源站详情失败:', error);
-      // 如果获取失败，直接跳转到播放页面
-      navigateToPlay();
-    } finally {
-      setIsSearchingDetail(false);
-      setIsLoading(false);
-    }
-  }, [actualTitle, isSearchingDetail, navigateToPlay]);
 
   const handleClick = useCallback(() => {
     // 如果是豆瓣来源，展示豆瓣详情
