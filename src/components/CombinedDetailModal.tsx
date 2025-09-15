@@ -242,7 +242,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
                 </div>
 
                 <h3 className="text-xs md:text-lg font-semibold text-white mt-1 md:mt-6 mb-1">简介</h3>
-                <div className="mb-4 h-20 md:h-32 overflow-y-auto">
+                <div className="mb-4 h-19 md:h-55 overflow-y-auto">
                   <p className="text-gray-300 text-xs md:text-sm leading-tight md:leading-relaxed">
                     {doubanDetail?.plot_summary || videoDetail?.desc || '暂无简介信息'}
                   </p>
