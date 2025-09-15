@@ -305,7 +305,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         if (!response.ok) throw new Error('搜索失败');
         return response.json();
       })
-      .then(data => {
+      .then((data: { results: SearchResult[] }) => {
         if (data.results && data.results.length > 0) {
           return { success: true, results: data.results };
         }
@@ -318,7 +318,10 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     promises.push(searchPromise);
     
     // 等待所有请求完成
-    const [doubanResult, searchResult] = await Promise.all(promises);
+    const [doubanResult, searchResult] = await Promise.all(promises) as [
+      { success: boolean; data?: DoubanDetail } | null,
+      { success: boolean; results: SearchResult[] }
+    ];
     
     // 处理结果
     if (doubanResult && doubanResult.success) {
