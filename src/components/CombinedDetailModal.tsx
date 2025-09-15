@@ -174,7 +174,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
         }
       }}
     >
-      <div className="bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-[90vw] max-w-4xl h-[75vh] md:h-[70vh] flex flex-col md:flex-row overflow-hidden relative">
+      <div className="bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-[90vw] max-w-4xl h-[65vh] md:h-[70vh] flex flex-col md:flex-row overflow-hidden relative">
         <button
           onClick={() => {
             // 清除倒计时定时器
