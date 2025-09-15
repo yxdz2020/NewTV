@@ -752,7 +752,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                 return false;
               }}
             >
-              {(isSearchingDetail || isLoading) ? (
+              {isLoading ? (
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
                 </div>
