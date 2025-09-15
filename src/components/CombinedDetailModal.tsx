@@ -116,7 +116,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
               <>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4">
                   {renderDetailItem('年份', doubanDetail?.year)}
-                  {renderDetailItem('豆瓣评分', doubanDetail?.rating)}
+                  {renderDetailItem('豆瓣评分', doubanDetail?.rate)}
                   {renderDetailItem('类型', doubanDetail?.genres)}
                   {renderDetailItem('制片国家/地区', doubanDetail?.countries)}
                   {renderDetailItem('语言', doubanDetail?.languages)}
@@ -126,7 +126,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
 
                 <h3 className="text-lg font-semibold text-white mt-6 mb-2">简介</h3>
                 <p className="text-gray-300 text-sm leading-relaxed max-h-48 overflow-y-auto">
-                  {doubanDetail?.summary}
+                  {doubanDetail?.plot_summary}
                 </p>
               </>
             )}
