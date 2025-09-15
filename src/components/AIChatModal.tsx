@@ -161,11 +161,11 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[99999] p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl h-[80vh] flex flex-col">
+      <div className="glass-strong rounded-lg shadow-xl w-full max-w-2xl h-[80vh] flex flex-col">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">NewTV AI 荐片助手</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white">
@@ -188,7 +188,7 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
                 {message.recommendations && message.recommendations.length > 0 && (
                   <div className="mt-3 space-y-2 self-stretch">
                     {message.recommendations.map((movie, index) => (
-                      <div key={index} onClick={() => handleMovieSelect(movie)} className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all">
+                      <div key={index} onClick={() => handleMovieSelect(movie)} className="p-3 glass-light rounded-lg cursor-pointer hover:shadow-md transition-all">
                         <div className="flex items-start gap-3">
                           {movie.poster && <img src={movie.poster} alt={movie.title} className="w-12 h-16 object-cover rounded flex-shrink-0" />}
                           <div className="flex-1 min-w-0">
@@ -204,7 +204,7 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
                 {message.youtubeVideos && message.youtubeVideos.length > 0 && (
                   <div className="mt-3 space-y-2 self-stretch">
                     {message.youtubeVideos.map((video, index) => (
-                      <div key={index} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                      <div key={index} className="glass-light rounded-lg overflow-hidden">
                         {playingVideoId === video.id ? (
                           <div className="relative">
                             <div className="aspect-video">
@@ -235,7 +235,7 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
                                 <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded">
                                   <div className="bg-red-600 text-white rounded-full p-1">
                                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                                      <path d="M8 5v14l11-7z"/>
+                                      <path d="M8 5v14l11-7z" />
                                     </svg>
                                   </div>
                                 </div>

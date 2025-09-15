@@ -85,7 +85,7 @@ const buttonStyles = {
   disabled: 'px-3 py-1.5 text-sm font-medium bg-gray-400 dark:bg-gray-600 cursor-not-allowed text-white rounded-lg transition-colors',
   disabledSmall: 'px-2 py-1 text-xs font-medium bg-gray-400 dark:bg-gray-600 cursor-not-allowed text-white rounded-md transition-colors',
   // 开关按钮样式
-  toggleOn: 'bg-green-600 dark:bg-green-600',
+  toggleOn: 'bg-blue-600 dark:bg-blue-600',
   toggleOff: 'bg-gray-200 dark:bg-gray-700',
   toggleThumb: 'bg-white',
   toggleThumbOn: 'translate-x-6',
@@ -811,7 +811,7 @@ const UserConfig = ({ config, role, refreshConfig, setConfig }: UserConfigProps)
                     // 乐观更新：立即更新UI状态
                     const previousValue = config.UserConfig.AllowRegister;
                     const newValue = !previousValue;
-                    
+
                     // 立即更新本地状态
                     setConfig(prev => ({
                       ...prev!,
@@ -892,7 +892,7 @@ const UserConfig = ({ config, role, refreshConfig, setConfig }: UserConfigProps)
                     // 乐观更新：立即更新UI状态
                     const previousValue = (config as any).UserConfig.RequireApproval;
                     const newValue = !previousValue;
-                    
+
                     // 立即更新本地状态
                     setConfig(prev => ({
                       ...prev!,
@@ -3538,7 +3538,7 @@ const ConfigFileComponent = ({ config, refreshConfig }: { config: AdminConfig | 
               onChange={(e) => setSubscriptionUrl(e.target.value)}
               placeholder='https://example.com/config.json'
               disabled={false}
-              className='w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 shadow-sm hover:border-gray-400 dark:hover:border-gray-500'
+              className='w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm hover:border-gray-400 dark:hover:border-gray-500'
             />
             <p className='mt-2 text-xs text-gray-500 dark:text-gray-400'>
               输入配置文件的订阅地址，要求 JSON 格式，且使用 Base58 编码
@@ -3552,7 +3552,7 @@ const ConfigFileComponent = ({ config, refreshConfig }: { config: AdminConfig | 
               disabled={isLoading('fetchConfig') || !subscriptionUrl.trim()}
               className={`w-full px-6 py-3 rounded-lg font-medium transition-all duration-200 ${isLoading('fetchConfig') || !subscriptionUrl.trim()
                 ? buttonStyles.disabled
-                : buttonStyles.success
+                : buttonStyles.primary
                 }`}
             >
               {isLoading('fetchConfig') ? (
@@ -3580,7 +3580,7 @@ const ConfigFileComponent = ({ config, refreshConfig }: { config: AdminConfig | 
               type='button'
               onClick={() => setAutoUpdate(!autoUpdate)}
               disabled={false}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${autoUpdate
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${autoUpdate
                 ? buttonStyles.toggleOn
                 : buttonStyles.toggleOff
                 }`}
@@ -3718,7 +3718,7 @@ const CloudDiskConfigComponent = ({ config, refreshConfig }: { config: AdminConf
             <button
               type='button'
               onClick={() => setCloudDiskSettings(prev => ({ ...prev, enabled: !prev.enabled }))}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${cloudDiskSettings.enabled ? buttonStyles.toggleOn : buttonStyles.toggleOff
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${cloudDiskSettings.enabled ? buttonStyles.toggleOn : buttonStyles.toggleOff
                 }`}
             >
               <span
@@ -4279,7 +4279,7 @@ const SiteConfigComponent = ({ config, refreshConfig }: { config: AdminConfig | 
                 DisableYellowFilter: !prev.DisableYellowFilter,
               }))
             }
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${siteSettings.DisableYellowFilter
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${siteSettings.DisableYellowFilter
               ? buttonStyles.toggleOn
               : buttonStyles.toggleOff
               }`}
@@ -4313,7 +4313,7 @@ const SiteConfigComponent = ({ config, refreshConfig }: { config: AdminConfig | 
                 FluidSearch: !prev.FluidSearch,
               }))
             }
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${siteSettings.FluidSearch
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${siteSettings.FluidSearch
               ? buttonStyles.toggleOn
               : buttonStyles.toggleOff
               }`}
@@ -4339,7 +4339,7 @@ const SiteConfigComponent = ({ config, refreshConfig }: { config: AdminConfig | 
           disabled={isLoading('saveSiteConfig')}
           className={`px-4 py-2 ${isLoading('saveSiteConfig')
             ? buttonStyles.disabled
-            : buttonStyles.success
+            : buttonStyles.primary
             } rounded-lg transition-colors`}
         >
           {isLoading('saveSiteConfig') ? '保存中…' : '保存'}

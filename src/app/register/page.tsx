@@ -218,7 +218,7 @@ function RegisterPageClient() {
         <ThemeToggle />
       </div>
       <div className='relative z-10 w-full max-w-md rounded-3xl bg-gradient-to-b from-white/90 via-white/70 to-white/40 dark:from-zinc-900/90 dark:via-zinc-900/70 dark:to-zinc-900/40 backdrop-blur-xl shadow-2xl p-10 dark:border dark:border-zinc-800'>
-        <h1 className='text-green-600 tracking-tight text-center text-3xl font-extrabold mb-2 bg-clip-text drop-shadow-sm'>
+        <h1 className='text-black dark:text-white tracking-tight text-center text-3xl font-extrabold mb-2 bg-clip-text drop-shadow-sm'>
           {siteName}
         </h1>
         <p className='text-center text-gray-600 dark:text-gray-400 text-sm mb-8'>
@@ -315,7 +315,7 @@ function RegisterPageClient() {
             <button
               type='button'
               onClick={() => router.push('/login')}
-              className='ml-2 text-green-600 dark:text-green-400 text-sm font-medium hover:underline'
+              className='ml-2 text-blue-600 dark:text-blue-400 text-sm font-medium hover:underline'
             >
               立即登录
             </button>

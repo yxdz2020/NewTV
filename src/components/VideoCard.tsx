@@ -10,6 +10,7 @@ import React, {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -24,8 +25,12 @@ import {
 import { processImageUrl } from '@/lib/utils';
 import { useLongPress } from '@/hooks/useLongPress';
 
+import { getDoubanDetails } from '@/lib/douban.client';
 import { ImagePlaceholder } from '@/components/ImagePlaceholder';
 import MobileActionSheet from '@/components/MobileActionSheet';
+import CombinedDetailModal from './CombinedDetailModal';
+import VideoDetailPreview from '@/components/VideoDetailPreview';
+import { SearchResult, DoubanDetail } from '@/lib/types';
 
 export interface VideoCardProps {
   id?: string;
@@ -84,6 +89,14 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const [isLoading, setIsLoading] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
   const [searchFavorited, setSearchFavorited] = useState<boolean | null>(null); // 搜索结果的收藏状态
+  const [showDetailPreview, setShowDetailPreview] = useState(false);
+  const [previewDetail, setPreviewDetail] = useState<SearchResult | null>(null);
+
+  const [showCombinedModal, setShowCombinedModal] = useState(false);
+  const [doubanDetail, setDoubanDetail] = useState<DoubanDetail | null>(null);
+  const [videoDetail, setVideoDetail] = useState<SearchResult | null>(null);
+  const [isLoadingModal, setIsLoadingModal] = useState(false);
+  const autoPlayTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 可外部修改的可控字段
   const [dynamicEpisodes, setDynamicEpisodes] = useState<number | undefined>(
@@ -222,10 +235,11 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     [from, actualSource, actualId, onDelete]
   );
 
-  const handleClick = useCallback(() => {
+  // 跳转到播放页面的函数
+  const navigateToPlay = useCallback(() => {
     // 构建豆瓣ID参数
     const doubanIdParam = actualDoubanId && actualDoubanId > 0 ? `&douban_id=${actualDoubanId}` : '';
-    
+
     if (origin === 'live' && actualSource && actualId) {
       // 直播内容跳转到直播页面
       const url = `/live?source=${actualSource.replace('live_', '')}&id=${actualId.replace('live_', '')}`;
@@ -256,11 +270,130 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     actualDoubanId,
   ]);
 
+
+
+  const handleDoubanClick = useCallback(async () => {
+    // 立即显示模态框和加载状态
+    setIsLoading(true);
+    setShowCombinedModal(true);
+    setIsLoadingModal(true);
+    setDoubanDetail(null);
+    setVideoDetail(null);
+
+    // 同时执行豆瓣API和搜索API请求
+    const promises = [];
+
+    // 豆瓣API请求
+    let doubanPromise = null;
+    if (actualDoubanId) {
+      doubanPromise = getDoubanDetails(actualDoubanId.toString())
+        .then(details => {
+          if (details.code === 200 && details.data) {
+            setDoubanDetail(details.data);
+            return { success: true, data: details.data };
+          }
+          return { success: false, data: null };
+        })
+        .catch(error => {
+          console.error('获取豆瓣详情失败:', error);
+          return { success: false, data: null };
+        });
+      promises.push(doubanPromise);
+    }
+
+    // 搜索API请求（后台执行）
+    const searchPromise = fetch(`/api/search?q=${encodeURIComponent(actualTitle.trim())}`)
+      .then(response => {
+        if (!response.ok) throw new Error('搜索失败');
+        return response.json();
+      })
+      .then((data: { results: SearchResult[] }) => {
+        if (data.results && data.results.length > 0) {
+          return { success: true, results: data.results };
+        }
+        return { success: false, results: [] };
+      })
+      .catch(error => {
+        console.error('搜索视频源失败:', error);
+        return { success: false, results: [] };
+      });
+    promises.push(searchPromise);
+
+    // 等待所有请求完成
+    const [doubanResult, searchResult] = await Promise.all(promises) as [
+      { success: boolean; data?: DoubanDetail } | null,
+      { success: boolean; results: SearchResult[] }
+    ];
+
+    // 处理结果
+    if (doubanResult && doubanResult.success) {
+      // 豆瓣API成功：显示豆瓣信息，5秒后自动播放
+      setIsLoadingModal(false);
+
+      // 如果搜索也成功，设置搜索结果供后续使用
+      if (searchResult.success && searchResult.results.length > 0) {
+        setVideoDetail(searchResult.results[0]);
+      }
+
+      // 5秒后自动播放
+      autoPlayTimerRef.current = setTimeout(() => {
+        if (searchResult.success && searchResult.results.length > 0) {
+          // 跳转到播放器
+          navigateToPlay();
+        }
+      }, 5000);
+    } else {
+      // 豆瓣API失败：使用搜索结果作为备用方案
+      if (searchResult.success && searchResult.results.length > 0) {
+        // 查找匹配title且有desc的结果
+        const matchedResult = searchResult.results.find(result =>
+          result.title && result.title.includes(actualTitle.trim()) && result.desc
+        ) || searchResult.results.find(result => result.desc) || searchResult.results[0];
+
+        setVideoDetail(matchedResult);
+        setIsLoadingModal(false);
+
+        // 5秒后跳转到第一个源播放
+        autoPlayTimerRef.current = setTimeout(() => {
+          const firstResult = searchResult.results[0];
+          if (firstResult.id && firstResult.source) {
+            navigateToPlay();
+          }
+        }, 5000);
+      } else {
+        // 搜索也失败
+        setIsLoadingModal(false);
+      }
+    }
+
+    setIsLoading(false);
+  }, [actualDoubanId, actualTitle]);
+
+  const handleClick = useCallback(() => {
+    // 如果是豆瓣来源，展示豆瓣详情
+    if (from === 'douban') {
+      handleDoubanClick();
+    } else if (isAggregate && !actualSource && !actualId) {
+      // 如果是聚合搜索且没有具体的source和id（即搜索源状态），使用统一的处理逻辑
+      handleDoubanClick();
+    } else {
+      // 其他情况直接跳转
+      navigateToPlay();
+    }
+  }, [
+    from,
+    isAggregate,
+    actualSource,
+    actualId,
+    handleDoubanClick,
+    navigateToPlay,
+  ]);
+
   // 新标签页播放处理函数
   const handlePlayInNewTab = useCallback(() => {
     // 构建豆瓣ID参数
     const doubanIdParam = actualDoubanId && actualDoubanId > 0 ? `&douban_id=${actualDoubanId}` : '';
-    
+
     if (origin === 'live' && actualSource && actualId) {
       // 直播内容跳转到直播页面
       const url = `/live?source=${actualSource.replace('live_', '')}&id=${actualId.replace('live_', '')}`;
@@ -503,7 +636,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   return (
     <>
       <div
-        className='group relative w-full rounded-lg bg-transparent cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.05] hover:z-[500]'
+        className='group relative w-full glass-card cursor-pointer transition-transform duration-200 ease-out hover:scale-105 hover:shadow-elevated hover:z-10 flex flex-col h-full'
         onClick={handleClick}
         {...longPressProps}
         style={{
@@ -540,7 +673,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       >
         {/* 海报容器 */}
         <div
-          className={`relative aspect-[2/3] overflow-hidden rounded-lg ${origin === 'live' ? 'ring-1 ring-gray-300/80 dark:ring-gray-600/80' : ''}`}
+          className={`relative aspect-[3/4] overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-800 transition-all duration-300 ease-in-out group-hover:shadow-lg group-hover:shadow-black/20 dark:group-hover:shadow-black/20 ${origin === 'live' ? 'ring-1 ring-gray-300/80 dark:ring-gray-600/80' : ''}`}
           style={{
             WebkitUserSelect: 'none',
             userSelect: 'none',
@@ -618,20 +751,26 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                 return false;
               }}
             >
-              <PlayCircleIcon
-                size={50}
-                strokeWidth={0.8}
-                className='text-white fill-transparent transition-all duration-300 ease-out hover:fill-green-500 hover:scale-[1.1]'
-                style={{
-                  WebkitUserSelect: 'none',
-                  userSelect: 'none',
-                  WebkitTouchCallout: 'none',
-                } as React.CSSProperties}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  return false;
-                }}
-              />
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+                </div>
+              ) : (
+                <PlayCircleIcon
+                  size={50}
+                  strokeWidth={0.8}
+                  className='text-white fill-transparent transition-all duration-300 ease-out hover:fill-blue-500 hover:scale-[1.1]'
+                  style={{
+                    WebkitUserSelect: 'none',
+                    userSelect: 'none',
+                    WebkitTouchCallout: 'none',
+                  } as React.CSSProperties}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    return false;
+                  }}
+                />
+              )}
             </div>
           )}
 
@@ -726,7 +865,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
 
           {actualEpisodes && actualEpisodes > 1 && (
             <div
-              className='absolute top-2 right-2 bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-md shadow-md transition-all duration-300 ease-out group-hover:scale-110'
+              className='absolute top-2 right-2 bg-black text-white text-xs font-semibold px-2 py-1 rounded-md shadow-md transition-all duration-300 ease-out group-hover:scale-110'
               style={{
                 WebkitUserSelect: 'none',
                 userSelect: 'none',
@@ -766,7 +905,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
               }}
             >
               <div
-                className='bg-green-500 text-white text-xs font-bold w-7 h-7 rounded-full flex items-center justify-center shadow-md hover:bg-green-600 hover:scale-[1.1] transition-all duration-300 ease-out'
+                className='bg-black text-white text-xs font-bold w-7 h-7 rounded-full flex items-center justify-center shadow-md hover:bg-gray-800 hover:scale-[1.1] transition-all duration-300 ease-out'
                 style={{
                   WebkitUserSelect: 'none',
                   userSelect: 'none',
@@ -817,7 +956,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                   } as React.CSSProperties}
                 >
                   <div
-                    className='bg-gray-700 text-white text-xs font-bold w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center shadow-md hover:bg-gray-600 hover:scale-[1.1] transition-all duration-300 ease-out cursor-pointer'
+                    className='glass-strong text-white text-xs font-bold w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center shadow-glass hover:scale-[1.1] transition-all duration-300 ease-out cursor-pointer'
                     style={{
                       WebkitUserSelect: 'none',
                       userSelect: 'none',
@@ -865,7 +1004,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                         }}
                       >
                         <div
-                          className='bg-gray-800/90 backdrop-blur-sm text-white text-xs sm:text-xs rounded-lg shadow-xl border border-white/10 p-1.5 sm:p-2 min-w-[100px] sm:min-w-[120px] max-w-[140px] sm:max-w-[200px] overflow-hidden'
+                          className='glass-strong text-white text-xs sm:text-xs rounded-apple-lg shadow-floating border border-white/20 p-1.5 sm:p-2 min-w-[100px] sm:min-w-[120px] max-w-[140px] sm:max-w-[200px] overflow-hidden'
                           style={{
                             WebkitUserSelect: 'none',
                             userSelect: 'none',
@@ -924,7 +1063,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             }}
           >
             <div
-              className='h-full bg-green-500 transition-all duration-500 ease-out'
+              className='h-full bg-blue-500 transition-all duration-500 ease-out'
               style={{
                 width: `${progress}%`,
                 WebkitUserSelect: 'none',
@@ -941,7 +1080,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
 
         {/* 标题与来源 */}
         <div
-          className='mt-2 text-center'
+          className='flex-1 flex flex-col justify-center px-2 py-3 text-center'
           style={{
             WebkitUserSelect: 'none',
             userSelect: 'none',
@@ -961,7 +1100,8 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             } as React.CSSProperties}
           >
             <span
-              className='block text-sm font-semibold truncate text-gray-900 dark:text-gray-100 transition-colors duration-300 ease-in-out group-hover:text-green-600 dark:group-hover:text-green-400 peer'
+              className={`block font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300 ease-in-out group-hover:text-black dark:group-hover:text-white peer ${from === 'douban' && actualTitle.length > 8 ? 'text-xs' : 'text-sm'
+                }`}
               style={{
                 WebkitUserSelect: 'none',
                 userSelect: 'none',
@@ -972,7 +1112,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                 return false;
               }}
             >
-              {actualTitle}
+              {actualTitle.length <= 10 ? actualTitle : `${actualTitle.slice(0, 10)}...`}
             </span>
             {/* 自定义 tooltip */}
             <div
@@ -1012,7 +1152,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
               }}
             >
               <span
-                className='inline-block border rounded px-2 py-0.5 border-gray-500/60 dark:border-gray-400/60 transition-all duration-300 ease-in-out group-hover:border-green-500/60 group-hover:text-green-600 dark:group-hover:text-green-400'
+                className='inline-block border rounded px-2 py-0.5 border-gray-500/60 dark:border-gray-400/60 transition-all duration-300 ease-in-out group-hover:border-black/60 group-hover:text-black dark:group-hover:text-white'
                 style={{
                   WebkitUserSelect: 'none',
                   userSelect: 'none',
@@ -1046,6 +1186,49 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         currentEpisode={currentEpisode}
         totalEpisodes={actualEpisodes}
         origin={origin}
+      />
+
+      {/* 资源站详情预览 */}
+      <VideoDetailPreview
+        detail={previewDetail}
+        isVisible={showDetailPreview}
+        onClose={() => {
+          setShowDetailPreview(false);
+          setPreviewDetail(null);
+        }}
+        onTimeout={() => {
+          setShowDetailPreview(false);
+          setPreviewDetail(null);
+          navigateToPlay();
+        }}
+        duration={5000}
+      />
+      <CombinedDetailModal
+        isOpen={showCombinedModal}
+        onClose={() => {
+          setShowCombinedModal(false);
+          setDoubanDetail(null);
+          setVideoDetail(null);
+          setIsLoadingModal(false);
+        }}
+        onPlay={() => {
+          setShowCombinedModal(false);
+          setDoubanDetail(null);
+          setVideoDetail(null);
+          setIsLoadingModal(false);
+          navigateToPlay();
+        }}
+        onClearAutoPlayTimer={() => {
+          if (autoPlayTimerRef.current) {
+            clearTimeout(autoPlayTimerRef.current);
+            autoPlayTimerRef.current = null;
+          }
+        }}
+        doubanDetail={doubanDetail}
+        videoDetail={videoDetail}
+        isLoading={isLoadingModal}
+        poster={actualPoster}
+        title={actualTitle}
       />
     </>
   );
