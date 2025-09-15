@@ -33,19 +33,19 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
   // 创建fallback URL数组
   const fallbackUrls = useMemo(() => {
     const doubanPoster = doubanDetail?.poster;
-    const isDoubanPosterValid = doubanPoster && 
-      doubanPoster.trim() !== '' && 
-      doubanPoster !== 'undefined' && 
+    const isDoubanPosterValid = doubanPoster &&
+      doubanPoster.trim() !== '' &&
+      doubanPoster !== 'undefined' &&
       doubanPoster !== 'null' &&
       !doubanPoster.includes('default') &&
       !doubanPoster.includes('placeholder');
-    
+
     const baseUrl = isDoubanPosterValid ? doubanPoster : poster;
-    
+
     if (!baseUrl || !baseUrl.includes('doubanio.com')) {
       return [baseUrl]; // 非豆瓣图片直接返回
     }
-    
+
     // 为豆瓣图片创建多个fallback选项
     const urls = [
       // 1. 服务器代理
@@ -59,17 +59,17 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
       // 5. 原始URL
       baseUrl
     ];
-    
+
     console.log('海报URL fallback列表:', urls);
     return urls;
   }, [doubanDetail, poster]);
-  
+
   const posterUrl = useMemo(() => {
     const url = fallbackUrls[fallbackIndex] || fallbackUrls[0] || poster;
     console.log(`使用第${fallbackIndex + 1}个fallback URL:`, url);
     return url;
   }, [fallbackUrls, fallbackIndex, poster]);
-  
+
   // 重置fallback索引当URL列表改变时
   useEffect(() => {
     setFallbackIndex(0);
@@ -121,30 +121,30 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
     if (!value) return null;
     const displayValue = Array.isArray(value) ? value.join(' / ') : value;
     return (
-      <div className="flex text-sm mb-2">
-        <span className="text-gray-400 w-24 flex-shrink-0">{label}</span>
+      <div className="flex text-xs md:text-sm mb-1 md:mb-2">
+        <span className="text-gray-400 w-16 md:w-24 flex-shrink-0">{label}</span>
         <span className="text-white flex-grow">{displayValue}</span>
       </div>
     );
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-full max-w-4xl h-auto max-h-[80vh] flex overflow-hidden relative">
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-full max-w-4xl h-auto max-h-[90vh] md:max-h-[80vh] flex flex-col md:flex-row overflow-hidden relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white z-10"
+          className="absolute top-2 right-2 md:top-4 md:right-4 text-gray-400 hover:text-white z-10 bg-black bg-opacity-50 rounded-full p-1"
         >
-          <X size={24} />
+          <X size={20} className="md:w-6 md:h-6" />
         </button>
 
-        <div className="w-1/3 flex-shrink-0 relative">
+        <div className="w-full md:w-1/3 h-48 md:h-auto flex-shrink-0 relative">
           <Image
             src={posterUrl}
             alt={title}
             fill
             style={{ objectFit: 'cover' }}
-            className="rounded-l-lg"
+            className="rounded-t-lg md:rounded-l-lg md:rounded-t-none"
             onError={(e) => {
               console.error(`海报图片加载失败 (第${fallbackIndex + 1}个URL):`, posterUrl, e);
               // 尝试下一个fallback URL
@@ -161,17 +161,17 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
           />
         </div>
 
-        <div className="w-2/3 p-8 flex flex-col justify-between overflow-y-auto">
+        <div className="w-full md:w-2/3 p-4 md:p-8 flex flex-col justify-between overflow-y-auto">
           <div>
-            <h2 className="text-3xl font-bold text-white mb-6">{doubanDetail?.title || videoDetail?.title || title}</h2>
+            <h2 className="text-xl md:text-3xl font-bold text-white mb-4 md:mb-6">{doubanDetail?.title || videoDetail?.title || title}</h2>
 
             {isLoading && !doubanDetail && !videoDetail ? (
               <div className="flex items-center justify-center h-full">
-                <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+                <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 md:h-12 md:w-12 mb-4"></div>
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 mb-4">
                   {renderDetailItem('年份', doubanDetail?.year || videoDetail?.year)}
                   {renderDetailItem('豆瓣评分', doubanDetail?.rate)}
                   {renderDetailItem('类型', doubanDetail?.genres || videoDetail?.type_name)}
@@ -180,17 +180,17 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
                   {videoDetail?.source_name && renderDetailItem('来源', videoDetail.source_name)}
                 </div>
 
-                <h3 className="text-lg font-semibold text-white mt-6 mb-2">简介</h3>
-                <p className="text-gray-300 text-sm leading-relaxed max-h-48 overflow-y-auto">
+                <h3 className="text-base md:text-lg font-semibold text-white mt-4 md:mt-6 mb-2">简介</h3>
+                <p className="text-gray-300 text-sm leading-relaxed max-h-32 md:max-h-48 overflow-y-auto">
                   {doubanDetail?.plot_summary || videoDetail?.desc || '暂无简介信息'}
                 </p>
               </>
             )}
           </div>
 
-          <div className="mt-8">
+          <div className="mt-4 md:mt-8">
             {(doubanDetail || videoDetail) && !isLoading && (
-              <div className="w-full mb-4">
+              <div className="w-full mb-3 md:mb-4">
                 <div className="flex justify-between text-xs text-gray-400 mb-1">
                   <span>{countdown}s 后自动播放</span>
                   <span>{Math.round(progress)}%</span>
@@ -203,16 +203,16 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
                 </div>
               </div>
             )}
-            <div className="flex space-x-4">
+            <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
               <button
                 onClick={onPlay}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
+                className="flex-1 bg-blue-600 text-white py-2 md:py-3 rounded-lg hover:bg-blue-700 transition text-sm md:text-base"
               >
                 立即播放
               </button>
               <button
                 onClick={onClose}
-                className="flex-1 bg-gray-700 text-white py-3 rounded-lg hover:bg-gray-600 transition"
+                className="flex-1 bg-gray-700 text-white py-2 md:py-3 rounded-lg hover:bg-gray-600 transition text-sm md:text-base"
               >
                 取消
               </button>

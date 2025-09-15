@@ -337,10 +337,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       setTimeout(() => {
         if (searchResult.success && searchResult.results.length > 0) {
           // 跳转到播放器
-          const firstResult = searchResult.results[0];
-          if (firstResult.id && firstResult.source) {
-            window.open(`/play/${firstResult.source}/${firstResult.id}`, '_blank');
-          }
+          navigateToPlay();
         }
       }, 5000);
     } else {
@@ -358,7 +355,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         setTimeout(() => {
           const firstResult = searchResult.results[0];
           if (firstResult.id && firstResult.source) {
-            window.open(`/play/${firstResult.source}/${firstResult.id}`, '_blank');
+            navigateToPlay();
           }
         }, 5000);
       } else {
