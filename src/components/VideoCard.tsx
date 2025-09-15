@@ -674,7 +674,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       >
         {/* 海报容器 */}
         <div
-          className={`relative aspect-[3/4] overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-800 transition-all duration-300 ease-in-out group-hover:shadow-lg group-hover:shadow-black/20 dark:group-hover:shadow-black/20 ${origin === 'live' ? 'ring-1 ring-gray-300/80 dark:ring-gray-600/80' : ''} ${isSearchingDetail ? 'opacity-75' : ''}`}
+          className={`relative aspect-[3/4] overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-800 transition-all duration-300 ease-in-out group-hover:shadow-lg group-hover:shadow-black/20 dark:group-hover:shadow-black/20 ${origin === 'live' ? 'ring-1 ring-gray-300/80 dark:ring-gray-600/80' : ''}`}
           style={{
             WebkitUserSelect: 'none',
             userSelect: 'none',
