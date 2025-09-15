@@ -27,9 +27,9 @@ import { useLongPress } from '@/hooks/useLongPress';
 import { getDoubanDetails } from '@/lib/douban.client';
 import { ImagePlaceholder } from '@/components/ImagePlaceholder';
 import MobileActionSheet from '@/components/MobileActionSheet';
-import DoubanDetailModal from './DoubanDetailModal';
+import CombinedDetailModal from './CombinedDetailModal';
 import VideoDetailPreview from '@/components/VideoDetailPreview';
-import { SearchResult } from '@/lib/types';
+import { SearchResult, DoubanDetail } from '@/lib/types';
 
 export interface VideoCardProps {
   id?: string;
@@ -91,8 +91,10 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const [showDetailPreview, setShowDetailPreview] = useState(false);
   const [previewDetail, setPreviewDetail] = useState<SearchResult | null>(null);
   const [isSearchingDetail, setIsSearchingDetail] = useState(false);
-  const [showDoubanDetail, setShowDoubanDetail] = useState(false);
-  const [doubanDetail, setDoubanDetail] = useState<any | null>(null);
+  const [showCombinedModal, setShowCombinedModal] = useState(false);
+  const [doubanDetail, setDoubanDetail] = useState<DoubanDetail | null>(null);
+  const [videoDetail, setVideoDetail] = useState<SearchResult | null>(null);
+  const [isLoadingModal, setIsLoadingModal] = useState(false);
 
   // 可外部修改的可控字段
   const [dynamicEpisodes, setDynamicEpisodes] = useState<number | undefined>(
@@ -267,18 +269,40 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   ]);
 
   const handleDoubanClick = useCallback(async () => {
+    // 立即显示模态框和加载状态
+    setIsLoading(true);
+    setShowCombinedModal(true);
+    setIsLoadingModal(true);
+    setDoubanDetail(null);
+    setVideoDetail(null);
+
+    // 并行请求豆瓣详情和搜索详情
+    const promises = [];
+    
     if (actualDoubanId) {
-      const details = await getDoubanDetails(actualDoubanId.toString());
-      if (details.code === 200 && details.data) {
-        setDoubanDetail(details.data);
-        setShowDoubanDetail(true);
-      } else {
-        navigateToPlay();
-      }
-    } else {
-      navigateToPlay();
+      promises.push(
+        getDoubanDetails(actualDoubanId.toString())
+          .then(details => {
+            if (details.code === 200 && details.data) {
+              setDoubanDetail(details.data);
+            }
+          })
+          .catch(error => console.error('获取豆瓣详情失败:', error))
+      );
     }
-  }, [actualDoubanId, navigateToPlay]);
+
+    // 同时搜索视频源详情
+    promises.push(
+      searchFirstSourceDetail()
+        .catch(error => console.error('搜索视频源失败:', error))
+    );
+
+    // 等待所有请求完成
+    await Promise.allSettled(promises);
+    
+    setIsLoadingModal(false);
+    setIsLoading(false);
+  }, [actualDoubanId, searchFirstSourceDetail]);
 
   // 搜索采集站详情，实现fallback机制
   const searchFirstSourceDetail = useCallback(async () => {
@@ -308,8 +332,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
               const detailData = await detailResponse.json();
               // 检查详情数据是否有效（有播放链接）
               if (detailData && detailData.episodes && detailData.episodes.length > 0) {
-                setPreviewDetail(detailData);
-                setShowDetailPreview(true);
+                setVideoDetail(detailData);
                 foundValidDetail = true;
                 break;
               }
@@ -323,8 +346,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         
         // 如果所有源都没有有效详情，使用第一个搜索结果作为预览数据
         if (!foundValidDetail) {
-          setPreviewDetail(data.results[0]);
-          setShowDetailPreview(true);
+          setVideoDetail(data.results[0]);
         }
       } else {
         // 如果没有搜索结果，直接跳转到播放页面
@@ -345,10 +367,39 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     if (from === 'douban') {
       handleDoubanClick();
     } else if (isAggregate && !actualSource && !actualId) {
-      // 如果是聚合搜索且没有具体的source和id（即搜索源状态），先展示资源站详情
-      // 添加点击反馈动画
+      // 如果是聚合搜索且没有具体的source和id（即搜索源状态），使用新的统一模态框
       setIsLoading(true);
-      searchFirstSourceDetail();
+      setShowCombinedModal(true);
+      setIsLoadingModal(true);
+      setDoubanDetail(null);
+      setVideoDetail(null);
+      
+      // 并行请求豆瓣详情和搜索详情
+      const promises = [];
+      
+      if (actualDoubanId) {
+        promises.push(
+          getDoubanDetails(actualDoubanId.toString())
+            .then(details => {
+              if (details.code === 200 && details.data) {
+                setDoubanDetail(details.data);
+              }
+            })
+            .catch(error => console.error('获取豆瓣详情失败:', error))
+        );
+      }
+
+      // 搜索视频源详情
+      promises.push(
+        searchFirstSourceDetail()
+          .catch(error => console.error('搜索视频源失败:', error))
+      );
+
+      // 等待所有请求完成
+      Promise.allSettled(promises).then(() => {
+        setIsLoadingModal(false);
+        setIsLoading(false);
+      });
     } else {
       // 其他情况直接跳转
       navigateToPlay();
@@ -358,6 +409,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     isAggregate,
     actualSource,
     actualId,
+    actualDoubanId,
     searchFirstSourceDetail,
     navigateToPlay,
     handleDoubanClick,
@@ -725,7 +777,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                 return false;
               }}
             >
-              {isSearchingDetail ? (
+              {(isSearchingDetail || isLoading) ? (
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
                 </div>
@@ -1177,19 +1229,26 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         }}
         duration={5000}
       />
-      <DoubanDetailModal
-        detail={doubanDetail}
-        isVisible={showDoubanDetail}
+      <CombinedDetailModal
+        isOpen={showCombinedModal}
         onClose={() => {
-          setShowDoubanDetail(false);
+          setShowCombinedModal(false);
           setDoubanDetail(null);
+          setVideoDetail(null);
+          setIsLoadingModal(false);
         }}
-        onTimeout={() => {
-          setShowDoubanDetail(false);
+        onPlay={() => {
+          setShowCombinedModal(false);
           setDoubanDetail(null);
+          setVideoDetail(null);
+          setIsLoadingModal(false);
           navigateToPlay();
         }}
-        duration={5000}
+        doubanDetail={doubanDetail}
+        videoDetail={videoDetail}
+        isLoading={isLoadingModal}
+        poster={actualPoster}
+        title={actualTitle}
       />
     </>
   );
