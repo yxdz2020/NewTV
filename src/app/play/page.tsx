@@ -83,7 +83,7 @@ function PlayPageClient() {
   // -----------------------------------------------------------------------------
   // 状态变量（State）
   // -----------------------------------------------------------------------------
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState<
     'searching' | 'preferring' | 'fetching' | 'ready'
   >('searching');
@@ -1315,16 +1315,9 @@ function PlayPageClient() {
     const initAll = async () => {
       if (!currentSource && !currentId && !videoTitle && !searchTitle) {
         setError('缺少必要参数');
-        setLoading(false);
         return;
       }
-      setLoading(true);
-      setLoadingStage(currentSource && currentId ? 'fetching' : 'searching');
-      setLoadingMessage(
-        currentSource && currentId
-          ? '🎬 正在获取视频详情...'
-          : '🔍 正在搜索播放源...'
-      );
+
 
       let sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
       if (
@@ -1338,7 +1331,6 @@ function PlayPageClient() {
       }
       if (sourcesInfo.length === 0) {
         setError('未找到匹配结果');
-        setLoading(false);
         return;
       }
 
@@ -1352,7 +1344,6 @@ function PlayPageClient() {
           detailData = target;
         } else {
           setError('未找到匹配结果');
-          setLoading(false);
           return;
         }
       }
@@ -1362,8 +1353,7 @@ function PlayPageClient() {
         (!currentSource || !currentId || needPreferRef.current) &&
         optimizationEnabled
       ) {
-        setLoadingStage('preferring');
-        setLoadingMessage('⚡ 正在优选最佳播放源...');
+
 
         detailData = await preferBestSource(sourcesInfo);
       }
@@ -1392,8 +1382,7 @@ function PlayPageClient() {
       newUrl.searchParams.delete('prefer');
       window.history.replaceState({}, '', newUrl.toString());
 
-      // 直接结束loading，跳过准备就绪页面
-      setLoading(false);
+
     };
 
     initAll();

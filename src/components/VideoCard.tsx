@@ -282,7 +282,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
 
     // 同时执行豆瓣API和搜索API请求
     const promises = [];
-    
+
     // 豆瓣API请求
     let doubanPromise = null;
     if (actualDoubanId) {
@@ -300,7 +300,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         });
       promises.push(doubanPromise);
     }
-    
+
     // 搜索API请求（后台执行）
     const searchPromise = fetch(`/api/search?q=${encodeURIComponent(actualTitle.trim())}`)
       .then(response => {
@@ -318,23 +318,23 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         return { success: false, results: [] };
       });
     promises.push(searchPromise);
-    
+
     // 等待所有请求完成
     const [doubanResult, searchResult] = await Promise.all(promises) as [
       { success: boolean; data?: DoubanDetail } | null,
       { success: boolean; results: SearchResult[] }
     ];
-    
+
     // 处理结果
     if (doubanResult && doubanResult.success) {
       // 豆瓣API成功：显示豆瓣信息，5秒后自动播放
       setIsLoadingModal(false);
-      
+
       // 如果搜索也成功，设置搜索结果供后续使用
       if (searchResult.success && searchResult.results.length > 0) {
         setVideoDetail(searchResult.results[0]);
       }
-      
+
       // 5秒后自动播放
       autoPlayTimerRef.current = setTimeout(() => {
         if (searchResult.success && searchResult.results.length > 0) {
@@ -346,13 +346,13 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       // 豆瓣API失败：使用搜索结果作为备用方案
       if (searchResult.success && searchResult.results.length > 0) {
         // 查找匹配title且有desc的结果
-        const matchedResult = searchResult.results.find(result => 
+        const matchedResult = searchResult.results.find(result =>
           result.title && result.title.includes(actualTitle.trim()) && result.desc
         ) || searchResult.results.find(result => result.desc) || searchResult.results[0];
-        
+
         setVideoDetail(matchedResult);
         setIsLoadingModal(false);
-        
+
         // 5秒后跳转到第一个源播放
         autoPlayTimerRef.current = setTimeout(() => {
           const firstResult = searchResult.results[0];
@@ -365,7 +365,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         setIsLoadingModal(false);
       }
     }
-    
+
     setIsLoading(false);
   }, [actualDoubanId, actualTitle]);
 

@@ -154,7 +154,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-2 md:p-4"
       onClick={(e) => {
         // 只有点击背景时才关闭弹窗
@@ -269,19 +269,19 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
               </button>
               <button
                 onClick={() => {
-              // 清除倒计时定时器
-              if (timerRef.current) {
-                clearInterval(timerRef.current);
-                timerRef.current = null;
-              }
-              if (progressTimerRef.current) {
-                clearInterval(progressTimerRef.current);
-                progressTimerRef.current = null;
-              }
-              // 清除VideoCard中的自动播放定时器
-              onClearAutoPlayTimer?.();
-              onClose();
-            }}
+                  // 清除倒计时定时器
+                  if (timerRef.current) {
+                    clearInterval(timerRef.current);
+                    timerRef.current = null;
+                  }
+                  if (progressTimerRef.current) {
+                    clearInterval(progressTimerRef.current);
+                    progressTimerRef.current = null;
+                  }
+                  // 清除VideoCard中的自动播放定时器
+                  onClearAutoPlayTimer?.();
+                  onClose();
+                }}
                 className="flex-1 bg-gray-700 text-white py-2 md:py-3 rounded-lg hover:bg-gray-600 transition text-sm md:text-base"
               >
                 取消
