@@ -8,6 +8,7 @@ interface CombinedDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   onPlay: () => void;
+  onClearAutoPlayTimer?: () => void;
   doubanDetail: DoubanDetail | null;
   videoDetail: SearchResult | null;
   isLoading: boolean;
@@ -19,6 +20,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
   isOpen,
   onClose,
   onPlay,
+  onClearAutoPlayTimer,
   doubanDetail,
   videoDetail,
   isLoading,
@@ -152,7 +154,26 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-2 md:p-4">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-2 md:p-4"
+      onClick={(e) => {
+        // 只有点击背景时才关闭弹窗
+        if (e.target === e.currentTarget) {
+          // 清除倒计时定时器
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          if (progressTimerRef.current) {
+            clearInterval(progressTimerRef.current);
+            progressTimerRef.current = null;
+          }
+          // 清除VideoCard中的自动播放定时器
+          onClearAutoPlayTimer?.();
+          onClose();
+        }
+      }}
+    >
       <div className="bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-full max-w-4xl h-auto max-h-[85vh] md:max-h-[80vh] flex flex-col md:flex-row overflow-hidden relative">
         <button
           onClick={() => {
@@ -165,6 +186,8 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
               clearInterval(progressTimerRef.current);
               progressTimerRef.current = null;
             }
+            // 清除VideoCard中的自动播放定时器
+            onClearAutoPlayTimer?.();
             onClose();
           }}
           className="absolute top-2 right-2 md:top-4 md:right-4 text-gray-400 hover:text-white z-20 bg-black bg-opacity-50 rounded-full p-1"
@@ -246,17 +269,19 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
               </button>
               <button
                 onClick={() => {
-                  // 清除倒计时定时器
-                  if (timerRef.current) {
-                    clearInterval(timerRef.current);
-                    timerRef.current = null;
-                  }
-                  if (progressTimerRef.current) {
-                    clearInterval(progressTimerRef.current);
-                    progressTimerRef.current = null;
-                  }
-                  onClose();
-                }}
+              // 清除倒计时定时器
+              if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+              }
+              if (progressTimerRef.current) {
+                clearInterval(progressTimerRef.current);
+                progressTimerRef.current = null;
+              }
+              // 清除VideoCard中的自动播放定时器
+              onClearAutoPlayTimer?.();
+              onClose();
+            }}
                 className="flex-1 bg-gray-700 text-white py-2 md:py-3 rounded-lg hover:bg-gray-600 transition text-sm md:text-base"
               >
                 取消

@@ -10,6 +10,7 @@ import React, {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -95,6 +96,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const [doubanDetail, setDoubanDetail] = useState<DoubanDetail | null>(null);
   const [videoDetail, setVideoDetail] = useState<SearchResult | null>(null);
   const [isLoadingModal, setIsLoadingModal] = useState(false);
+  const autoPlayTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 可外部修改的可控字段
   const [dynamicEpisodes, setDynamicEpisodes] = useState<number | undefined>(
@@ -334,7 +336,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       }
       
       // 5秒后自动播放
-      setTimeout(() => {
+      autoPlayTimerRef.current = setTimeout(() => {
         if (searchResult.success && searchResult.results.length > 0) {
           // 跳转到播放器
           navigateToPlay();
@@ -352,7 +354,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         setIsLoadingModal(false);
         
         // 5秒后跳转到第一个源播放
-        setTimeout(() => {
+        autoPlayTimerRef.current = setTimeout(() => {
           const firstResult = searchResult.results[0];
           if (firstResult.id && firstResult.source) {
             navigateToPlay();
@@ -1215,6 +1217,12 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
           setVideoDetail(null);
           setIsLoadingModal(false);
           navigateToPlay();
+        }}
+        onClearAutoPlayTimer={() => {
+          if (autoPlayTimerRef.current) {
+            clearTimeout(autoPlayTimerRef.current);
+            autoPlayTimerRef.current = null;
+          }
         }}
         doubanDetail={doubanDetail}
         videoDetail={videoDetail}
