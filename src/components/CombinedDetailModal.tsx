@@ -174,7 +174,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
         }
       }}
     >
-      <div className="bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-[90vw] max-w-4xl h-[50vh] md:h-[70vh] flex flex-col md:flex-row overflow-hidden relative">
+      <div className="bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-[90vw] max-w-4xl h-[65vh] md:h-[70vh] flex flex-col md:flex-row overflow-hidden relative">
         <button
           onClick={() => {
             // 清除倒计时定时器
@@ -195,7 +195,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
           <X size={20} className="md:w-6 md:h-6" />
         </button>
 
-        <div className="w-full md:w-1/3 h-24 md:h-auto flex-shrink-0 relative z-0">
+        <div className="w-full md:w-1/3 h-32 md:h-auto flex-shrink-0 relative z-0">
           <Image
             src={posterUrl}
             alt={title}
@@ -223,7 +223,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
             <h2 className="text-base md:text-3xl font-bold text-white mb-1 md:mb-6">{doubanDetail?.title || videoDetail?.title || title}</h2>
 
             {isLoading && !doubanDetail && !videoDetail ? (
-              <div className="flex flex-col items-center justify-center h-32 md:h-80">
+              <div className="flex flex-col items-center justify-center h-40 md:h-80">
                 <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 md:h-12 md:w-12 mb-4"></div>
                 <div className="text-white text-sm md:text-base text-center">
                   影片信息获取中，请稍等片刻
@@ -241,7 +241,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
                 </div>
 
                 <h3 className="text-xs md:text-lg font-semibold text-white mt-1 md:mt-6 mb-1">简介</h3>
-                <p className="text-gray-300 text-xs md:text-sm leading-tight md:leading-relaxed max-h-16 md:max-h-48 overflow-y-auto">
+                <p className="text-gray-300 text-xs md:text-sm leading-tight md:leading-relaxed max-h-20 md:max-h-48 overflow-y-auto">
                   {doubanDetail?.plot_summary || videoDetail?.desc || '暂无简介信息'}
                 </p>
               </>
