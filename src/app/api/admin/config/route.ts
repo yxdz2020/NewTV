@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
       YouTubeChannels: partialConfig.YouTubeChannels !== undefined 
         ? partialConfig.YouTubeChannels 
         : currentConfig.YouTubeChannels || [],
-    };}]}}
+    };
 
     // 保存新配置
     await db.saveAdminConfig(newConfig);
