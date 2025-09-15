@@ -29,7 +29,17 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
   const [progress, setProgress] = useState(0);
 
   const posterUrl = useMemo(() => {
-    const url = doubanDetail?.poster || poster;
+    // 优先使用豆瓣海报，但如果豆瓣海报无效则回退到原始海报
+    const doubanPoster = doubanDetail?.poster;
+    // 检查豆瓣海报是否有效（不为空且不是无效URL）
+    const isDoubanPosterValid = doubanPoster && 
+      doubanPoster.trim() !== '' && 
+      doubanPoster !== 'undefined' && 
+      doubanPoster !== 'null' &&
+      !doubanPoster.includes('default') &&
+      !doubanPoster.includes('placeholder');
+    
+    const url = isDoubanPosterValid ? doubanPoster : poster;
     return processImageUrl(url);
   }, [doubanDetail, poster]);
 
@@ -121,7 +131,6 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
                   {renderDetailItem('制片国家/地区', doubanDetail?.countries)}
                   {renderDetailItem('语言', doubanDetail?.languages)}
                   {videoDetail?.source_name && renderDetailItem('来源', videoDetail.source_name)}
-                  {videoDetail?.episodes && renderDetailItem('集数', `共 ${videoDetail.episodes} 集`)}
                 </div>
 
                 <h3 className="text-lg font-semibold text-white mt-6 mb-2">简介</h3>

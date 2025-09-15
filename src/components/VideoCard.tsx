@@ -300,29 +300,29 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     setDoubanDetail(null);
     setVideoDetail(null);
 
-    // 并行请求豆瓣详情和搜索详情
-    const promises = [];
+    let doubanSuccess = false;
     
+    // 先尝试获取豆瓣详情
     if (actualDoubanId) {
-      promises.push(
-        getDoubanDetails(actualDoubanId.toString())
-          .then(details => {
-            if (details.code === 200 && details.data) {
-              setDoubanDetail(details.data);
-            }
-          })
-          .catch(error => console.error('获取豆瓣详情失败:', error))
-      );
+      try {
+        const details = await getDoubanDetails(actualDoubanId.toString());
+        if (details.code === 200 && details.data) {
+          setDoubanDetail(details.data);
+          doubanSuccess = true;
+        }
+      } catch (error) {
+        console.error('获取豆瓣详情失败:', error);
+      }
     }
 
-    // 同时搜索视频源详情
-    promises.push(
-      searchFirstSourceDetail()
-        .catch(error => console.error('搜索视频源失败:', error))
-    );
-
-    // 等待所有请求完成
-    await Promise.allSettled(promises);
+    // 只有豆瓣请求失败时才搜索采集站详情
+    if (!doubanSuccess) {
+      try {
+        await searchFirstSourceDetail();
+      } catch (error) {
+        console.error('搜索视频源失败:', error);
+      }
+    }
     
     setIsLoadingModal(false);
     setIsLoading(false);
