@@ -279,6 +279,11 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
 
 
   const handleDoubanClick = useCallback(async () => {
+    // 防止重复调用
+    if (isLoading || showCombinedModal) {
+      return;
+    }
+    
     // 立即显示模态框和加载状态
     setIsLoading(true);
     setShowCombinedModal(true);
