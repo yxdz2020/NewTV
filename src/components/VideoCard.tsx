@@ -369,6 +369,16 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     setIsLoading(false);
   }, [actualDoubanId, actualTitle]);
 
+  // 组件卸载时清理自动播放计时器
+  useEffect(() => {
+    return () => {
+      if (autoPlayTimerRef.current) {
+        clearTimeout(autoPlayTimerRef.current);
+        autoPlayTimerRef.current = null;
+      }
+    };
+  }, []);
+
   const handleClick = useCallback(() => {
     // 如果是豆瓣来源，展示豆瓣详情
     if (from === 'douban') {
