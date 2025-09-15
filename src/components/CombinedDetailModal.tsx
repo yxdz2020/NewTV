@@ -262,7 +262,20 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
             )}
             <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
               <button
-                onClick={onPlay}
+                onClick={() => {
+                  // 清除倒计时定时器
+                  if (timerRef.current) {
+                    clearInterval(timerRef.current);
+                    timerRef.current = null;
+                  }
+                  if (progressTimerRef.current) {
+                    clearInterval(progressTimerRef.current);
+                    progressTimerRef.current = null;
+                  }
+                  // 清除VideoCard中的自动播放定时器
+                  onClearAutoPlayTimer?.();
+                  onPlay();
+                }}
                 className="flex-1 bg-blue-600 text-white py-2 md:py-3 rounded-lg hover:bg-blue-700 transition text-sm md:text-base"
               >
                 立即播放
