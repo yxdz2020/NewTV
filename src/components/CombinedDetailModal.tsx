@@ -129,16 +129,16 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-full max-w-4xl h-auto max-h-[90vh] md:max-h-[80vh] flex flex-col md:flex-row overflow-hidden relative">
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-2 md:p-4">
+      <div className="bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-full max-w-4xl h-auto max-h-[85vh] md:max-h-[80vh] flex flex-col md:flex-row overflow-hidden relative">
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 md:top-4 md:right-4 text-gray-400 hover:text-white z-10 bg-black bg-opacity-50 rounded-full p-1"
+          className="absolute top-2 right-2 md:top-4 md:right-4 text-gray-400 hover:text-white z-20 bg-black bg-opacity-50 rounded-full p-1"
         >
           <X size={20} className="md:w-6 md:h-6" />
         </button>
 
-        <div className="w-full md:w-1/3 h-48 md:h-auto flex-shrink-0 relative">
+        <div className="w-full md:w-1/3 h-32 md:h-auto flex-shrink-0 relative z-0">
           <Image
             src={posterUrl}
             alt={title}
@@ -161,9 +161,9 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
           />
         </div>
 
-        <div className="w-full md:w-2/3 p-4 md:p-8 flex flex-col justify-between overflow-y-auto">
+        <div className="w-full md:w-2/3 p-3 md:p-8 flex flex-col justify-between overflow-y-auto relative z-10">
           <div>
-            <h2 className="text-xl md:text-3xl font-bold text-white mb-4 md:mb-6">{doubanDetail?.title || videoDetail?.title || title}</h2>
+            <h2 className="text-lg md:text-3xl font-bold text-white mb-2 md:mb-6">{doubanDetail?.title || videoDetail?.title || title}</h2>
 
             {isLoading && !doubanDetail && !videoDetail ? (
               <div className="flex items-center justify-center h-full">
@@ -171,7 +171,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 md:gap-y-2 mb-2 md:mb-4">
                   {renderDetailItem('年份', doubanDetail?.year || videoDetail?.year)}
                   {renderDetailItem('豆瓣评分', doubanDetail?.rate)}
                   {renderDetailItem('类型', doubanDetail?.genres || videoDetail?.type_name)}
@@ -180,17 +180,17 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
                   {videoDetail?.source_name && renderDetailItem('来源', videoDetail.source_name)}
                 </div>
 
-                <h3 className="text-base md:text-lg font-semibold text-white mt-4 md:mt-6 mb-2">简介</h3>
-                <p className="text-gray-300 text-sm leading-relaxed max-h-32 md:max-h-48 overflow-y-auto">
+                <h3 className="text-sm md:text-lg font-semibold text-white mt-2 md:mt-6 mb-1">简介</h3>
+                <p className="text-gray-300 text-xs md:text-sm leading-tight md:leading-relaxed max-h-20 md:max-h-48 overflow-y-auto">
                   {doubanDetail?.plot_summary || videoDetail?.desc || '暂无简介信息'}
                 </p>
               </>
             )}
           </div>
 
-          <div className="mt-4 md:mt-8">
+          <div className="mt-2 md:mt-8">
             {(doubanDetail || videoDetail) && !isLoading && (
-              <div className="w-full mb-3 md:mb-4">
+              <div className="w-full mb-2 md:mb-4">
                 <div className="flex justify-between text-xs text-gray-400 mb-1">
                   <span>{countdown}s 后自动播放</span>
                   <span>{Math.round(progress)}%</span>
