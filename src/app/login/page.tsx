@@ -187,7 +187,7 @@ function LoginPageClient() {
               <button
                 type='button'
                 onClick={() => router.push('/register')}
-                className='ml-2 text-green-600 dark:text-green-400 text-sm font-medium hover:underline'
+                className='ml-2 text-blue-600 dark:text-blue-400 text-sm font-medium hover:underline'
               >
                 立即注册
               </button>

@@ -315,7 +315,7 @@ function RegisterPageClient() {
             <button
               type='button'
               onClick={() => router.push('/login')}
-              className='ml-2 text-green-600 dark:text-green-400 text-sm font-medium hover:underline'
+              className='ml-2 text-blue-600 dark:text-blue-400 text-sm font-medium hover:underline'
             >
               立即登录
             </button>
