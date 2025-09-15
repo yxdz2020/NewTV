@@ -174,7 +174,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
         }
       }}
     >
-      <div className="bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-[95vw] max-w-4xl h-[90vh] md:h-[70vh] flex flex-col md:flex-row overflow-hidden relative">
+      <div className="bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-[90vw] max-w-4xl h-[50vh] md:h-[70vh] flex flex-col md:flex-row overflow-hidden relative">
         <button
           onClick={() => {
             // 清除倒计时定时器
@@ -195,7 +195,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
           <X size={20} className="md:w-6 md:h-6" />
         </button>
 
-        <div className="w-full md:w-1/3 h-40 md:h-auto flex-shrink-0 relative z-0">
+        <div className="w-full md:w-1/3 h-24 md:h-auto flex-shrink-0 relative z-0">
           <Image
             src={posterUrl}
             alt={title}
@@ -218,12 +218,12 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
           />
         </div>
 
-        <div className="w-full md:w-2/3 p-4 md:p-8 flex flex-col justify-between overflow-y-auto relative z-10">
+        <div className="w-full md:w-2/3 p-3 md:p-8 flex flex-col justify-between overflow-y-auto relative z-10">
           <div>
-            <h2 className="text-lg md:text-3xl font-bold text-white mb-2 md:mb-6">{doubanDetail?.title || videoDetail?.title || title}</h2>
+            <h2 className="text-base md:text-3xl font-bold text-white mb-1 md:mb-6">{doubanDetail?.title || videoDetail?.title || title}</h2>
 
             {isLoading && !doubanDetail && !videoDetail ? (
-              <div className="flex flex-col items-center justify-center h-64 md:h-80">
+              <div className="flex flex-col items-center justify-center h-32 md:h-80">
                 <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 md:h-12 md:w-12 mb-4"></div>
                 <div className="text-white text-sm md:text-base text-center">
                   影片信息获取中，请稍等片刻
@@ -231,7 +231,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 md:gap-y-2 mb-2 md:mb-4">
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-x-2 gap-y-1 md:gap-y-2 mb-2 md:mb-4 text-xs md:text-sm">
                   {renderDetailItem('年份', doubanDetail?.year || videoDetail?.year)}
                   {renderDetailItem('豆瓣评分', doubanDetail?.rate)}
                   {renderDetailItem('类型', doubanDetail?.genres || videoDetail?.type_name)}
@@ -240,15 +240,15 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
                   {videoDetail?.source_name && renderDetailItem('来源', videoDetail.source_name)}
                 </div>
 
-                <h3 className="text-sm md:text-lg font-semibold text-white mt-2 md:mt-6 mb-1">简介</h3>
-                <p className="text-gray-300 text-xs md:text-sm leading-tight md:leading-relaxed max-h-32 md:max-h-48 overflow-y-auto">
+                <h3 className="text-xs md:text-lg font-semibold text-white mt-1 md:mt-6 mb-1">简介</h3>
+                <p className="text-gray-300 text-xs md:text-sm leading-tight md:leading-relaxed max-h-16 md:max-h-48 overflow-y-auto">
                   {doubanDetail?.plot_summary || videoDetail?.desc || '暂无简介信息'}
                 </p>
               </>
             )}
           </div>
 
-          <div className="mt-2 md:mt-8">
+          <div className="mt-1 md:mt-8">
             {(doubanDetail || videoDetail) && !isLoading && (
               <div className="w-full mb-2 md:mb-4">
                 <div className="flex justify-between text-xs text-gray-400 mb-1">
