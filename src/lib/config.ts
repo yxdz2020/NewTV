@@ -384,6 +384,11 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
       customModel: '',
     };
   }
+  
+  // 确保 YouTubeChannels 字段存在
+  if (!(adminConfig as any).YouTubeChannels || !Array.isArray((adminConfig as any).YouTubeChannels)) {
+    (adminConfig as any).YouTubeChannels = [];
+  }
 
   // 站长变更自检
   const ownerUser = process.env.USERNAME;
