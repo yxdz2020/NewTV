@@ -90,7 +90,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const [searchFavorited, setSearchFavorited] = useState<boolean | null>(null); // 搜索结果的收藏状态
   const [showDetailPreview, setShowDetailPreview] = useState(false);
   const [previewDetail, setPreviewDetail] = useState<SearchResult | null>(null);
-  const [isSearchingDetail, setIsSearchingDetail] = useState(false);
+
   const [showCombinedModal, setShowCombinedModal] = useState(false);
   const [doubanDetail, setDoubanDetail] = useState<DoubanDetail | null>(null);
   const [videoDetail, setVideoDetail] = useState<SearchResult | null>(null);
@@ -268,29 +268,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     actualDoubanId,
   ]);
 
-  // 搜索采集站详情，实现fallback机制
-  const searchFirstSourceDetail = useCallback(async () => {
-    if (isSearchingDetail) return;
-    
-    setIsSearchingDetail(true);
-    try {
-      const response = await fetch(
-        `/api/search?q=${encodeURIComponent(actualTitle.trim())}`
-      );
-      if (!response.ok) {
-        throw new Error('搜索失败');
-      }
-      const data = await response.json();
-      
-      if (data.results && data.results.length > 0) {
-        setVideoDetail(data.results[0]);
-      }
-    } catch (error) {
-      console.error('搜索失败:', error);
-    } finally {
-      setIsSearchingDetail(false);
-    }
-  }, [actualTitle, isSearchingDetail]);
+
 
   const handleDoubanClick = useCallback(async () => {
     // 立即显示模态框和加载状态
@@ -300,72 +278,102 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     setDoubanDetail(null);
     setVideoDetail(null);
 
-    let doubanSuccess = false;
+    // 同时执行豆瓣API和搜索API请求
+    const promises = [];
     
-    // 先尝试获取豆瓣详情
+    // 豆瓣API请求
+    let doubanPromise = null;
     if (actualDoubanId) {
-      try {
-        const details = await getDoubanDetails(actualDoubanId.toString());
-        if (details.code === 200 && details.data) {
-          setDoubanDetail(details.data);
-          doubanSuccess = true;
-        }
-      } catch (error) {
-        console.error('获取豆瓣详情失败:', error);
-      }
+      doubanPromise = getDoubanDetails(actualDoubanId.toString())
+        .then(details => {
+          if (details.code === 200 && details.data) {
+            setDoubanDetail(details.data);
+            return { success: true, data: details.data };
+          }
+          return { success: false, data: null };
+        })
+        .catch(error => {
+          console.error('获取豆瓣详情失败:', error);
+          return { success: false, data: null };
+        });
+      promises.push(doubanPromise);
     }
-
-    // 只有豆瓣请求失败时才搜索采集站详情
-    if (!doubanSuccess) {
-      try {
-        await searchFirstSourceDetail();
-      } catch (error) {
+    
+    // 搜索API请求（后台执行）
+    const searchPromise = fetch(`/api/search?q=${encodeURIComponent(actualTitle.trim())}`)
+      .then(response => {
+        if (!response.ok) throw new Error('搜索失败');
+        return response.json();
+      })
+      .then(data => {
+        if (data.results && data.results.length > 0) {
+          return { success: true, results: data.results };
+        }
+        return { success: false, results: [] };
+      })
+      .catch(error => {
         console.error('搜索视频源失败:', error);
+        return { success: false, results: [] };
+      });
+    promises.push(searchPromise);
+    
+    // 等待所有请求完成
+    const [doubanResult, searchResult] = await Promise.all(promises);
+    
+    // 处理结果
+    if (doubanResult && doubanResult.success) {
+      // 豆瓣API成功：显示豆瓣信息，5秒后自动播放
+      setIsLoadingModal(false);
+      
+      // 如果搜索也成功，设置搜索结果供后续使用
+      if (searchResult.success && searchResult.results.length > 0) {
+        setVideoDetail(searchResult.results[0]);
+      }
+      
+      // 5秒后自动播放
+      setTimeout(() => {
+        if (searchResult.success && searchResult.results.length > 0) {
+          // 跳转到播放器
+          const firstResult = searchResult.results[0];
+          if (firstResult.id && firstResult.source) {
+            window.open(`/play/${firstResult.source}/${firstResult.id}`, '_blank');
+          }
+        }
+      }, 5000);
+    } else {
+      // 豆瓣API失败：使用搜索结果作为备用方案
+      if (searchResult.success && searchResult.results.length > 0) {
+        // 查找匹配title且有desc的结果
+        const matchedResult = searchResult.results.find(result => 
+          result.title && result.title.includes(actualTitle.trim()) && result.desc
+        ) || searchResult.results.find(result => result.desc) || searchResult.results[0];
+        
+        setVideoDetail(matchedResult);
+        setIsLoadingModal(false);
+        
+        // 5秒后跳转到第一个源播放
+        setTimeout(() => {
+          const firstResult = searchResult.results[0];
+          if (firstResult.id && firstResult.source) {
+            window.open(`/play/${firstResult.source}/${firstResult.id}`, '_blank');
+          }
+        }, 5000);
+      } else {
+        // 搜索也失败
+        setIsLoadingModal(false);
       }
     }
     
-    setIsLoadingModal(false);
     setIsLoading(false);
-  }, [actualDoubanId, searchFirstSourceDetail]);
+  }, [actualDoubanId, actualTitle]);
 
   const handleClick = useCallback(() => {
     // 如果是豆瓣来源，展示豆瓣详情
     if (from === 'douban') {
       handleDoubanClick();
     } else if (isAggregate && !actualSource && !actualId) {
-      // 如果是聚合搜索且没有具体的source和id（即搜索源状态），使用新的统一模态框
-      setIsLoading(true);
-      setShowCombinedModal(true);
-      setIsLoadingModal(true);
-      setDoubanDetail(null);
-      setVideoDetail(null);
-      
-      // 并行请求豆瓣详情和搜索详情
-      const promises = [];
-      
-      if (actualDoubanId) {
-        promises.push(
-          getDoubanDetails(actualDoubanId.toString())
-            .then(details => {
-              if (details.code === 200 && details.data) {
-                setDoubanDetail(details.data);
-              }
-            })
-            .catch(error => console.error('获取豆瓣详情失败:', error))
-        );
-      }
-
-      // 搜索视频源详情
-      promises.push(
-        searchFirstSourceDetail()
-          .catch(error => console.error('搜索视频源失败:', error))
-      );
-
-      // 等待所有请求完成
-      Promise.allSettled(promises).then(() => {
-        setIsLoadingModal(false);
-        setIsLoading(false);
-      });
+      // 如果是聚合搜索且没有具体的source和id（即搜索源状态），使用统一的处理逻辑
+      handleDoubanClick();
     } else {
       // 其他情况直接跳转
       navigateToPlay();
@@ -375,10 +383,8 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     isAggregate,
     actualSource,
     actualId,
-    actualDoubanId,
-    searchFirstSourceDetail,
-    navigateToPlay,
     handleDoubanClick,
+    navigateToPlay,
   ]);
 
   // 新标签页播放处理函数

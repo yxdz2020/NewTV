@@ -83,7 +83,8 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
       return;
     }
 
-    if (doubanDetail && !isLoading) {
+    // 当有豆瓣数据或搜索数据且不在加载状态时启动倒计时
+    if ((doubanDetail || videoDetail) && !isLoading) {
       const timer = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
@@ -110,7 +111,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
         clearInterval(progressInterval);
       };
     }
-  }, [isOpen, doubanDetail, isLoading, onPlay]);
+  }, [isOpen, doubanDetail, videoDetail, isLoading, onPlay]);
 
   if (!isOpen) {
     return null;
@@ -162,18 +163,18 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
 
         <div className="w-2/3 p-8 flex flex-col justify-between overflow-y-auto">
           <div>
-            <h2 className="text-3xl font-bold text-white mb-6">{doubanDetail?.title || title}</h2>
+            <h2 className="text-3xl font-bold text-white mb-6">{doubanDetail?.title || videoDetail?.title || title}</h2>
 
-            {isLoading && !doubanDetail ? (
+            {isLoading && !doubanDetail && !videoDetail ? (
               <div className="flex items-center justify-center h-full">
                 <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
               </div>
             ) : (
               <>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4">
-                  {renderDetailItem('年份', doubanDetail?.year)}
+                  {renderDetailItem('年份', doubanDetail?.year || videoDetail?.year)}
                   {renderDetailItem('豆瓣评分', doubanDetail?.rate)}
-                  {renderDetailItem('类型', doubanDetail?.genres)}
+                  {renderDetailItem('类型', doubanDetail?.genres || videoDetail?.type)}
                   {renderDetailItem('制片国家/地区', doubanDetail?.countries)}
                   {renderDetailItem('语言', doubanDetail?.languages)}
                   {videoDetail?.source_name && renderDetailItem('来源', videoDetail.source_name)}
@@ -181,14 +182,14 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
 
                 <h3 className="text-lg font-semibold text-white mt-6 mb-2">简介</h3>
                 <p className="text-gray-300 text-sm leading-relaxed max-h-48 overflow-y-auto">
-                  {doubanDetail?.plot_summary}
+                  {doubanDetail?.plot_summary || videoDetail?.desc || '暂无简介信息'}
                 </p>
               </>
             )}
           </div>
 
           <div className="mt-8">
-            {doubanDetail && !isLoading && (
+            {(doubanDetail || videoDetail) && !isLoading && (
               <div className="w-full mb-4">
                 <div className="flex justify-between text-xs text-gray-400 mb-1">
                   <span>{countdown}s 后自动播放</span>
