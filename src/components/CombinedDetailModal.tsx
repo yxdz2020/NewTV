@@ -27,11 +27,12 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
 }) => {
   const [countdown, setCountdown] = useState(5);
   const [progress, setProgress] = useState(0);
+  const [currentPosterUrl, setCurrentPosterUrl] = useState<string>('');
+  const [fallbackIndex, setFallbackIndex] = useState(0);
 
-  const posterUrl = useMemo(() => {
-    // 优先使用豆瓣海报，但如果豆瓣海报无效则回退到原始海报
+  // 创建fallback URL数组
+  const fallbackUrls = useMemo(() => {
     const doubanPoster = doubanDetail?.poster;
-    // 检查豆瓣海报是否有效（不为空且不是无效URL）
     const isDoubanPosterValid = doubanPoster && 
       doubanPoster.trim() !== '' && 
       doubanPoster !== 'undefined' && 
@@ -39,9 +40,41 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
       !doubanPoster.includes('default') &&
       !doubanPoster.includes('placeholder');
     
-    const url = isDoubanPosterValid ? doubanPoster : poster;
-    return processImageUrl(url);
+    const baseUrl = isDoubanPosterValid ? doubanPoster : poster;
+    
+    if (!baseUrl || !baseUrl.includes('doubanio.com')) {
+      return [baseUrl]; // 非豆瓣图片直接返回
+    }
+    
+    // 为豆瓣图片创建多个fallback选项
+    const urls = [
+      // 1. 服务器代理
+      `/api/image-proxy?url=${encodeURIComponent(baseUrl)}`,
+      // 2. img3代理
+      baseUrl.replace(/img\d+\.doubanio\.com/g, 'img3.doubanio.com'),
+      // 3. 腾讯CDN代理
+      baseUrl.replace(/img\d+\.doubanio\.com/g, 'img.doubanio.cmliussss.net'),
+      // 4. 阿里CDN代理
+      baseUrl.replace(/img\d+\.doubanio\.com/g, 'img.doubanio.cmliussss.com'),
+      // 5. 原始URL
+      baseUrl
+    ];
+    
+    console.log('海报URL fallback列表:', urls);
+    return urls;
   }, [doubanDetail, poster]);
+  
+  const posterUrl = useMemo(() => {
+    const url = fallbackUrls[fallbackIndex] || fallbackUrls[0] || poster;
+    console.log(`使用第${fallbackIndex + 1}个fallback URL:`, url);
+    return url;
+  }, [fallbackUrls, fallbackIndex, poster]);
+  
+  // 重置fallback索引当URL列表改变时
+  useEffect(() => {
+    setFallbackIndex(0);
+    setCurrentPosterUrl(fallbackUrls[0] || poster);
+  }, [fallbackUrls, poster]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -108,9 +141,22 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
           <Image
             src={posterUrl}
             alt={title}
-            layout="fill"
-            objectFit="cover"
+            fill
+            style={{ objectFit: 'cover' }}
             className="rounded-l-lg"
+            onError={(e) => {
+              console.error(`海报图片加载失败 (第${fallbackIndex + 1}个URL):`, posterUrl, e);
+              // 尝试下一个fallback URL
+              if (fallbackIndex < fallbackUrls.length - 1) {
+                console.log(`尝试第${fallbackIndex + 2}个fallback URL`);
+                setFallbackIndex(prev => prev + 1);
+              } else {
+                console.error('所有fallback URL都失败了');
+              }
+            }}
+            onLoad={() => {
+              console.log(`海报图片加载成功 (第${fallbackIndex + 1}个URL):`, posterUrl);
+            }}
           />
         </div>
 

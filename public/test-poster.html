@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>海报URL测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .test-image { max-width: 300px; border: 2px solid #ccc; margin: 10px; display: block; }
+        .success { border-color: green; }
+        .error { border-color: red; }
+        .status { font-weight: bold; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>豆瓣海报URL测试</h1>
+    <p>测试URL: https://img2.doubanio.com/view/photo/s_ratio_poster/public/p2923645461.webp</p>
+    
+    <div class="test-section">
+        <h2>1. 原始豆瓣URL:</h2>
+        <div class="status" id="status1">加载中...</div>
+        <img id="img1" src="https://img2.doubanio.com/view/photo/s_ratio_poster/public/p2923645461.webp" 
+             alt="原始豆瓣海报" class="test-image">
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 腾讯CDN代理URL (默认配置):</h2>
+        <div class="status" id="status2">加载中...</div>
+        <img id="img2" src="https://img.doubanio.cmliussss.net/view/photo/s_ratio_poster/public/p2923645461.webp" 
+             alt="腾讯CDN代理豆瓣海报" class="test-image">
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 阿里CDN代理URL:</h2>
+        <div class="status" id="status3">加载中...</div>
+        <img id="img3" src="https://img.doubanio.cmliussss.com/view/photo/s_ratio_poster/public/p2923645461.webp" 
+             alt="阿里CDN代理豆瓣海报" class="test-image">
+    </div>
+    
+    <div class="test-section">
+        <h2>4. img3代理URL:</h2>
+        <div class="status" id="status4">加载中...</div>
+        <img id="img4" src="https://img3.doubanio.com/view/photo/s_ratio_poster/public/p2923645461.webp" 
+             alt="img3代理豆瓣海报" class="test-image">
+    </div>
+    
+    <div class="test-section">
+        <h2>5. 服务器代理URL:</h2>
+        <div class="status" id="status5">加载中...</div>
+        <img id="img5" src="/api/image-proxy?url=https%3A//img2.doubanio.com/view/photo/s_ratio_poster/public/p2923645461.webp" 
+             alt="服务器代理海报" class="test-image">
+    </div>
+         
+    <script>
+        function setupImageTest(imgId, statusId, description) {
+            const img = document.getElementById(imgId);
+            const status = document.getElementById(statusId);
+            
+            img.onload = function() {
+                console.log(description + '加载成功');
+                status.textContent = '✅ 加载成功';
+                status.style.color = 'green';
+                img.classList.add('success');
+            };
+            
+            img.onerror = function() {
+                console.error(description + '加载失败');
+                status.textContent = '❌ 加载失败';
+                status.style.color = 'red';
+                img.classList.add('error');
+            };
+        }
+        
+        // 设置所有图片测试
+        setupImageTest('img1', 'status1', '原始豆瓣URL');
+        setupImageTest('img2', 'status2', '腾讯CDN代理URL');
+        setupImageTest('img3', 'status3', '阿里CDN代理URL');
+        setupImageTest('img4', 'status4', 'img3代理URL');
+        setupImageTest('img5', 'status5', '服务器代理URL');
+        
+        console.log('海报URL测试页面已加载');
+    </script>
+</body>
+</html>
