@@ -14,6 +14,13 @@ interface Message {
   timestamp: Date;
   recommendations?: MovieRecommendation[];
   youtubeVideos?: YouTubeVideo[];
+  isMovieCard?: boolean;
+  movieInfo?: {
+    title: string;
+    poster: string;
+    doubanLink: string;
+  };
+  hiddenContent?: string;
 }
 
 interface MovieRecommendation {
@@ -54,29 +61,37 @@ const AIChatPage = () => {
       // 检查是否有预设的剧名内容
       const presetContent = localStorage.getItem('ai-chat-preset');
       if (presetContent) {
-        const { movieTitle, poster, timestamp } = JSON.parse(presetContent);
+        const { title, poster, doubanLink, hiddenContent, timestamp } = JSON.parse(presetContent);
         const now = Date.now();
         // 5分钟内有效
         if (now - timestamp < 5 * 60 * 1000) {
           // 清除预设内容
           localStorage.removeItem('ai-chat-preset');
           
-          // 自动发送带剧名的消息
-          const presetMessage: Message = {
+          // 模拟发送海报卡片消息
+          const movieCardMessage: Message = {
             id: Date.now().toString(),
             type: 'user',
-            content: `${movieTitle}，你觉得怎么样？`,
+            content: `[发送了《${title}》的海报卡片]`,
+            timestamp: new Date(),
+            isMovieCard: true,
+            movieInfo: {
+              title,
+              poster,
+              doubanLink
+            },
+            hiddenContent
+          };
+          
+          // AI预设回复
+          const aiPresetReply: Message = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: `你想了解《${title}》的什么相关信息呢？`,
             timestamp: new Date()
           };
           
-          setMessages(prev => [...prev, presetMessage]);
-          setInputValue('');
-          setIsLoading(true);
-          
-          // 自动调用AI推荐
-          setTimeout(() => {
-            handleAutoSendMessage([presetMessage]);
-          }, 100);
+          setMessages(prev => [...prev, movieCardMessage, aiPresetReply]);
           
           return; // 如果有预设内容，不加载缓存消息
         } else {
@@ -168,10 +183,19 @@ const AIChatPage = () => {
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
 
+    // 检查是否有隐藏内容需要组合
+    const lastMovieCard = messages.slice().reverse().find(msg => msg.isMovieCard && msg.hiddenContent);
+    let actualContent = inputValue.trim();
+    
+    if (lastMovieCard && lastMovieCard.hiddenContent) {
+      // 组合隐藏内容和用户输入
+      actualContent = lastMovieCard.hiddenContent + actualContent;
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
-      content: inputValue.trim(),
+      content: inputValue.trim(), // 显示给用户的是原始输入
       timestamp: new Date()
     };
 
@@ -182,6 +206,14 @@ const AIChatPage = () => {
 
     // Keep the last 4 rounds of conversation (4 user + 4 AI messages = 8 total)
     const conversationHistory = updatedMessages.slice(-8);
+    
+    // 将最后一条消息的内容替换为实际发送给AI的内容（包含隐藏内容）
+    if (conversationHistory.length > 0) {
+      conversationHistory[conversationHistory.length - 1] = {
+        ...conversationHistory[conversationHistory.length - 1],
+        content: actualContent
+      };
+    }
 
     try {
       const response = await fetch('/api/ai/recommend', {
@@ -265,6 +297,39 @@ const AIChatPage = () => {
                 >
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                 </div>
+
+                {/* 海报卡片显示 */}
+                {message.isMovieCard && message.movieInfo && (
+                  <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg max-w-xs">
+                    <div className="flex items-start gap-3">
+                      <img
+                        src={message.movieInfo.poster}
+                        alt={message.movieInfo.title}
+                        className="w-16 h-20 object-cover rounded flex-shrink-0"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 dark:text-white text-sm mb-1">
+                          {message.movieInfo.title}
+                        </h4>
+                        {message.movieInfo.doubanLink && (
+                          <a
+                            href={message.movieInfo.doubanLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            查看豆瓣详情
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* 推荐影片卡片 */}
                 {message.recommendations && message.recommendations.length > 0 && (

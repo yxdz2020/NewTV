@@ -282,17 +282,26 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     e.preventDefault();
     e.stopPropagation();
     
-    // 预设剧名到localStorage，供AI聊天页面使用
+    // 构建豆瓣链接
+    const doubanLink = actualDoubanId && actualDoubanId !== 0 
+      ? (isBangumi 
+          ? `https://bgm.tv/subject/${actualDoubanId}` 
+          : `https://movie.douban.com/subject/${actualDoubanId}`)
+      : '';
+    
+    // 存储剧名、海报和豆瓣链接信息到localStorage
     const presetContent = {
-      movieTitle: actualTitle,
+      title: actualTitle,
       poster: actualPoster,
+      doubanLink: doubanLink,
+      hiddenContent: `这部剧的名字叫《${actualTitle}》，这部剧豆瓣链接地址：${doubanLink}\n`,
       timestamp: Date.now()
     };
     localStorage.setItem('ai-chat-preset', JSON.stringify(presetContent));
     
     // 跳转到AI聊天页面
     router.push('/ai-chat');
-  }, [actualTitle, actualPoster, router]);
+  }, [actualTitle, actualPoster, actualDoubanId, isBangumi, router]);
 
   // 跳转到播放页面的函数
   const navigateToPlay = useCallback(() => {
