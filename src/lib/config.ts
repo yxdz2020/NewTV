@@ -385,8 +385,11 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
     };
   }
   
-  // 确保 YouTubeChannels 字段存在
-  if (!(adminConfig as any).YouTubeChannels || !Array.isArray((adminConfig as any).YouTubeChannels)) {
+  // 确保 YouTubeChannels 字段存在，但不要覆盖现有数据
+  if (!(adminConfig as any).YouTubeChannels) {
+    (adminConfig as any).YouTubeChannels = [];
+  } else if (!Array.isArray((adminConfig as any).YouTubeChannels)) {
+    // 如果存在但不是数组，才重置为空数组
     (adminConfig as any).YouTubeChannels = [];
   }
 
