@@ -292,7 +292,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     
     // 跳转到AI聊天页面
     router.push('/ai-chat');
-  }, [actualTitle, actualPoster, router]);}]}
+  }, [actualTitle, actualPoster, router]);
 
   // 跳转到播放页面的函数
   const navigateToPlay = useCallback(() => {
