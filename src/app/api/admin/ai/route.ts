@@ -40,17 +40,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 更新AI配置
-    adminConfig.AIConfig = {
-      enabled,
-      apiUrl,
-      apiKey,
-      model,
+    // 更新AI配置，保持其他配置不变
+    const updatedConfig = {
+      ...adminConfig,
+      AIConfig: {
+        enabled,
+        apiUrl,
+        apiKey,
+        model,
+      },
     };
 
     // 写入数据库
-    await db.saveAdminConfig(adminConfig);
-    
+    await db.saveAdminConfig(updatedConfig);
+
     // 清除配置缓存
     clearConfigCache();
 

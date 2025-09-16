@@ -25,7 +25,7 @@ async function getChannels(): Promise<YouTubeChannel[]> {
 
     const adminConfig = await storage.getAdminConfig();
     const channels = (adminConfig as any)?.YouTubeChannels || [];
-    
+
     // 确保所有频道都有sortOrder字段，如果没有则按添加时间排序
     return channels.map((channel: any, index: number) => ({
       ...channel,
@@ -45,9 +45,19 @@ async function saveChannels(channels: YouTubeChannel[]): Promise<void> {
       throw new Error('数据库存储不可用');
     }
 
-    const adminConfig = await storage.getAdminConfig() || {} as any;
-    adminConfig.YouTubeChannels = channels;
-    await storage.setAdminConfig(adminConfig);
+    // 获取当前完整的管理员配置
+    const currentConfig = await storage.getAdminConfig();
+    if (!currentConfig) {
+      throw new Error('无法获取当前管理员配置');
+    }
+
+    // 只更新YouTubeChannels字段，保持其他配置不变
+    const updatedConfig = {
+      ...currentConfig,
+      YouTubeChannels: channels
+    };
+    
+    await storage.setAdminConfig(updatedConfig);
   } catch (error) {
     console.error('保存YouTube频道失败:', error);
     throw error;
@@ -90,7 +100,7 @@ export async function POST(request: NextRequest) {
 
     // 获取当前最大的sortOrder，新频道排在最后
     const maxSortOrder = channels.length > 0 ? Math.max(...channels.map(c => c.sortOrder || 0)) : -1;
-    
+
     const newChannel: YouTubeChannel = {
       id: Date.now().toString(),
       name,
