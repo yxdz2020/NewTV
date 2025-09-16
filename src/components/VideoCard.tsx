@@ -1192,50 +1192,49 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
           </div>
         )}
 
-        {/* 标题与来源 */}
-        <div
-          className='flex-1 flex flex-col justify-center px-2 py-3 text-center'
-          style={{
-            WebkitUserSelect: 'none',
-            userSelect: 'none',
-            WebkitTouchCallout: 'none',
-          } as React.CSSProperties}
-          onContextMenu={(e) => {
-            e.preventDefault();
-            return false;
-          }}
-        >
-          <div
-            className='relative'
+        {/* 标题与来源 - 豆瓣卡片悬停时整个底栏变成问问AI按钮 */}
+        {from === 'douban' && showAIButton ? (
+          <button
+            onClick={handleAIButtonClick}
+            className='flex-1 flex flex-col justify-center px-2 py-3 text-center bg-black/80 hover:bg-blue-600 text-white transition-all duration-300 ease-in-out rounded-b-lg'
             style={{
               WebkitUserSelect: 'none',
               userSelect: 'none',
               WebkitTouchCallout: 'none',
             } as React.CSSProperties}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              return false;
+            }}
           >
-            {/* 标题文字 - 豆瓣卡片悬停时隐藏 */}
-            <span
-              className={`block font-semibold text-gray-900 dark:text-gray-100 transition-all duration-300 ease-in-out group-hover:text-black dark:group-hover:text-white peer ${from === 'douban' && actualTitle.length > 8 ? 'text-xs' : 'text-sm'
-                } ${from === 'douban' && showAIButton ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'
-                }`}
+            <span className='text-sm font-medium'>问问AI</span>
+            <span className='text-xs opacity-80 mt-1'>点击了解更多</span>
+          </button>
+        ) : (
+          <div
+            className='flex-1 flex flex-col justify-center px-2 py-3 text-center'
+            style={{
+              WebkitUserSelect: 'none',
+              userSelect: 'none',
+              WebkitTouchCallout: 'none',
+            } as React.CSSProperties}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              return false;
+            }}
+          >
+            <div
+              className='relative'
               style={{
                 WebkitUserSelect: 'none',
                 userSelect: 'none',
                 WebkitTouchCallout: 'none',
               } as React.CSSProperties}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                return false;
-              }}
             >
-              {actualTitle.length <= 10 ? actualTitle : `${actualTitle.slice(0, 10)}...`}
-            </span>
-
-            {/* 问问AI按钮 - 仅豆瓣卡片悬停时显示，与标题位置对齐 */}
-            {from === 'douban' && showAIButton && (
-              <button
-                onClick={handleAIButtonClick}
-                className='absolute inset-0 flex items-center justify-center px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded transition-all duration-300 ease-in-out opacity-100 scale-100 shadow-md hover:shadow-lg'
+              {/* 标题文字 */}
+              <span
+                className={`block font-semibold text-gray-900 dark:text-gray-100 transition-all duration-300 ease-in-out group-hover:text-black dark:group-hover:text-white peer ${from === 'douban' && actualTitle.length > 8 ? 'text-xs' : 'text-sm'
+                  }`}
                 style={{
                   WebkitUserSelect: 'none',
                   userSelect: 'none',
@@ -1246,12 +1245,10 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                   return false;
                 }}
               >
-                问问AI
-              </button>
-            )}
+                {actualTitle.length <= 10 ? actualTitle : `${actualTitle.slice(0, 10)}...`}
+              </span>
 
-            {/* 自定义 tooltip - 非AI按钮状态时显示 */}
-            {!(from === 'douban' && showAIButton) && (
+              {/* 自定义 tooltip */}
               <div
                 className='absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded-md shadow-lg opacity-0 invisible peer-hover:opacity-100 peer-hover:visible transition-all duration-200 ease-out delay-100 whitespace-nowrap pointer-events-none'
                 style={{
@@ -1274,23 +1271,10 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                   } as React.CSSProperties}
                 ></div>
               </div>
-            )}
-          </div>
-          {config.showSourceName && source_name && (
-            <span
-              className='block text-xs text-gray-500 dark:text-gray-400 mt-1'
-              style={{
-                WebkitUserSelect: 'none',
-                userSelect: 'none',
-                WebkitTouchCallout: 'none',
-              } as React.CSSProperties}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                return false;
-              }}
-            >
+            </div>
+            {config.showSourceName && source_name && (
               <span
-                className='inline-block border rounded px-2 py-0.5 border-gray-500/60 dark:border-gray-400/60 transition-all duration-300 ease-in-out group-hover:border-black/60 group-hover:text-black dark:group-hover:text-white'
+                className='block text-xs text-gray-500 dark:text-gray-400 mt-1'
                 style={{
                   WebkitUserSelect: 'none',
                   userSelect: 'none',
@@ -1301,14 +1285,27 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                   return false;
                 }}
               >
-                {origin === 'live' && (
-                  <Radio size={12} className="inline-block text-gray-500 dark:text-gray-400 mr-1.5" />
-                )}
-                {source_name}
+                <span
+                  className='inline-block border rounded px-2 py-0.5 border-gray-500/60 dark:border-gray-400/60 transition-all duration-300 ease-in-out group-hover:border-black/60 group-hover:text-black dark:group-hover:text-white'
+                  style={{
+                    WebkitUserSelect: 'none',
+                    userSelect: 'none',
+                    WebkitTouchCallout: 'none',
+                  } as React.CSSProperties}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    return false;
+                  }}
+                >
+                  {origin === 'live' && (
+                    <Radio size={12} className="inline-block text-gray-500 dark:text-gray-400 mr-1.5" />
+                  )}
+                  {source_name}
+                </span>
               </span>
-            </span>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 操作菜单 - 支持右键和长按触发 */}
