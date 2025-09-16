@@ -1214,7 +1214,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             {from === 'douban' && showAIButton && (
               <button
                 onClick={handleAIButtonClick}
-                className='absolute inset-0 flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-md transition-all duration-300 ease-in-out transform opacity-100 scale-100 shadow-lg hover:shadow-xl'
+                className='absolute inset-x-2 inset-y-1 flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-md transition-all duration-300 ease-in-out transform opacity-100 scale-100 shadow-lg hover:shadow-xl'
                 style={{
                   WebkitUserSelect: 'none',
                   userSelect: 'none',
