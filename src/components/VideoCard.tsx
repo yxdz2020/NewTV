@@ -252,13 +252,13 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   // 悬停AI功能事件处理（仅豆瓣卡片）
   const handleMouseEnter = useCallback(() => {
     if (from !== 'douban') return;
-    
+
     setIsHovering(true);
     // 清除之前的定时器
     if (hoverTimerRef.current) {
       clearTimeout(hoverTimerRef.current);
     }
-    
+
     // 设置2秒定时器
     hoverTimerRef.current = setTimeout(() => {
       setShowAIButton(true);
@@ -267,10 +267,10 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
 
   const handleMouseLeave = useCallback(() => {
     if (from !== 'douban') return;
-    
+
     setIsHovering(false);
     setShowAIButton(false);
-    
+
     // 清除定时器
     if (hoverTimerRef.current) {
       clearTimeout(hoverTimerRef.current);
@@ -281,14 +281,14 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const handleAIButtonClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // 构建豆瓣链接
-    const doubanLink = actualDoubanId && actualDoubanId !== 0 
-      ? (isBangumi 
-          ? `https://bgm.tv/subject/${actualDoubanId}` 
-          : `https://movie.douban.com/subject/${actualDoubanId}`)
+    const doubanLink = actualDoubanId && actualDoubanId !== 0
+      ? (isBangumi
+        ? `https://bgm.tv/subject/${actualDoubanId}`
+        : `https://movie.douban.com/subject/${actualDoubanId}`)
       : '';
-    
+
     // 存储剧名、海报和豆瓣链接信息到localStorage
     const presetContent = {
       title: actualTitle,
@@ -298,7 +298,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       timestamp: Date.now()
     };
     localStorage.setItem('ai-chat-preset', JSON.stringify(presetContent));
-    
+
     // 跳转到AI聊天页面
     router.push('/ai-chat');
   }, [actualTitle, actualPoster, actualDoubanId, isBangumi, router]);
@@ -310,7 +310,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       clearTimeout(autoPlayTimerRef.current);
       autoPlayTimerRef.current = null;
     }
-    
+
     // 构建豆瓣ID参数
     const doubanIdParam = actualDoubanId && actualDoubanId > 0 ? `&douban_id=${actualDoubanId}` : '';
 
@@ -351,7 +351,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     if (isLoading || showCombinedModal) {
       return;
     }
-    
+
     // 立即显示模态框和加载状态
     setIsLoading(true);
     setShowCombinedModal(true);
@@ -1192,11 +1192,9 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
           >
             {/* 标题文字 - 豆瓣卡片悬停时隐藏 */}
             <span
-              className={`block font-semibold text-gray-900 dark:text-gray-100 transition-all duration-300 ease-in-out group-hover:text-black dark:group-hover:text-white peer ${
-                from === 'douban' && actualTitle.length > 8 ? 'text-xs' : 'text-sm'
-              } ${
-                from === 'douban' && showAIButton ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'
-              }`}
+              className={`block font-semibold text-gray-900 dark:text-gray-100 transition-all duration-300 ease-in-out group-hover:text-black dark:group-hover:text-white peer ${from === 'douban' && actualTitle.length > 8 ? 'text-xs' : 'text-sm'
+                } ${from === 'douban' && showAIButton ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'
+                }`}
               style={{
                 WebkitUserSelect: 'none',
                 userSelect: 'none',
@@ -1209,12 +1207,12 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             >
               {actualTitle.length <= 10 ? actualTitle : `${actualTitle.slice(0, 10)}...`}
             </span>
-            
+
             {/* 问问AI按钮 - 仅豆瓣卡片悬停时显示 */}
             {from === 'douban' && showAIButton && (
               <button
                 onClick={handleAIButtonClick}
-                className='absolute inset-x-2 inset-y-1 flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-md transition-all duration-300 ease-in-out transform opacity-100 scale-100 shadow-lg hover:shadow-xl'
+                className='absolute bottom-2 left-2 px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded transition-all duration-300 ease-in-out transform opacity-100 scale-100 shadow-md hover:shadow-lg'
                 style={{
                   WebkitUserSelect: 'none',
                   userSelect: 'none',
@@ -1228,7 +1226,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                 问问AI
               </button>
             )}
-            
+
             {/* 自定义 tooltip - 非AI按钮状态时显示 */}
             {!(from === 'douban' && showAIButton) && (
               <div

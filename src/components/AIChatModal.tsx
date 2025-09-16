@@ -259,11 +259,24 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
                 {message.isMovieCard && message.movieInfo && (
                   <div className="mt-3 p-3 glass-light rounded-lg border border-gray-200 dark:border-gray-600 self-stretch">
                     <div className="flex items-start gap-3">
-                      <img 
-                        src={message.movieInfo.poster} 
-                        alt={message.movieInfo.title} 
-                        className="w-16 h-20 object-cover rounded flex-shrink-0" 
-                      />
+                      <div className="w-16 h-20 bg-gray-200 dark:bg-gray-700 rounded flex-shrink-0 overflow-hidden">
+                        <img 
+                          src={message.movieInfo.poster} 
+                          alt={message.movieInfo.title} 
+                          className="w-full h-full object-cover" 
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent && !parent.querySelector('.poster-placeholder')) {
+                              const placeholder = document.createElement('div');
+                              placeholder.className = 'poster-placeholder w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs';
+                              placeholder.textContent = '海报';
+                              parent.appendChild(placeholder);
+                            }
+                          }}
+                        />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-gray-900 dark:text-white text-sm mb-2">{message.movieInfo.title}</h4>
                         <a 
@@ -274,7 +287,7 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
                         >
                           查看详情
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                           </svg>
                         </a>
                       </div>
