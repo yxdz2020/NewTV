@@ -82,9 +82,6 @@ export async function POST(request: NextRequest) {
 
     // 获取配置与存储
     const adminConfig = await getConfig();
-    
-    // 保存原始YouTube配置，防止被意外清空
-    const originalYouTubeChannels = adminConfig.YouTubeChannels;
 
     // 判定操作者角色
     let operatorRole: 'owner' | 'admin';
@@ -492,9 +489,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: '未知操作' }, { status: 400 });
     }
 
-    // 确保YouTube配置不会丢失
-    adminConfig.YouTubeChannels = originalYouTubeChannels;
-    
     // 将更新后的配置写入数据库
     await db.saveAdminConfig(adminConfig);
 

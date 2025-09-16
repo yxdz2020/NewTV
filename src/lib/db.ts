@@ -184,20 +184,6 @@ export class DbManager {
   }
 
   async saveAdminConfig(config: AdminConfig): Promise<void> {
-    // 在保存前，确保YouTube配置不会丢失
-    try {
-      const currentConfig = await this.getAdminConfig();
-      if (currentConfig && currentConfig.YouTubeChannels && Array.isArray(currentConfig.YouTubeChannels)) {
-        // 如果新配置中没有YouTubeChannels或者为空，保留原有配置
-        if (!(config as any).YouTubeChannels || (config as any).YouTubeChannels.length === 0) {
-          (config as any).YouTubeChannels = currentConfig.YouTubeChannels;
-        }
-      }
-    } catch (e) {
-      // 如果获取当前配置失败，继续保存新配置
-      console.warn('获取当前配置失败，继续保存新配置:', e);
-    }
-
     if (typeof (this.storage as any).setAdminConfig === 'function') {
       await (this.storage as any).setAdminConfig(config);
     }

@@ -81,25 +81,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 更新站点配置，保持其他配置不变
-    const updatedConfig = {
-      ...adminConfig,
-      SiteConfig: {
-        SiteName,
-        Announcement,
-        SearchDownstreamMaxPage,
-        SiteInterfaceCacheTime,
-        DoubanProxyType,
-        DoubanProxy,
-        DoubanImageProxyType,
-        DoubanImageProxy,
-        DisableYellowFilter,
-        FluidSearch,
-      },
+    // 更新缓存中的站点设置
+    adminConfig.SiteConfig = {
+      SiteName,
+      Announcement,
+      SearchDownstreamMaxPage,
+      SiteInterfaceCacheTime,
+      DoubanProxyType,
+      DoubanProxy,
+      DoubanImageProxyType,
+      DoubanImageProxy,
+      DisableYellowFilter,
+      FluidSearch,
     };
 
     // 写入数据库
-    await db.saveAdminConfig(updatedConfig);
+    await db.saveAdminConfig(adminConfig);
 
     return NextResponse.json(
       { ok: true },

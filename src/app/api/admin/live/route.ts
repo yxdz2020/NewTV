@@ -15,9 +15,6 @@ export async function POST(request: NextRequest) {
     const authInfo = getAuthInfoFromCookie(request);
     const username = authInfo?.username;
     const config = await getConfig();
-    
-    // 保存原始YouTube配置，防止被意外清空
-    const originalYouTubeChannels = config.YouTubeChannels;
     if (username !== process.env.USERNAME) {
       // 管理员
       const user = config.UserConfig.Users.find(
@@ -163,9 +160,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: '未知操作' }, { status: 400 });
     }
 
-    // 确保YouTube配置不会丢失
-    config.YouTubeChannels = originalYouTubeChannels;
-    
     // 保存配置
     await db.saveAdminConfig(config);
 
