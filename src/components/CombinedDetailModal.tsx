@@ -199,7 +199,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
               <h2 className="text-3xl font-bold text-white mb-6">{doubanDetail?.title || videoDetail?.title || title}</h2>
 
               {isLoading && !doubanDetail && !videoDetail ? (
-                <div className="flex flex-col items-center justify-center h-[calc(100%-8rem)]">
+                <div className="flex flex-col items-center justify-center h-full">
                   <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
                   <div className="text-white text-base text-center">
                     影片信息获取中，请稍等片刻
@@ -306,7 +306,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
           <h2 className="text-base font-bold text-white mb-2">{doubanDetail?.title || videoDetail?.title || title}</h2>
 
           {isLoading && !doubanDetail && !videoDetail ? (
-            <div className="flex flex-col items-center justify-center h-32">
+            <div className="flex flex-col items-center justify-center h-full">
               <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 mb-4"></div>
               <div className="text-white text-sm text-center">
                 影片信息获取中，请稍等片刻
