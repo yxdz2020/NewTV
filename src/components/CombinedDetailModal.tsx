@@ -174,7 +174,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
         }
       }}
     >
-      <div className="bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-full max-w-4xl h-auto max-h-[85vh] md:max-h-[80vh] flex flex-col md:flex-row overflow-hidden relative">
+      <div className="bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-[90vw] max-w-4xl h-[65vh] md:h-[70vh] flex flex-col md:flex-row overflow-hidden relative">
         <button
           onClick={() => {
             // 清除倒计时定时器
@@ -218,20 +218,21 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
           />
         </div>
 
-        <div className="w-full md:w-2/3 p-3 md:p-8 flex flex-col justify-between overflow-y-auto relative z-10">
-          <div>
-            <h2 className="text-lg md:text-3xl font-bold text-white mb-2 md:mb-6">{doubanDetail?.title || videoDetail?.title || title}</h2>
+        <div className="w-full md:w-2/3 relative z-10 h-full">
+          {/* 内容区域 - 绝对定位，为底部按钮留出空间 */}
+          <div className="absolute inset-0 p-3 md:p-8 pb-32 md:pb-40 overflow-y-auto">
+            <h2 className="text-base md:text-3xl font-bold text-white mb-1 md:mb-6">{doubanDetail?.title || videoDetail?.title || title}</h2>
 
             {isLoading && !doubanDetail && !videoDetail ? (
-              <div className="flex items-center justify-start h-full px-4">
-                <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 md:h-12 md:w-12 mr-4"></div>
-                <div className="text-white text-sm md:text-base">
+              <div className="flex flex-col items-center justify-center h-32 md:h-[calc(100%-8rem)]">
+                <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 md:h-12 md:w-12 mb-4"></div>
+                <div className="text-white text-sm md:text-base text-center">
                   影片信息获取中，请稍等片刻
                 </div>
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 md:gap-y-2 mb-2 md:mb-4">
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-x-2 gap-y-1 md:gap-y-2 mb-2 md:mb-4 text-xs md:text-sm">
                   {renderDetailItem('年份', doubanDetail?.year || videoDetail?.year)}
                   {renderDetailItem('豆瓣评分', doubanDetail?.rate)}
                   {renderDetailItem('类型', doubanDetail?.genres || videoDetail?.type_name)}
@@ -240,15 +241,18 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
                   {videoDetail?.source_name && renderDetailItem('来源', videoDetail.source_name)}
                 </div>
 
-                <h3 className="text-sm md:text-lg font-semibold text-white mt-2 md:mt-6 mb-1">简介</h3>
-                <p className="text-gray-300 text-xs md:text-sm leading-tight md:leading-relaxed max-h-20 md:max-h-48 overflow-y-auto">
-                  {doubanDetail?.plot_summary || videoDetail?.desc || '暂无简介信息'}
-                </p>
+                <h3 className="text-xs md:text-lg font-semibold text-white mt-1 md:mt-6 mb-1">简介</h3>
+                <div className="mb-4 h-20 md:h-32 overflow-y-auto">
+                  <p className="text-gray-300 text-xs md:text-sm leading-tight md:leading-relaxed">
+                    {doubanDetail?.plot_summary || videoDetail?.desc || '暂无简介信息'}
+                  </p>
+                </div>
               </>
             )}
           </div>
 
-          <div className="mt-2 md:mt-8">
+          {/* 按钮区域 - 绝对定位在底部 */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 md:p-8 bg-gradient-to-t from-gray-800 to-transparent">
             {(doubanDetail || videoDetail) && !isLoading && (
               <div className="w-full mb-2 md:mb-4">
                 <div className="flex justify-between text-xs text-gray-400 mb-1">
@@ -263,7 +267,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
                 </div>
               </div>
             )}
-            <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
+            <div className="flex flex-row space-x-2 md:space-x-4">
               <button
                 onClick={() => {
                   // 清除倒计时定时器
