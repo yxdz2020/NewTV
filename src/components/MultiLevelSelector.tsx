@@ -471,7 +471,7 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
     if (value === undefined) {
       value = 'all';
       if (categoryKey === 'sort') {
-        value = 'T';
+        value = 'U';
       }
     }
     return value === optionValue;
