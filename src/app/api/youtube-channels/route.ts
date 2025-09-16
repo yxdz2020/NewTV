@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthInfoFromCookie } from '@/lib/auth';
-import { getConfig } from '@/lib/config';
+import { clearConfigCache, getConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 
 // YouTube频道数据类型
@@ -37,6 +37,9 @@ async function saveChannels(channels: YouTubeChannel[]): Promise<void> {
     const adminConfig = await getConfig();
     (adminConfig as any).YouTubeChannels = channels;
     await db.saveAdminConfig(adminConfig);
+    
+    // 清除配置缓存，确保下次读取时从数据库获取最新数据
+    clearConfigCache();
   } catch (error) {
     console.error('保存YouTube频道失败:', error);
     throw error;
