@@ -636,21 +636,32 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       label: '问问AI',
       icon: <Bot size={20} />,
       onClick: () => {
-        // 设置预设内容到localStorage
+        // 清除之前的聊天缓存，确保每次都显示新的剧信息
+        localStorage.removeItem('ai-chat-messages');
+
+        // 构建豆瓣链接
+        const doubanLink = actualDoubanId && actualDoubanId !== 0
+          ? (isBangumi
+            ? `https://bgm.tv/subject/${actualDoubanId}`
+            : `https://movie.douban.com/subject/${actualDoubanId}`)
+          : '';
+
+        // 存储剧名、海报和豆瓣链接信息到localStorage
         const presetContent = {
           title: actualTitle,
           poster: processImageUrl(actualPoster),
-          doubanLink: actualDoubanId && actualDoubanId !== 0 
-            ? (isBangumi 
-                ? `https://bgm.tv/subject/${actualDoubanId.toString()}`
-                : `https://movie.douban.com/subject/${actualDoubanId.toString()}`)
-            : '',
-          hiddenContent: `这是一部${actualYear ? actualYear + '年的' : ''}${type || '影视作品'}《${actualTitle}》${actualDoubanId && actualDoubanId !== 0 ? `，豆瓣ID：${actualDoubanId}` : ''}。请为我推荐类似的作品或者告诉我这部作品的相关信息。`
+          doubanLink: doubanLink,
+          hiddenContent: `这部剧的名字叫《${actualTitle}》，这部剧豆瓣链接地址：${doubanLink}\n`,
+          timestamp: Date.now()
         };
         localStorage.setItem('ai-chat-preset', JSON.stringify(presetContent));
-        
-        // 跳转到AI聊天页面
-        window.location.href = '/ai-chat';
+
+        // PC端打开模态框，移动端跳转页面
+        if (isDesktop) {
+          setIsAIChatModalOpen(true);
+        } else {
+          router.push('/ai-chat');
+        }
       },
       color: 'default' as const,
     });
