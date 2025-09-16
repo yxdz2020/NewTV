@@ -1199,7 +1199,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         {from === 'douban' && showAIButton ? (
           <button
             onClick={handleAIButtonClick}
-            className='flex-1 flex flex-col justify-center px-2 py-3 text-center bg-black/80 hover:bg-blue-600 text-white transition-all duration-300 ease-in-out rounded-b-lg'
+            className='flex-1 flex flex-col justify-center px-2 py-3 text-center bg-blue-500 hover:bg-white hover:text-black text-white transition-all duration-300 ease-in-out rounded-b-lg'
             style={{
               WebkitUserSelect: 'none',
               userSelect: 'none',
@@ -1210,7 +1210,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
               return false;
             }}
           >
-            <span className='text-sm font-medium'>问问AI</span>
+            <span className='text-sm font-medium'>问问 AI</span>
           </button>
         ) : (
           <div
