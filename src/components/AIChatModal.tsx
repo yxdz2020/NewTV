@@ -59,17 +59,7 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
   useEffect(() => {
     if (isOpen) {
       try {
-        const cachedMessages = localStorage.getItem('ai-chat-messages');
-        if (cachedMessages) {
-          const { messages: storedMessages, timestamp } = JSON.parse(cachedMessages);
-          const now = new Date().getTime();
-          if (now - timestamp < 30 * 60 * 1000) {
-            setMessages(storedMessages.map((msg: Message) => ({ ...msg, timestamp: new Date(msg.timestamp) })));
-            return;
-          }
-        }
-        
-        // 检查是否有预设内容
+        // 首先检查是否有预设内容（优先级最高）
         const presetContent = localStorage.getItem('ai-chat-preset');
         if (presetContent) {
           try {
@@ -111,8 +101,20 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
             
             // 清除预设内容
             localStorage.removeItem('ai-chat-preset');
+            return; // 有预设内容时不加载缓存消息
           } catch (error) {
             console.error('Failed to parse preset content:', error);
+          }
+        }
+        
+        // 没有预设内容时才加载缓存消息
+        const cachedMessages = localStorage.getItem('ai-chat-messages');
+        if (cachedMessages) {
+          const { messages: storedMessages, timestamp } = JSON.parse(cachedMessages);
+          const now = new Date().getTime();
+          if (now - timestamp < 30 * 60 * 1000) {
+            setMessages(storedMessages.map((msg: Message) => ({ ...msg, timestamp: new Date(msg.timestamp) })));
+            return;
           }
         }
       } catch (error) {

@@ -301,6 +301,9 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     e.preventDefault();
     e.stopPropagation();
 
+    // 清除之前的聊天缓存，确保每次都显示新的剧信息
+    localStorage.removeItem('ai-chat-messages');
+
     // 构建豆瓣链接
     const doubanLink = actualDoubanId && actualDoubanId !== 0
       ? (isBangumi
@@ -1208,7 +1211,6 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             }}
           >
             <span className='text-sm font-medium'>问问AI</span>
-            <span className='text-xs opacity-80 mt-1'>点击了解更多</span>
           </button>
         ) : (
           <div
