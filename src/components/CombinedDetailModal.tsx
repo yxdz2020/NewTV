@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import { X } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { DoubanDetail, SearchResult } from '@/lib/types';
 import { processImageUrl } from '@/lib/utils';
 
@@ -27,6 +28,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
   poster,
   title,
 }) => {
+  const { resolvedTheme } = useTheme();
   const [countdown, setCountdown] = useState(5);
   const [progress, setProgress] = useState(0);
   const [currentPosterUrl, setCurrentPosterUrl] = useState<string>('');
@@ -142,8 +144,8 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
     const displayValue = Array.isArray(value) ? value.join(' / ') : value;
     return (
       <div className="flex text-xs md:text-sm mb-1 md:mb-2">
-        <span className="text-gray-400 w-16 md:w-24 flex-shrink-0">{label}</span>
-        <span className="text-white flex-grow">{displayValue}</span>
+        <span className={`${resolvedTheme === 'light' ? 'text-gray-600' : 'text-gray-400'} w-16 md:w-24 flex-shrink-0`}>{label}</span>
+        <span className={`${resolvedTheme === 'light' ? 'text-gray-900' : 'text-white'} flex-grow`}>{displayValue}</span>
       </div>
     );
   };
@@ -160,14 +162,14 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
       }}
     >
       {/* PC端布局 - 保持原有的横向布局 */}
-      <div className="hidden md:block bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-[90vw] max-w-4xl h-[70vh] overflow-hidden relative">
+      <div className={`hidden md:block ${resolvedTheme === 'light' ? 'bg-white bg-opacity-95' : 'bg-gray-800 bg-opacity-90'} rounded-lg shadow-lg w-[90vw] max-w-4xl h-[70vh] overflow-hidden relative`}>
         <div className="flex h-full">
           <button
             onClick={() => {
               clearTimers();
               onClose();
             }}
-            className="absolute top-4 right-4 text-gray-400 hover:text-white z-20 bg-black bg-opacity-50 rounded-full p-1"
+            className={`absolute top-4 right-4 ${resolvedTheme === 'light' ? 'text-gray-600 hover:text-gray-900 bg-white bg-opacity-70' : 'text-gray-400 hover:text-white bg-black bg-opacity-50'} z-20 rounded-full p-1`}
           >
             <X size={24} />
           </button>
@@ -196,12 +198,12 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
 
           <div className="w-2/3 relative z-10 h-full">
             <div className="absolute inset-0 p-8 pb-40 overflow-y-auto">
-              <h2 className="text-3xl font-bold text-white mb-6">{doubanDetail?.title || videoDetail?.title || title}</h2>
+              <h2 className={`text-3xl font-bold ${resolvedTheme === 'light' ? 'text-gray-900' : 'text-white'} mb-6`}>{doubanDetail?.title || videoDetail?.title || title}</h2>
 
               {isLoading && !doubanDetail && !videoDetail ? (
                 <div className="flex flex-col items-center justify-center h-full">
                   <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
-                  <div className="text-white text-base text-center">
+                  <div className={`${resolvedTheme === 'light' ? 'text-gray-700' : 'text-white'} text-base text-center`}>
                     影片信息获取中，请稍等片刻
                   </div>
                 </div>
@@ -216,9 +218,9 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
                     {videoDetail?.source_name && renderDetailItem('来源', videoDetail.source_name)}
                   </div>
 
-                  <h3 className="text-lg font-semibold text-white mt-6 mb-1">简介</h3>
+                  <h3 className={`text-lg font-semibold ${resolvedTheme === 'light' ? 'text-gray-900' : 'text-white'} mt-6 mb-1`}>简介</h3>
                   <div className="mb-4 h-32 overflow-y-auto">
-                    <p className="text-gray-300 text-sm leading-relaxed">
+                    <p className={`${resolvedTheme === 'light' ? 'text-gray-700' : 'text-gray-300'} text-sm leading-relaxed`}>
                       {doubanDetail?.plot_summary || videoDetail?.desc || '暂无简介信息'}
                     </p>
                   </div>
@@ -226,10 +228,10 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
               )}
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-gray-800 to-transparent">
+            <div className={`absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t ${resolvedTheme === 'light' ? 'from-white to-transparent' : 'from-gray-800 to-transparent'}`}>
               {(doubanDetail || videoDetail) && !isLoading && (
                 <div className="w-full mb-4">
-                  <div className="flex justify-between text-xs text-gray-400 mb-1">
+                  <div className={`flex justify-between text-xs ${resolvedTheme === 'light' ? 'text-gray-600' : 'text-gray-400'} mb-1`}>
                     <span>{countdown}s 后自动播放</span>
                     <span>{Math.round(progress)}%</span>
                   </div>
@@ -267,13 +269,13 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
       </div>
 
       {/* 移动端布局 - 4段式垂直布局 */}
-      <div className="block md:hidden bg-gray-800 bg-opacity-90 rounded-lg shadow-lg w-[90vw] h-[80vh] flex flex-col overflow-hidden relative">
+      <div className={`block md:hidden ${resolvedTheme === 'light' ? 'bg-white bg-opacity-95' : 'bg-gray-800 bg-opacity-90'} rounded-lg shadow-lg w-[90vw] h-[80vh] flex flex-col overflow-hidden relative`}>
         <button
           onClick={() => {
             clearTimers();
             onClose();
           }}
-          className="absolute top-2 right-2 text-gray-400 hover:text-white z-20 bg-black bg-opacity-50 rounded-full p-1"
+          className={`absolute top-2 right-2 ${resolvedTheme === 'light' ? 'text-gray-600 hover:text-gray-900 bg-white bg-opacity-70' : 'text-gray-400 hover:text-white bg-black bg-opacity-50'} z-20 rounded-full p-1`}
         >
           <X size={20} />
         </button>
@@ -303,12 +305,12 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
 
         {/* 第2段：影片信息内容区域 - 可滚动，自适应高度 */}
         <div className="flex-1 p-3 overflow-y-auto">
-          <h2 className="text-base font-bold text-white mb-2">{doubanDetail?.title || videoDetail?.title || title}</h2>
+          <h2 className={`text-base font-bold ${resolvedTheme === 'light' ? 'text-gray-900' : 'text-white'} mb-2`}>{doubanDetail?.title || videoDetail?.title || title}</h2>
 
           {isLoading && !doubanDetail && !videoDetail ? (
             <div className="flex flex-col items-center justify-center h-full">
               <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 mb-4"></div>
-              <div className="text-white text-sm text-center">
+              <div className={`${resolvedTheme === 'light' ? 'text-gray-700' : 'text-white'} text-sm text-center`}>
                 影片信息获取中，请稍等片刻
               </div>
             </div>
@@ -323,8 +325,8 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
                 {videoDetail?.source_name && renderDetailItem('来源', videoDetail.source_name)}
               </div>
 
-              <h3 className="text-xs font-semibold text-white mb-2">简介</h3>
-              <p className="text-gray-300 text-xs leading-tight">
+              <h3 className={`text-xs font-semibold ${resolvedTheme === 'light' ? 'text-gray-900' : 'text-white'} mb-2`}>简介</h3>
+              <p className={`${resolvedTheme === 'light' ? 'text-gray-700' : 'text-gray-300'} text-xs leading-tight`}>
                 {doubanDetail?.plot_summary || videoDetail?.desc || '暂无简介信息'}
               </p>
             </>
@@ -333,8 +335,8 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
 
         {/* 第3段：进度条区域 - 固定高度 */}
         {(doubanDetail || videoDetail) && !isLoading && (
-          <div className="flex-shrink-0 px-3 py-2 bg-gray-800">
-            <div className="flex justify-between text-xs text-gray-400 mb-1">
+          <div className={`flex-shrink-0 px-3 py-2 ${resolvedTheme === 'light' ? 'bg-gray-100' : 'bg-gray-800'}`}>
+            <div className={`flex justify-between text-xs ${resolvedTheme === 'light' ? 'text-gray-600' : 'text-gray-400'} mb-1`}>
               <span>{countdown}s 后自动播放</span>
               <span>{Math.round(progress)}%</span>
             </div>
@@ -348,7 +350,7 @@ const CombinedDetailModal: React.FC<CombinedDetailModalProps> = ({
         )}
 
         {/* 第4段：按钮区域 - 固定高度 */}
-        <div className="flex-shrink-0 p-3 bg-gray-800 rounded-b-lg">
+        <div className={`flex-shrink-0 p-3 ${resolvedTheme === 'light' ? 'bg-gray-100' : 'bg-gray-800'} rounded-b-lg`}>
           <div className="flex flex-row space-x-2">
             <button
               onClick={() => {
