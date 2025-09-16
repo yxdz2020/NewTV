@@ -119,8 +119,11 @@ export async function POST(request: NextRequest) {
         ...(partialConfig.SiteConfig || {}),
       },
       // 确保YouTubeChannels字段不会在配置更新时丢失
-      // 只有当partialConfig明确包含YouTubeChannels时才更新，否则保持原值
-      YouTubeChannels: partialConfig.YouTubeChannels !== undefined 
+      // 只有当partialConfig明确包含有效的YouTubeChannels数据时才更新，否则保持原值
+      YouTubeChannels: (partialConfig.hasOwnProperty('YouTubeChannels') && 
+                       partialConfig.YouTubeChannels !== null && 
+                       partialConfig.YouTubeChannels !== undefined &&
+                       Array.isArray(partialConfig.YouTubeChannels))
         ? partialConfig.YouTubeChannels 
         : currentConfig.YouTubeChannels,
     };
