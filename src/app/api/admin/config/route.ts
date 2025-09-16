@@ -119,8 +119,8 @@ export async function POST(request: NextRequest) {
         ...(partialConfig.SiteConfig || {}),
       },
       // 确保YouTubeChannels字段不会在配置更新时丢失
-      YouTubeChannels: partialConfig.YouTubeChannels !== undefined 
-        ? partialConfig.YouTubeChannels 
+      YouTubeChannels: partialConfig.YouTubeChannels !== undefined
+        ? partialConfig.YouTubeChannels
         : currentConfig.YouTubeChannels || [],
     };
 
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
 
     // 清除缓存，强制下次重新从数据库读取
     clearConfigCache();
-    
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('保存管理员配置失败:', error);

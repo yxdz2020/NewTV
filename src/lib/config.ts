@@ -384,9 +384,13 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
       customModel: '',
     };
   }
-  
-  // 确保 YouTubeChannels 字段存在
-  if (!(adminConfig as any).YouTubeChannels || !Array.isArray((adminConfig as any).YouTubeChannels)) {
+
+  // 确保 YouTubeChannels 字段存在，但不重置已有数据
+  if (!(adminConfig as any).YouTubeChannels) {
+    (adminConfig as any).YouTubeChannels = [];
+  } else if (!Array.isArray((adminConfig as any).YouTubeChannels)) {
+    // 如果存在但不是数组，尝试修复而不是重置
+    console.warn('YouTubeChannels字段存在但不是数组，尝试修复:', (adminConfig as any).YouTubeChannels);
     (adminConfig as any).YouTubeChannels = [];
   }
 
