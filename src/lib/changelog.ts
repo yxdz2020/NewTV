@@ -11,6 +11,20 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    "version": "7.1.0",
+    "date": "2025-09-16",
+    "added": [
+      "✨ 新增“问问AI”功能：鼠标悬停于影片海报即可触发，将影片信息发送给AI，实现视频与AI的深度联动，高效获取资讯或查找解说相关视频。"
+    ],
+    "changed": [
+      "🎨 UI细节优化：统一了影片介绍弹窗的尺寸，并对部分界面元素进行了微调，提升了视觉一致性。"
+    ],
+    "fixed": [
+      "💾 修复了在Kvrocks数据库下，YouTube频道数据被意外覆盖导致丢失的严重问题。",
+      "⏱️ 修复了影片介绍弹窗5秒自动跳转功能中的一些误跳转Bug。"
+    ]
+  },
+  {
     "version": "7.0.0",
     "date": "2025-09-15",
     "added": [
@@ -25,7 +39,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    "version": "7.0.0",
+    "version": "6.5.6",
     "date": "2025-09-15",
     "added": [
       "🔝 网盘搜索新增回到顶部按钮，方便用户快速返回页面顶部"
