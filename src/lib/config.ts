@@ -390,6 +390,7 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
     (adminConfig as any).YouTubeChannels = [];
   } else if (!Array.isArray((adminConfig as any).YouTubeChannels)) {
     // 如果存在但不是数组，才重置为空数组
+    console.warn('YouTubeChannels字段不是数组，重置为空数组');
     (adminConfig as any).YouTubeChannels = [];
   }
 
