@@ -51,6 +51,41 @@ const AIChatPage = () => {
 
   useEffect(() => {
     try {
+      // 检查是否有预设的剧名内容
+      const presetContent = localStorage.getItem('ai-chat-preset');
+      if (presetContent) {
+        const { movieTitle, poster, timestamp } = JSON.parse(presetContent);
+        const now = Date.now();
+        // 5分钟内有效
+        if (now - timestamp < 5 * 60 * 1000) {
+          // 清除预设内容
+          localStorage.removeItem('ai-chat-preset');
+          
+          // 自动发送带剧名的消息
+          const presetMessage: Message = {
+            id: Date.now().toString(),
+            type: 'user',
+            content: `${movieTitle}，你觉得怎么样？`,
+            timestamp: new Date()
+          };
+          
+          setMessages(prev => [...prev, presetMessage]);
+          setInputValue('');
+          setIsLoading(true);
+          
+          // 自动调用AI推荐
+          setTimeout(() => {
+            handleAutoSendMessage([presetMessage]);
+          }, 100);
+          
+          return; // 如果有预设内容，不加载缓存消息
+        } else {
+          // 过期的预设内容，清除
+          localStorage.removeItem('ai-chat-preset');
+        }
+      }
+      
+      // 加载缓存消息
       const cachedMessages = localStorage.getItem('ai-chat-messages');
       if (cachedMessages) {
         const { messages: storedMessages, timestamp } = JSON.parse(cachedMessages);
@@ -83,6 +118,51 @@ const AIChatPage = () => {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleAutoSendMessage = async (messagesWithPreset: Message[]) => {
+    const conversationHistory = messagesWithPreset.slice(-8);
+
+    try {
+      const response = await fetch('/api/ai/recommend', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          messages: conversationHistory.map(m => ({ role: m.type, content: m.content }))
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('推荐请求失败');
+      }
+
+      const data = await response.json();
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: data.content || '抱歉，我现在无法为你推荐内容，请稍后再试。',
+        timestamp: new Date(),
+        recommendations: data.recommendations || [],
+        youtubeVideos: data.youtubeVideos || []
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      console.error('AI推荐失败:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: '抱歉，网络连接出现问题，请检查网络后重试。如果问题持续存在，请稍后再试。',
+        timestamp: new Date(),
+        recommendations: [],
+        youtubeVideos: []
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSendMessage = async () => {

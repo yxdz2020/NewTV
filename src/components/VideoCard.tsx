@@ -98,6 +98,11 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const [isLoadingModal, setIsLoadingModal] = useState(false);
   const autoPlayTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 悬停AI功能相关状态（仅豆瓣卡片）
+  const [isHovering, setIsHovering] = useState(false);
+  const [showAIButton, setShowAIButton] = useState(false);
+  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // 可外部修改的可控字段
   const [dynamicEpisodes, setDynamicEpisodes] = useState<number | undefined>(
     episodes
@@ -120,6 +125,15 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   useEffect(() => {
     setDynamicDoubanId(douban_id);
   }, [douban_id]);
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current);
+      }
+    };
+  }, []);
 
   useImperativeHandle(ref, () => ({
     setEpisodes: (eps?: number) => setDynamicEpisodes(eps),
@@ -234,6 +248,51 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     },
     [from, actualSource, actualId, onDelete]
   );
+
+  // 悬停AI功能事件处理（仅豆瓣卡片）
+  const handleMouseEnter = useCallback(() => {
+    if (from !== 'douban') return;
+    
+    setIsHovering(true);
+    // 清除之前的定时器
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+    }
+    
+    // 设置2秒定时器
+    hoverTimerRef.current = setTimeout(() => {
+      setShowAIButton(true);
+    }, 2000);
+  }, [from]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (from !== 'douban') return;
+    
+    setIsHovering(false);
+    setShowAIButton(false);
+    
+    // 清除定时器
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+  }, [from]);
+
+  const handleAIButtonClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // 预设剧名到localStorage，供AI聊天页面使用
+    const presetContent = {
+      movieTitle: actualTitle,
+      poster: actualPoster,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('ai-chat-preset', JSON.stringify(presetContent));
+    
+    // 跳转到AI聊天页面
+    router.push('/ai-chat');
+  }, [actualTitle, actualPoster, router]);}]}
 
   // 跳转到播放页面的函数
   const navigateToPlay = useCallback(() => {
@@ -659,6 +718,8 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       <div
         className='group relative w-full glass-card cursor-pointer transition-transform duration-200 ease-out hover:scale-105 hover:shadow-elevated hover:z-10 flex flex-col h-full'
         onClick={handleClick}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         {...longPressProps}
         style={{
           // 禁用所有默认的长按和选择效果
@@ -1120,9 +1181,13 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
               WebkitTouchCallout: 'none',
             } as React.CSSProperties}
           >
+            {/* 标题文字 - 豆瓣卡片悬停时隐藏 */}
             <span
-              className={`block font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300 ease-in-out group-hover:text-black dark:group-hover:text-white peer ${from === 'douban' && actualTitle.length > 8 ? 'text-xs' : 'text-sm'
-                }`}
+              className={`block font-semibold text-gray-900 dark:text-gray-100 transition-all duration-300 ease-in-out group-hover:text-black dark:group-hover:text-white peer ${
+                from === 'douban' && actualTitle.length > 8 ? 'text-xs' : 'text-sm'
+              } ${
+                from === 'douban' && showAIButton ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'
+              }`}
               style={{
                 WebkitUserSelect: 'none',
                 userSelect: 'none',
@@ -1135,29 +1200,51 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             >
               {actualTitle.length <= 10 ? actualTitle : `${actualTitle.slice(0, 10)}...`}
             </span>
-            {/* 自定义 tooltip */}
-            <div
-              className='absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded-md shadow-lg opacity-0 invisible peer-hover:opacity-100 peer-hover:visible transition-all duration-200 ease-out delay-100 whitespace-nowrap pointer-events-none'
-              style={{
-                WebkitUserSelect: 'none',
-                userSelect: 'none',
-                WebkitTouchCallout: 'none',
-              } as React.CSSProperties}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                return false;
-              }}
-            >
-              {actualTitle}
-              <div
-                className='absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800'
+            
+            {/* 问问AI按钮 - 仅豆瓣卡片悬停时显示 */}
+            {from === 'douban' && showAIButton && (
+              <button
+                onClick={handleAIButtonClick}
+                className='absolute inset-0 flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-md transition-all duration-300 ease-in-out transform opacity-100 scale-100 shadow-lg hover:shadow-xl'
                 style={{
                   WebkitUserSelect: 'none',
                   userSelect: 'none',
                   WebkitTouchCallout: 'none',
                 } as React.CSSProperties}
-              ></div>
-            </div>
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  return false;
+                }}
+              >
+                问问AI
+              </button>
+            )}
+            
+            {/* 自定义 tooltip - 非AI按钮状态时显示 */}
+            {!(from === 'douban' && showAIButton) && (
+              <div
+                className='absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded-md shadow-lg opacity-0 invisible peer-hover:opacity-100 peer-hover:visible transition-all duration-200 ease-out delay-100 whitespace-nowrap pointer-events-none'
+                style={{
+                  WebkitUserSelect: 'none',
+                  userSelect: 'none',
+                  WebkitTouchCallout: 'none',
+                } as React.CSSProperties}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  return false;
+                }}
+              >
+                {actualTitle}
+                <div
+                  className='absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800'
+                  style={{
+                    WebkitUserSelect: 'none',
+                    userSelect: 'none',
+                    WebkitTouchCallout: 'none',
+                  } as React.CSSProperties}
+                ></div>
+              </div>
+            )}
           </div>
           {config.showSourceName && source_name && (
             <span
