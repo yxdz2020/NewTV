@@ -416,11 +416,11 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
       year: 'all',
       platform: 'all',
       label: 'all',
-      sort: 'T',
+      sort: 'U',
     };
 
     Object.entries(newValues).forEach(([key, value]) => {
-      if (value && value !== 'all' && (key !== 'sort' || value !== 'T')) {
+      if (value && value !== 'all' && (key !== 'sort' || value !== 'U')) {
         const category = categories.find((cat) => cat.key === key);
         if (category) {
           const option = category.options.find((opt) => opt.value === value);
@@ -449,7 +449,7 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
     if (
       !value ||
       value === 'all' ||
-      (categoryKey === 'sort' && value === 'T')
+      (categoryKey === 'sort' && value === 'U')
     ) {
       return category.label;
     }
@@ -461,7 +461,7 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
   const isDefaultValue = (categoryKey: string) => {
     const value = values[categoryKey];
     return (
-      !value || value === 'all' || (categoryKey === 'sort' && value === 'T')
+      !value || value === 'all' || (categoryKey === 'sort' && value === 'U')
     );
   };
 
