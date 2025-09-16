@@ -30,6 +30,7 @@ import { ImagePlaceholder } from '@/components/ImagePlaceholder';
 import MobileActionSheet from '@/components/MobileActionSheet';
 import CombinedDetailModal from './CombinedDetailModal';
 import VideoDetailPreview from '@/components/VideoDetailPreview';
+import AIChatModal from '@/components/AIChatModal';
 import { SearchResult, DoubanDetail } from '@/lib/types';
 
 export interface VideoCardProps {
@@ -103,6 +104,10 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const [showAIButton, setShowAIButton] = useState(false);
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // AI聊天模态框状态
+  const [isAIChatModalOpen, setIsAIChatModalOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
   // 可外部修改的可控字段
   const [dynamicEpisodes, setDynamicEpisodes] = useState<number | undefined>(
     episodes
@@ -125,6 +130,20 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   useEffect(() => {
     setDynamicDoubanId(douban_id);
   }, [douban_id]);
+
+  // 屏幕尺寸检测
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+
+    return () => {
+      window.removeEventListener('resize', checkScreenSize);
+    };
+  }, []);
 
   // 清理定时器
   useEffect(() => {
@@ -292,16 +311,20 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     // 存储剧名、海报和豆瓣链接信息到localStorage
     const presetContent = {
       title: actualTitle,
-      poster: actualPoster,
+      poster: processImageUrl(actualPoster),
       doubanLink: doubanLink,
       hiddenContent: `这部剧的名字叫《${actualTitle}》，这部剧豆瓣链接地址：${doubanLink}\n`,
       timestamp: Date.now()
     };
     localStorage.setItem('ai-chat-preset', JSON.stringify(presetContent));
 
-    // 跳转到AI聊天页面
-    router.push('/ai-chat');
-  }, [actualTitle, actualPoster, actualDoubanId, isBangumi, router]);
+    // PC端打开模态框，移动端跳转页面
+    if (isDesktop) {
+      setIsAIChatModalOpen(true);
+    } else {
+      router.push('/ai-chat');
+    }
+  }, [actualTitle, actualPoster, actualDoubanId, isBangumi, router, isDesktop]);
 
   // 跳转到播放页面的函数
   const navigateToPlay = useCallback(() => {
@@ -1212,7 +1235,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             {from === 'douban' && showAIButton && (
               <button
                 onClick={handleAIButtonClick}
-                className='absolute bottom-2 left-2 px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded transition-all duration-300 ease-in-out transform opacity-100 scale-100 shadow-md hover:shadow-lg'
+                className='absolute bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded transition-all duration-300 ease-in-out opacity-100 scale-100 shadow-md hover:shadow-lg'
                 style={{
                   WebkitUserSelect: 'none',
                   userSelect: 'none',
@@ -1345,6 +1368,12 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         poster={actualPoster}
         title={actualTitle}
       />
+      {isDesktop && (
+        <AIChatModal
+          isOpen={isAIChatModalOpen}
+          onClose={() => setIsAIChatModalOpen(false)}
+        />
+      )}
     </>
   );
 }
