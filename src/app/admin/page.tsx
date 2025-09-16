@@ -1426,7 +1426,7 @@ const UserConfig = ({ config, role, refreshConfig, setConfig }: UserConfigProps)
                         <td className='px-6 py-4 whitespace-nowrap'>
                           <span
                             className={`px-2 py-1 text-xs rounded-full ${!user.banned
-                              ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+                              ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
                               : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
                               }`}
                           >
@@ -2563,7 +2563,7 @@ const VideoSourceConfig = ({
       case 'valid':
         return {
           text: '有效',
-          className: 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300',
+          className: 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300',
           icon: '✓',
           message: result.message
         };
@@ -2639,7 +2639,7 @@ const VideoSourceConfig = ({
         <td className='px-6 py-4 whitespace-nowrap max-w-[1rem]'>
           <span
             className={`px-2 py-1 text-xs rounded-full ${!source.disabled
-              ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+              ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
               : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
               }`}
           >
@@ -3235,7 +3235,7 @@ const CategoryConfig = ({
         <td className='px-6 py-4 whitespace-nowrap max-w-[1rem]'>
           <span
             className={`px-2 py-1 text-xs rounded-full ${!category.disabled
-              ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+              ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
               : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
               }`}
           >
@@ -4596,7 +4596,7 @@ const LiveSourceConfig = ({
         <td className='px-6 py-4 whitespace-nowrap max-w-[1rem]'>
           <span
             className={`px-2 py-1 text-xs rounded-full ${!liveSource.disabled
-              ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+              ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
               : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
               }`}
           >
