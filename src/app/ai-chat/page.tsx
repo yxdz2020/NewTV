@@ -288,18 +288,9 @@ const AIChatPage = () => {
                 </div>
               )}
               <div className={`flex flex-col max-w-[80%] ${message.type === 'user' ? 'items-end' : 'items-start'}`}>
-                <div
-                  className={`p-3 rounded-2xl ${message.type === 'user'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
-                    }`}
-                >
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                </div>
-
                 {/* 海报卡片显示 */}
                 {message.isMovieCard && message.movieInfo && (
-                  <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg max-w-xs">
+                  <div className="mb-2 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg max-w-xs">
                     <div className="flex items-start gap-3">
                       <div className="w-16 h-20 bg-gray-200 dark:bg-gray-600 rounded flex-shrink-0 overflow-hidden">
                         <img
@@ -338,6 +329,14 @@ const AIChatPage = () => {
                     </div>
                   </div>
                 )}
+                <div
+                  className={`p-3 rounded-2xl ${message.type === 'user'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                    }`}
+                >
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                </div>
 
                 {/* 推荐影片卡片 */}
                 {message.recommendations && message.recommendations.length > 0 && (
