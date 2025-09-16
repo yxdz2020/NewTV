@@ -773,6 +773,10 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     handleToggleFavorite,
     handleDeleteRecord,
     handlePlayInNewTab,
+    isDesktop,
+    setIsAIChatModalOpen,
+    router,
+    origin,
   ]);
 
   return (
