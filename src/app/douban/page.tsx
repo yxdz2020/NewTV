@@ -75,7 +75,7 @@ function DoubanPageClient() {
     year: 'all',
     platform: 'all',
     label: 'all',
-    sort: 'T',
+    sort: 'U',
   });
 
   // 星期选择器状态
@@ -647,7 +647,7 @@ function DoubanPageClient() {
           year: 'all',
           platform: 'all',
           label: 'all',
-          sort: 'T',
+          sort: 'U',
         });
 
         // 如果是自定义分类模式，同时更新一级和二级选择器
