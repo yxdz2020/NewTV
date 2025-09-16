@@ -1231,11 +1231,11 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
               {actualTitle.length <= 10 ? actualTitle : `${actualTitle.slice(0, 10)}...`}
             </span>
 
-            {/* 问问AI按钮 - 仅豆瓣卡片悬停时显示 */}
+            {/* 问问AI按钮 - 仅豆瓣卡片悬停时显示，与标题位置对齐 */}
             {from === 'douban' && showAIButton && (
               <button
                 onClick={handleAIButtonClick}
-                className='absolute bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded transition-all duration-300 ease-in-out opacity-100 scale-100 shadow-md hover:shadow-lg'
+                className='absolute inset-0 flex items-center justify-center px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded transition-all duration-300 ease-in-out opacity-100 scale-100 shadow-md hover:shadow-lg'
                 style={{
                   WebkitUserSelect: 'none',
                   userSelect: 'none',

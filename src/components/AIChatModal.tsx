@@ -1,6 +1,7 @@
 import { Bot, Send, User, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
+import { processImageUrl } from '@/lib/utils';
 
 interface Message {
   id: string;
@@ -261,7 +262,7 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
                     <div className="flex items-start gap-3">
                       <div className="w-16 h-20 bg-gray-200 dark:bg-gray-700 rounded flex-shrink-0 overflow-hidden">
                         <img 
-                          src={message.movieInfo.poster} 
+                          src={processImageUrl(message.movieInfo.poster)} 
                           alt={message.movieInfo.title} 
                           className="w-full h-full object-cover" 
                           onError={(e) => {
@@ -299,7 +300,7 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
                     {message.recommendations.map((movie, index) => (
                       <div key={index} onClick={() => handleMovieSelect(movie)} className="p-3 glass-light rounded-lg cursor-pointer hover:shadow-md transition-all">
                         <div className="flex items-start gap-3">
-                          {movie.poster && <img src={movie.poster} alt={movie.title} className="w-12 h-16 object-cover rounded flex-shrink-0" />}
+                          {movie.poster && <img src={processImageUrl(movie.poster)} alt={movie.title} className="w-12 h-16 object-cover rounded flex-shrink-0" />}
                           <div className="flex-1 min-w-0">
                             <h4 className="font-medium text-gray-900 dark:text-white text-sm">{movie.title}{movie.year && <span className="text-gray-500 dark:text-gray-400 ml-1">({movie.year})</span>}</h4>
                             {movie.genre && <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{movie.genre}</p>}
