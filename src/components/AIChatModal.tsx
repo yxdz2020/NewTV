@@ -64,7 +64,7 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
         if (presetContent) {
           try {
             const preset = JSON.parse(presetContent);
-            
+
             // 模拟发送海报卡片消息
             const movieCardMessage: Message = {
               id: 'movie-card-' + Date.now(),
@@ -79,7 +79,7 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
               },
               hiddenContent: preset.hiddenContent
             };
-            
+
             // AI预设回复
             const aiReplyMessage: Message = {
               id: 'ai-reply-' + Date.now(),
@@ -87,7 +87,7 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
               content: `你想了解《${preset.title}》的什么相关信息呢？`,
               timestamp: new Date()
             };
-            
+
             setMessages([
               {
                 id: '1',
@@ -98,7 +98,7 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
               movieCardMessage,
               aiReplyMessage
             ]);
-            
+
             // 清除预设内容
             localStorage.removeItem('ai-chat-preset');
             return; // 有预设内容时不加载缓存消息
@@ -106,7 +106,7 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
             console.error('Failed to parse preset content:', error);
           }
         }
-        
+
         // 没有预设内容时才加载缓存消息
         const cachedMessages = localStorage.getItem('ai-chat-messages');
         if (cachedMessages) {
@@ -145,7 +145,7 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
     // 检查最后一条消息是否是电影卡片消息，如果是则组合隐藏内容
     const lastMessage = messages[messages.length - 1];
     let actualContent = inputValue.trim();
-    
+
     if (lastMessage && lastMessage.isMovieCard && lastMessage.hiddenContent) {
       // 组合隐藏内容和用户输入
       actualContent = `${lastMessage.hiddenContent}\n\n用户问题：${inputValue.trim()}`;
@@ -236,8 +236,9 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[99999] p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999999] p-4"
       onClick={handleBackdropClick}
+      style={{ zIndex: 9999999 }}
     >
       <div className="glass-strong rounded-lg shadow-xl w-full max-w-2xl h-[80vh] flex flex-col">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
@@ -260,10 +261,10 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
                   <div className="mb-3 p-3 glass-light rounded-lg border border-gray-200 dark:border-gray-600 self-stretch">
                     <div className="flex items-start gap-3">
                       <div className="w-16 h-20 bg-gray-200 dark:bg-gray-700 rounded flex-shrink-0 overflow-hidden">
-                        <img 
-                          src={processImageUrl(message.movieInfo.poster)} 
-                          alt={message.movieInfo.title} 
-                          className="w-full h-full object-cover" 
+                        <img
+                          src={processImageUrl(message.movieInfo.poster)}
+                          alt={message.movieInfo.title}
+                          className="w-full h-full object-cover"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
@@ -279,9 +280,9 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-gray-900 dark:text-white text-sm mb-2">{message.movieInfo.title}</h4>
-                        <a 
-                          href={message.movieInfo.doubanLink} 
-                          target="_blank" 
+                        <a
+                          href={message.movieInfo.doubanLink}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
                         >
