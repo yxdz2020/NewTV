@@ -1,6 +1,7 @@
 import { Bot, Send, User, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { processImageUrl } from '@/lib/utils';
 
 interface Message {
@@ -55,6 +56,12 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // 确保组件在客户端挂载后才渲染 Portal
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -232,9 +239,9 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  const modalContent = (
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999999] p-4"
       onClick={handleBackdropClick}
@@ -415,6 +422,9 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
       </div>
     </div>
   );
+
+  // 使用 Portal 将弹窗渲染到 document.body
+  return createPortal(modalContent, document.body);
 };
 
 export default AIChatModal;
