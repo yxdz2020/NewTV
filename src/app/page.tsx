@@ -14,7 +14,7 @@ import {
   getAllPlayRecords,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
-import { getDoubanCategories } from '@/lib/douban.client';
+import { getDoubanCategories, getDoubanRecommends } from '@/lib/douban.client';
 import { DoubanItem } from '@/lib/types';
 
 import CapsuleSwitch from '@/components/CapsuleSwitch';
@@ -76,7 +76,14 @@ function HomeClient() {
               type: '全部',
             }),
             getDoubanCategories({ kind: 'tv', category: 'tv', type: 'tv' }),
-            getDoubanCategories({ kind: 'tv', category: 'anime', type: '全部' }),
+            getDoubanRecommends({
+              kind: 'tv',
+              pageLimit: 25,
+              pageStart: 0,
+              category: '动画',
+              format: '电视剧',
+              sort: 'U',
+            }),
             getDoubanCategories({ kind: 'tv', category: 'show', type: 'show' }),
           ]);
 
