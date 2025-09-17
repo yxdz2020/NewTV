@@ -599,7 +599,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                                   const textColorClasses = isUltraHigh
                                     ? 'text-purple-600 dark:text-purple-400'
                                     : isHigh
-                                      ? 'text-green-600 dark:text-green-400'
+                                      ? 'text-blue-600 dark:text-blue-400'
                                       : 'text-yellow-600 dark:text-yellow-400';
 
                                   return (
