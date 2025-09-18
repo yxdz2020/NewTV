@@ -1241,7 +1241,7 @@ function PlayPageClient() {
               }
 
               // 停止并重置弹幕，防止重复
-              plugin.stop();
+              plugin.load();
               plugin.reset();
               console.log('集数切换：已停止并重置弹幕插件');
 
@@ -1961,7 +1961,7 @@ function PlayPageClient() {
                   }
 
                   // 停止并重置弹幕，防止重复
-                  plugin.stop();
+                  plugin.load();
                   plugin.reset();
                   console.log('换源：已停止并重置弹幕插件');
 
