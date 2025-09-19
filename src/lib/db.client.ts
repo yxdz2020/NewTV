@@ -784,7 +784,7 @@ export async function savePlayRecord(
 
       // 更新用户统计数据
       await updateUserStats(record);
-      
+
       // 触发用户统计数据更新事件
       window.dispatchEvent(
         new CustomEvent('userStatsUpdated', {
@@ -817,7 +817,7 @@ export async function savePlayRecord(
 
     // 更新用户统计数据
     await updateUserStats(record);
-    
+
     // 触发用户统计数据更新事件
     window.dispatchEvent(
       new CustomEvent('userStatsUpdated', {
@@ -1978,49 +1978,28 @@ export async function getUserStats(): Promise<UserStats> {
  */
 export async function updateUserStats(record: PlayRecord): Promise<void> {
   try {
-    // 修复：使用统一的键格式，确保movieKey和lastProgressKey一致
-    // 对于电影（总集数为1），使用简化的键；对于电视剧，包含集数信息
-    const baseKey = `${record.source_name}+${record.title}-${record.year}`;
-    const movieKey = record.total_episodes === 1 ? baseKey : `${baseKey}+${record.index}`;
-    const lastProgressKey = `last_progress_${movieKey}`;
-    
-    // 获取上次播放进度
+    const movieKey = `${record.source_name}-${record.title}`;
+    const episodeKey = `${record.source_name}+${record.title}-${record.year}+${record.index}`;
+    const lastProgressKey = `last_progress_${episodeKey}`;
+
     const lastProgress = parseInt(localStorage.getItem(lastProgressKey) || '0');
-    
-    // 计算观看时间增量：当前播放进度 - 上次记录的播放进度
-    let watchTimeIncrement = Math.max(0, record.play_time - lastProgress);
-    
-    console.log(`观看时间增量计算: ${record.title} ${record.total_episodes === 1 ? '(电影)' : `第${record.index}集`} - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 增量: ${watchTimeIncrement}s`);
-    
-    // 修复：对于新观看的内容，确保统计数据能够正确更新
-    // 如果增量为0但播放时间大于5秒，检查是否是新的观看会话
-    if (watchTimeIncrement === 0 && record.play_time >= 5) {
-      // 检查是否是新的观看会话（距离上次保存超过30分钟或者是不同的视频）
-      const sessionKey = `last_session_${movieKey}`;
-      const lastSessionTime = parseInt(localStorage.getItem(sessionKey) || '0');
-      const currentTime = Date.now();
-      
-      // 如果距离上次会话超过30分钟，或者没有会话记录，认为是新的观看会话
-      if (currentTime - lastSessionTime > 30 * 60 * 1000 || lastSessionTime === 0) {
-        watchTimeIncrement = record.play_time;
-        console.log(`检测到新观看会话: ${record.title} - 使用当前播放时间作为增量: ${watchTimeIncrement}s`);
-        // 更新会话时间
-        localStorage.setItem(sessionKey, currentTime.toString());
-      }
-    }
-    
-    // 特殊处理：如果当前进度小于上次进度，说明重新开始观看
-    // 这种情况下，我们应该累计整个观看时间，而不是计算增量
-    if (record.play_time < lastProgress && record.play_time > 0) {
+    let watchTimeIncrement = 0;
+
+    // If current progress is significantly less than last progress (seek back > 15s),
+    // treat it as a new viewing session (restart).
+    if (record.play_time < lastProgress - 15) {
+      // For a new session, the increment is the current playtime.
+      // We also reset the progress baseline for this session.
       watchTimeIncrement = record.play_time;
-      console.log(`重新观看检测: ${record.title} - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 使用当前进度作为增量: ${watchTimeIncrement}s`);
+      // By setting lastProgress to 0, the next update will calculate increment from 0.
+      localStorage.setItem(lastProgressKey, '0');
+    } else {
+      // Otherwise, it's continuous playback.
+      watchTimeIncrement = Math.max(0, record.play_time - lastProgress);
     }
 
-    // 只有当观看时间增量大于0时才更新统计数据
+    // Only update if there is a meaningful increment.
     if (watchTimeIncrement > 0) {
-      console.log(`发送统计数据更新请求: 增量 ${watchTimeIncrement}s, movieKey: ${movieKey}`);
-      
-      // 发送到服务器更新
       const response = await fetchWithAuth('/api/user/stats', {
         method: 'POST',
         headers: {
@@ -2029,48 +2008,34 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
         body: JSON.stringify({
           watchTime: watchTimeIncrement,
           movieKey: movieKey,
-          timestamp: record.save_time
+          timestamp: record.save_time,
         }),
       });
 
-      console.log(`API响应状态: ${response.status}`);
-      
       if (response.ok) {
         const responseData = await response.json();
-        console.log(`API响应数据:`, responseData);
         
-        // 更新localStorage中的上次播放进度
+        // Update the last known progress to the current time.
         localStorage.setItem(lastProgressKey, record.play_time.toString());
-        console.log(`更新缓存: ${lastProgressKey} = ${record.play_time}`);
 
-        // 立即更新缓存中的用户统计数据，而不是清除缓存
+        // Update the user stats in the cache.
         const authInfo = getAuthInfoFromBrowserCookie();
         if (authInfo?.username && responseData.userStats) {
           cacheManager.cacheUserStats(responseData.userStats);
-          console.log(`更新用户统计数据缓存:`, responseData.userStats);
         } else {
-          // 如果API没有返回userStats，则清除缓存强制重新获取
           cacheManager.clearUserCache(authInfo?.username);
-          console.log(`清除用户缓存，强制重新获取: ${authInfo?.username}`);
         }
-        
-        // 触发用户统计数据更新事件
-        window.dispatchEvent(new CustomEvent('userStatsUpdated', { 
-          detail: responseData.userStats || record 
+
+        // Notify the application of the update.
+        window.dispatchEvent(new CustomEvent('userStatsUpdated', {
+          detail: responseData.userStats || record,
         }));
-        console.log(`触发userStatsUpdated事件`);
-        
-        console.log(`用户统计数据已更新: 增量 ${watchTimeIncrement}s`);
       } else {
-        const errorText = await response.text();
-        console.error(`更新用户统计数据失败: ${response.status} ${response.statusText}`, errorText);
+        console.error(`Failed to update user stats: ${response.status}`);
       }
-    } else {
-      console.log(`无需更新用户统计数据: 增量为 ${watchTimeIncrement}s`);
     }
   } catch (error) {
-    console.error('更新用户统计数据失败:', error);
-    // 静默失败，不影响用户体验
+    console.error('Failed to update user stats:', error);
   }
 }
 
