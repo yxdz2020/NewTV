@@ -395,8 +395,36 @@ export class UpstashRedisStorage implements IStorage {
   }
 
   async getUserStats(userName: string): Promise<UserStats | null> {
-    const result = await withRetry(() => this.client.get(this.userStatsKey(userName)));
-    return result ? JSON.parse(result as string) : null;
+    try {
+      const result = await withRetry(() => this.client.get(this.userStatsKey(userName)));
+      if (!result) {
+        return null;
+      }
+      
+      // 检查结果是否已经是对象
+      if (typeof result === 'object' && result !== null) {
+        console.log('getUserStats: 数据已经是对象格式，直接返回');
+        return result as UserStats;
+      }
+      
+      // 检查是否是有效的JSON字符串
+      if (typeof result === 'string') {
+        try {
+          return JSON.parse(result);
+        } catch (parseError) {
+          console.error('getUserStats: JSON解析失败，原始数据:', result);
+          console.error('getUserStats: 解析错误:', parseError);
+          // 如果解析失败，返回null让系统重新初始化
+          return null;
+        }
+      }
+      
+      console.error('getUserStats: 未知数据格式:', typeof result, result);
+      return null;
+    } catch (error) {
+      console.error('getUserStats: 获取用户统计数据失败:', error);
+      return null;
+    }
   }
 
   async updateUserStats(userName: string, updateData: {
@@ -404,50 +432,75 @@ export class UpstashRedisStorage implements IStorage {
     movieKey: string;
     timestamp: number;
   }): Promise<void> {
-    const key = this.userStatsKey(userName);
-    const existingStats = await this.getUserStats(userName);
+    try {
+      const key = this.userStatsKey(userName);
+      const existingStats = await this.getUserStats(userName);
 
-    let stats: UserStats;
-    if (existingStats) {
-      // 检查是否是新影片
-      const watchedMoviesKey = `watched_movies:${userName}`;
-      const watchedMovies = await withRetry(() => this.client.get(watchedMoviesKey));
-      const movieSet = watchedMovies ? new Set(JSON.parse(watchedMovies as string)) : new Set();
-      
-      const isNewMovie = !movieSet.has(updateData.movieKey);
-      
-      // 更新现有统计数据
-      stats = {
-        totalWatchTime: existingStats.totalWatchTime + updateData.watchTime,
-        totalMovies: isNewMovie ? existingStats.totalMovies + 1 : existingStats.totalMovies,
-        firstWatchDate: existingStats.firstWatchDate,
-        lastUpdateTime: updateData.timestamp
-      };
+      let stats: UserStats;
+      if (existingStats) {
+        // 检查是否是新影片
+        const watchedMoviesKey = `watched_movies:${userName}`;
+        const watchedMoviesResult = await withRetry(() => this.client.get(watchedMoviesKey));
+        
+        let movieSet: Set<string>;
+        if (watchedMoviesResult) {
+          try {
+            // 检查数据类型
+            if (typeof watchedMoviesResult === 'object' && Array.isArray(watchedMoviesResult)) {
+              movieSet = new Set(watchedMoviesResult);
+            } else if (typeof watchedMoviesResult === 'string') {
+              movieSet = new Set(JSON.parse(watchedMoviesResult));
+            } else {
+              console.error('watchedMovies数据格式异常:', typeof watchedMoviesResult, watchedMoviesResult);
+              movieSet = new Set();
+            }
+          } catch (parseError) {
+            console.error('解析watchedMovies失败:', parseError, '原始数据:', watchedMoviesResult);
+            movieSet = new Set();
+          }
+        } else {
+          movieSet = new Set();
+        }
+        
+        const isNewMovie = !movieSet.has(updateData.movieKey);
+        
+        // 更新现有统计数据
+        stats = {
+          totalWatchTime: existingStats.totalWatchTime + updateData.watchTime,
+          totalMovies: isNewMovie ? existingStats.totalMovies + 1 : existingStats.totalMovies,
+          firstWatchDate: existingStats.firstWatchDate,
+          lastUpdateTime: updateData.timestamp
+        };
 
-      // 如果是新影片，添加到已观看影片集合中
-      if (isNewMovie) {
-        movieSet.add(updateData.movieKey);
-        await withRetry(() => this.client.set(watchedMoviesKey, JSON.stringify(Array.from(movieSet))));
-        console.log(`新影片记录: ${updateData.movieKey}, 总影片数: ${stats.totalMovies}`);
+        // 如果是新影片，添加到已观看影片集合中
+        if (isNewMovie) {
+          movieSet.add(updateData.movieKey);
+          await withRetry(() => this.client.set(watchedMoviesKey, JSON.stringify(Array.from(movieSet))));
+          console.log(`新影片记录: ${updateData.movieKey}, 总影片数: ${stats.totalMovies}`);
+        } else {
+          console.log(`已观看影片: ${updateData.movieKey}, 总影片数保持: ${stats.totalMovies}`);
+        }
       } else {
-        console.log(`已观看影片: ${updateData.movieKey}, 总影片数保持: ${stats.totalMovies}`);
+        // 创建新的统计数据
+        stats = {
+          totalWatchTime: updateData.watchTime,
+          totalMovies: 1,
+          firstWatchDate: updateData.timestamp,
+          lastUpdateTime: updateData.timestamp
+        };
+
+        // 初始化已观看影片集合
+        const watchedMoviesKey = `watched_movies:${userName}`;
+        await withRetry(() => this.client.set(watchedMoviesKey, JSON.stringify([updateData.movieKey])));
+        console.log(`初始化用户统计: ${updateData.movieKey}, 总影片数: 1`);
       }
-    } else {
-      // 创建新的统计数据
-      stats = {
-        totalWatchTime: updateData.watchTime,
-        totalMovies: 1,
-        firstWatchDate: updateData.timestamp,
-        lastUpdateTime: updateData.timestamp
-      };
 
-      // 初始化已观看影片集合
-      const watchedMoviesKey = `watched_movies:${userName}`;
-      await withRetry(() => this.client.set(watchedMoviesKey, JSON.stringify([updateData.movieKey])));
-      console.log(`初始化用户统计: ${updateData.movieKey}, 总影片数: 1`);
+      await withRetry(() => this.client.set(key, JSON.stringify(stats)));
+      console.log('updateUserStats: 统计数据更新成功');
+    } catch (error) {
+      console.error('updateUserStats: 更新用户统计数据失败:', error);
+      throw error;
     }
-
-    await withRetry(() => this.client.set(key, JSON.stringify(stats)));
   }
 
   async clearUserStats(userName: string): Promise<void> {
