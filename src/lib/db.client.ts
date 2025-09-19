@@ -810,6 +810,13 @@ export async function savePlayRecord(
 
     // 更新用户统计数据
     await updateUserStats(record);
+    
+    // 触发用户统计数据更新事件
+    window.dispatchEvent(
+      new CustomEvent('userStatsUpdated', {
+        detail: { record },
+      })
+    );
   } catch (err) {
     console.error('保存播放记录失败:', err);
     triggerGlobalError('保存播放记录失败');
@@ -1531,7 +1538,8 @@ export type CacheUpdateEvent =
   | 'playRecordsUpdated'
   | 'favoritesUpdated'
   | 'searchHistoryUpdated'
-  | 'skipConfigsUpdated';
+  | 'skipConfigsUpdated'
+  | 'userStatsUpdated';
 
 /**
  * 用于 React 组件监听数据更新的事件监听器
@@ -1964,22 +1972,16 @@ export async function getUserStats(): Promise<UserStats> {
 export async function updateUserStats(record: PlayRecord): Promise<void> {
   try {
     const movieKey = `${record.source_name}-${record.title}`;
-    
-    // 获取之前的播放记录来计算观看时间增量
-    let watchTimeIncrement = 0;
-    
-    // 从缓存或存储中获取之前的播放记录
-    const allRecords = await getAllPlayRecords();
     const recordKey = generateStorageKey(record.source_name, `${record.title}-${record.year}`);
-    const previousRecord = allRecords[recordKey];
     
-    if (previousRecord) {
-      // 计算观看时间增量：当前播放进度 - 之前的播放进度
-      watchTimeIncrement = Math.max(0, record.play_time - previousRecord.play_time);
-    } else {
-      // 如果是新记录，观看时间增量就是当前播放进度
-      watchTimeIncrement = record.play_time;
-    }
+    // 使用localStorage缓存上次播放进度来计算增量
+    const lastProgressKey = `last_progress_${recordKey}`;
+    const lastProgress = parseInt(localStorage.getItem(lastProgressKey) || '0');
+    
+    // 计算观看时间增量：当前播放进度 - 上次记录的播放进度
+    const watchTimeIncrement = Math.max(0, record.play_time - lastProgress);
+    
+    console.log(`观看时间增量计算: ${record.title} - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 增量: ${watchTimeIncrement}s`);
 
     // 只有当观看时间增量大于0时才更新统计数据
     if (watchTimeIncrement > 0) {
@@ -1996,11 +1998,18 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
         }),
       });
 
+      // 更新localStorage中的上次播放进度
+      localStorage.setItem(lastProgressKey, record.play_time.toString());
+
       // 清除缓存，下次获取时会重新从服务器拉取
       const authInfo = getAuthInfoFromBrowserCookie();
       if (authInfo?.username) {
         cacheManager.clearUserCache(authInfo.username);
       }
+      
+      console.log(`用户统计数据已更新: 增量 ${watchTimeIncrement}s`);
+    } else {
+      console.log(`无需更新用户统计数据: 增量为 ${watchTimeIncrement}s`);
     }
   } catch (error) {
     console.error('更新用户统计数据失败:', error);

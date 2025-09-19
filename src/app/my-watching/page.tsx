@@ -27,17 +27,29 @@ export default function MyWatchingPage() {
     loadPlayRecords();
     loadUserStats();
 
-    // 监听播放记录更新事件，当播放记录更新时重新加载用户统计数据
-    const unsubscribe = subscribeToDataUpdates(
+    // 监听播放记录更新事件
+    const unsubscribePlayRecords = subscribeToDataUpdates(
       'playRecordsUpdated',
-      async () => {
-        // 播放记录更新后，重新加载用户统计数据以获取最新的统计信息
-        await loadUserStats();
-        await loadPlayRecords();
+      () => {
+        console.log('播放记录已更新，重新加载数据');
+        loadUserStats();
+        loadPlayRecords();
       }
     );
 
-    return unsubscribe;
+    // 监听用户统计数据更新事件
+    const unsubscribeUserStats = subscribeToDataUpdates(
+      'userStatsUpdated',
+      () => {
+        console.log('用户统计数据已更新，重新加载数据');
+        loadUserStats();
+      }
+    );
+
+    return () => {
+      unsubscribePlayRecords();
+      unsubscribeUserStats();
+    };
   }, []);
 
   const loadUserStats = async () => {
