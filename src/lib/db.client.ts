@@ -1972,21 +1972,21 @@ export async function getUserStats(): Promise<UserStats> {
 export async function updateUserStats(record: PlayRecord): Promise<void> {
   try {
     const movieKey = `${record.source_name}-${record.title}`;
-    const recordKey = generateStorageKey(record.source_name, `${record.title}-${record.year}`);
     
-    // 使用localStorage缓存上次播放进度来计算增量
-    const lastProgressKey = `last_progress_${recordKey}`;
+    // 使用剧集特定的键来缓存播放进度（包含集数信息）
+    const episodeKey = `${record.source_name}+${record.title}-${record.year}+${record.index}`;
+    const lastProgressKey = `last_progress_${episodeKey}`;
     const lastProgress = parseInt(localStorage.getItem(lastProgressKey) || '0');
     
     // 计算观看时间增量：当前播放进度 - 上次记录的播放进度
     const watchTimeIncrement = Math.max(0, record.play_time - lastProgress);
     
-    console.log(`观看时间增量计算: ${record.title} - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 增量: ${watchTimeIncrement}s`);
+    console.log(`观看时间增量计算: ${record.title} 第${record.index}集 - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 增量: ${watchTimeIncrement}s`);
 
     // 只有当观看时间增量大于0时才更新统计数据
     if (watchTimeIncrement > 0) {
       // 发送到服务器更新
-      await fetchWithAuth('/api/user/stats', {
+      const response = await fetchWithAuth('/api/user/stats', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1998,16 +1998,20 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
         }),
       });
 
-      // 更新localStorage中的上次播放进度
-      localStorage.setItem(lastProgressKey, record.play_time.toString());
+      if (response.ok) {
+        // 更新localStorage中的上次播放进度
+        localStorage.setItem(lastProgressKey, record.play_time.toString());
 
-      // 清除缓存，下次获取时会重新从服务器拉取
-      const authInfo = getAuthInfoFromBrowserCookie();
-      if (authInfo?.username) {
-        cacheManager.clearUserCache(authInfo.username);
+        // 清除缓存，下次获取时会重新从服务器拉取
+        const authInfo = getAuthInfoFromBrowserCookie();
+        if (authInfo?.username) {
+          cacheManager.clearUserCache(authInfo.username);
+        }
+        
+        console.log(`用户统计数据已更新: 增量 ${watchTimeIncrement}s`);
+      } else {
+        console.error('更新用户统计数据失败:', await response.text());
       }
-      
-      console.log(`用户统计数据已更新: 增量 ${watchTimeIncrement}s`);
     } else {
       console.log(`无需更新用户统计数据: 增量为 ${watchTimeIncrement}s`);
     }
