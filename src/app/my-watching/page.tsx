@@ -199,9 +199,13 @@ export default function MyWatchingPage() {
 
   const handleConfirmClearStats = async () => {
     try {
-      // 清空统计数据和播放记录（全部清除）
-      await clearUserStats();
-      await clearAllPlayRecords();
+      // 使用 Promise.all 确保所有清除操作同时进行并等待完成
+      await Promise.all([
+        clearUserStats(),
+        clearAllPlayRecords()
+      ]);
+      
+      // 确保所有状态都被重置
       setUserStats({
         totalWatchTime: 0,
         totalMovies: 0,
@@ -212,8 +216,18 @@ export default function MyWatchingPage() {
       setUpdatedRecords([]);
       setHistoryRecords([]);
       setShowClearStatsConfirm(false);
+      
+      // 强制重新加载数据以确保清除完成
+      setTimeout(() => {
+        loadPlayRecords();
+        loadUserStats();
+      }, 100);
     } catch (error) {
       console.error('清空所有数据失败:', error);
+      // 即使出错也要关闭对话框，避免用户重复点击
+      setShowClearStatsConfirm(false);
+      // 显示错误提示
+      alert('清空数据失败，请重试');
     }
   };
 
@@ -233,8 +247,17 @@ export default function MyWatchingPage() {
       setUpdatedRecords([]);
       setHistoryRecords([]);
       setShowClearConfirm(false);
+      
+      // 强制重新加载数据以确保清除完成
+      setTimeout(() => {
+        loadPlayRecords();
+      }, 100);
     } catch (error) {
       console.error('清空播放记录失败:', error);
+      // 即使出错也要关闭对话框，避免用户重复点击
+      setShowClearConfirm(false);
+      // 显示错误提示
+      alert('清空播放记录失败，请重试');
     }
   };
 
