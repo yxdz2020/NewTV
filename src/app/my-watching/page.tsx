@@ -417,7 +417,7 @@ export default function MyWatchingPage() {
                           currentEpisode={record.index}
                           episodes={record.total_episodes}
                           source_name={record.source_name}
-                          source={record.source}
+                          source={record.source_name}
                           id={record.id}
                           onDelete={loadUserStats}
                         />
