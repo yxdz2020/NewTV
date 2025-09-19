@@ -159,7 +159,7 @@ export default function MyWatchingPage() {
       setHistoryRecords([]);
       setShowClearStatsConfirm(false);
     } catch (error) {
-      console.error('清空统计数据失败:', error);
+      console.error('清空所有数据失败:', error);
     }
   };
 
@@ -173,6 +173,7 @@ export default function MyWatchingPage() {
 
   const handleConfirmClear = async () => {
     try {
+      // 只清除播放记录，不影响统计数据
       await clearAllPlayRecords();
       setPlayRecords([]);
       setUpdatedRecords([]);
@@ -346,7 +347,7 @@ export default function MyWatchingPage() {
                     ))}
                   </div>
                 </div>
-
+                
                 {/* 桌面端保持原有的横向滚动布局 */}
                 <div className="hidden sm:block">
                   <ScrollableRow>
@@ -383,7 +384,7 @@ export default function MyWatchingPage() {
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                 {updatedRecords.length > 0 ? '历史观看' : '观看记录'}
               </h2>
-
+              
               {/* 移动端网格布局 */}
               <div className="sm:hidden">
                 <div className="grid grid-cols-2 gap-4">
@@ -403,7 +404,7 @@ export default function MyWatchingPage() {
                   ))}
                 </div>
               </div>
-
+              
               {/* 桌面端保持原有的横向滚动布局 */}
               <div className="hidden sm:block">
                 <ScrollableRow>
@@ -459,7 +460,7 @@ export default function MyWatchingPage() {
               </div>
 
               <p className="text-gray-600 dark:text-gray-300 mb-6">
-                确定要清空所有观看记录吗？此操作不可撤销，将删除您的所有观看历史和进度信息。
+                确定要清空所有观看记录吗？此操作不可撤销，将删除您的所有观看历史和进度信息，但不会影响观看统计数据。
               </p>
 
               <div className="flex gap-3 justify-end">

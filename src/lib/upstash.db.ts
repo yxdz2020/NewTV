@@ -400,13 +400,13 @@ export class UpstashRedisStorage implements IStorage {
       if (!result) {
         return null;
       }
-      
+
       // 检查结果是否已经是对象
       if (typeof result === 'object' && result !== null) {
         console.log('getUserStats: 数据已经是对象格式，直接返回');
         return result as UserStats;
       }
-      
+
       // 检查是否是有效的JSON字符串
       if (typeof result === 'string') {
         try {
@@ -418,7 +418,7 @@ export class UpstashRedisStorage implements IStorage {
           return null;
         }
       }
-      
+
       console.error('getUserStats: 未知数据格式:', typeof result, result);
       return null;
     } catch (error) {
@@ -441,7 +441,7 @@ export class UpstashRedisStorage implements IStorage {
         // 检查是否是新影片
         const watchedMoviesKey = `watched_movies:${userName}`;
         const watchedMoviesResult = await withRetry(() => this.client.get(watchedMoviesKey));
-        
+
         let movieSet: Set<string>;
         if (watchedMoviesResult) {
           try {
@@ -461,9 +461,9 @@ export class UpstashRedisStorage implements IStorage {
         } else {
           movieSet = new Set();
         }
-        
+
         const isNewMovie = !movieSet.has(updateData.movieKey);
-        
+
         // 更新现有统计数据
         stats = {
           totalWatchTime: existingStats.totalWatchTime + updateData.watchTime,

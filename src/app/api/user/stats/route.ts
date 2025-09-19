@@ -39,12 +39,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     console.log('POST /api/user/stats - 开始处理请求');
-    
+
     // 从 cookie 获取用户信息
     console.log('正在从 cookie 获取用户信息...');
     const authInfo = getAuthInfoFromCookie(request);
     console.log('用户认证信息:', { username: authInfo?.username || 'null' });
-    
+
     if (!authInfo || !authInfo.username) {
       console.log('用户未认证');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     console.log('正在获取配置...');
     const config = await getConfig();
     console.log('配置获取成功');
-    
+
     if (authInfo.username !== process.env.ADMIN_USERNAME) {
       console.log('非管理员用户，检查用户状态...');
       // 非站长，检查用户存在或被封禁
@@ -97,30 +97,30 @@ export async function POST(request: NextRequest) {
     const updatedStats = await db.getUserStats(authInfo.username);
     console.log('获取统计数据成功:', updatedStats);
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       stats: updatedStats || { totalWatchTime: 0, totalMovies: 0, firstWatchDate: 0, lastUpdateTime: 0 }
     });
   } catch (error) {
-      console.error('POST /api/user/stats - 详细错误信息:');
-      console.error('错误类型:', error?.constructor?.name);
-      console.error('错误消息:', (error as Error)?.message);
-      console.error('错误堆栈:', (error as Error)?.stack);
-      
-      // 如果是特定类型的错误，提供更详细的信息
-      if (error instanceof Error) {
-        console.error('Error name:', error.name);
-        console.error('Error cause:', error.cause);
-      }
-      
-      return NextResponse.json(
-        { 
-          error: '更新用户统计数据失败',
-          details: process.env.NODE_ENV === 'development' ? (error as Error)?.message : undefined
-        },
-        { status: 500 }
-      );
+    console.error('POST /api/user/stats - 详细错误信息:');
+    console.error('错误类型:', error?.constructor?.name);
+    console.error('错误消息:', (error as Error)?.message);
+    console.error('错误堆栈:', (error as Error)?.stack);
+
+    // 如果是特定类型的错误，提供更详细的信息
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error cause:', error.cause);
     }
+
+    return NextResponse.json(
+      {
+        error: '更新用户统计数据失败',
+        details: process.env.NODE_ENV === 'development' ? (error as Error)?.message : undefined
+      },
+      { status: 500 }
+    );
+  }
 }
 
 export async function DELETE(request: NextRequest) {
