@@ -12,6 +12,7 @@ import {
   Shield,
   User,
   X,
+  Eye,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -37,6 +38,7 @@ export const UserMenu: React.FC = () => {
   const [authInfo, setAuthInfo] = useState<AuthInfo | null>(null);
   const [storageType, setStorageType] = useState<string>('localstorage');
   const [mounted, setMounted] = useState(false);
+  const [hasWatchingUpdates, setHasWatchingUpdates] = useState(false);
 
   // Body 滚动锁定 - 使用 overflow 方式避免布局问题
   useEffect(() => {
@@ -340,6 +342,12 @@ export const UserMenu: React.FC = () => {
     setIsSettingsOpen(true);
   };
 
+  const handleMyWatching = () => {
+    setIsOpen(false);
+    setHasWatchingUpdates(false); // 点击后清除提醒
+    router.push('/my-watching');
+  };
+
   const handleCloseSettings = () => {
     setIsSettingsOpen(false);
   };
@@ -525,6 +533,18 @@ export const UserMenu: React.FC = () => {
           >
             <Settings className='w-4 h-4 text-gray-500 dark:text-gray-400' />
             <span className='font-medium'>设置</span>
+          </button>
+
+          {/* 我的观看按钮 */}
+          <button
+            onClick={handleMyWatching}
+            className='w-full px-3 py-2 text-left flex items-center gap-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm relative'
+          >
+            <Eye className='w-4 h-4 text-gray-500 dark:text-gray-400' />
+            <span className='font-medium'>我的观看</span>
+            {hasWatchingUpdates && (
+              <div className='absolute right-3 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-white rounded-full'></div>
+            )}
           </button>
 
           {/* 管理面板按钮 */}
