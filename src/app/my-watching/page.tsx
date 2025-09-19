@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Clock, Play, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-import { getAllPlayRecords, clearAllPlayRecords, PlayRecord, getUserStats, clearUserStats, UserStats, subscribeToDataUpdates } from '@/lib/db.client';
+import { getAllPlayRecords, clearAllPlayRecords, PlayRecord, getUserStats, clearUserStats, UserStats, subscribeToDataUpdates, recalculateUserStatsFromHistory } from '@/lib/db.client';
 import VideoCard from '@/components/VideoCard';
 import ScrollableRow from '@/components/ScrollableRow';
 
@@ -54,10 +54,24 @@ export default function MyWatchingPage() {
 
   const loadUserStats = async () => {
     try {
-      const stats = await getUserStats();
-      setUserStats(stats);
+      // 首先尝试基于历史记录重新计算统计数据
+      const recalculatedStats = await recalculateUserStatsFromHistory();
+      if (recalculatedStats) {
+        setUserStats(recalculatedStats);
+      } else {
+        // 如果重新计算失败，则获取现有统计数据
+        const stats = await getUserStats();
+        setUserStats(stats);
+      }
     } catch (error) {
       console.error('加载用户统计数据失败:', error);
+      // 出错时仍尝试获取现有数据
+      try {
+        const stats = await getUserStats();
+        setUserStats(stats);
+      } catch (fallbackError) {
+        console.error('获取统计数据失败:', fallbackError);
+      }
     }
   };
 

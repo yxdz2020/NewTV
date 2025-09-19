@@ -1508,75 +1508,7 @@ export async function refreshAllCache(): Promise<void> {
   }
 }
 
-/**
- * 获取缓存状态信息
- * 用于调试和监控缓存健康状态
- */
-export function getCacheStatus(): {
-  hasPlayRecords: boolean;
-  hasFavorites: boolean;
-  hasSearchHistory: boolean;
-  hasSkipConfigs: boolean;
-  username: string | null;
-} {
-  if (STORAGE_TYPE === 'localstorage') {
-    return {
-      hasPlayRecords: false,
-      hasFavorites: false,
-      hasSearchHistory: false,
-      hasSkipConfigs: false,
-      username: null,
-    };
-  }
 
-  const authInfo = getAuthInfoFromBrowserCookie();
-  return {
-    hasPlayRecords: !!cacheManager.getCachedPlayRecords(),
-    hasFavorites: !!cacheManager.getCachedFavorites(),
-    hasSearchHistory: !!cacheManager.getCachedSearchHistory(),
-    hasSkipConfigs: !!cacheManager.getCachedSkipConfigs(),
-    username: authInfo?.username || null,
-  };
-}
-
-// ---------------- React Hook 辅助类型 ----------------
-
-export type CacheUpdateEvent =
-  | 'playRecordsUpdated'
-  | 'favoritesUpdated'
-  | 'searchHistoryUpdated'
-  | 'skipConfigsUpdated'
-  | 'userStatsUpdated';
-
-/**
- * 用于 React 组件监听数据更新的事件监听器
- * 使用方法：
- *
- * useEffect(() => {
- *   const unsubscribe = subscribeToDataUpdates('playRecordsUpdated', (data) => {
- *     setPlayRecords(data);
- *   });
- *   return unsubscribe;
- * }, []);
- */
-export function subscribeToDataUpdates<T>(
-  eventType: CacheUpdateEvent,
-  callback: (data: T) => void
-): () => void {
-  if (typeof window === 'undefined') {
-    return () => { };
-  }
-
-  const handleUpdate = (event: CustomEvent) => {
-    callback(event.detail);
-  };
-
-  window.addEventListener(eventType, handleUpdate as EventListener);
-
-  return () => {
-    window.removeEventListener(eventType, handleUpdate as EventListener);
-  };
-}
 
 /**
  * 预加载所有用户数据到缓存
@@ -1979,27 +1911,53 @@ export async function getUserStats(): Promise<UserStats> {
 export async function updateUserStats(record: PlayRecord): Promise<void> {
   try {
     const movieKey = `${record.source_name}-${record.title}`;
+
+    // 使用包含集数信息的键来缓存每一集的播放进度
     const episodeKey = `${record.source_name}+${record.title}-${record.year}+${record.index}`;
     const lastProgressKey = `last_progress_${episodeKey}`;
+    const lastUpdateTimeKey = `last_update_time_${episodeKey}`;
 
+    // 获取上次播放进度和更新时间
     const lastProgress = parseInt(localStorage.getItem(lastProgressKey) || '0');
-    let watchTimeIncrement = 0;
+    const lastUpdateTime = parseInt(localStorage.getItem(lastUpdateTimeKey) || '0');
 
-    // If current progress is significantly less than last progress (seek back > 15s),
-    // treat it as a new viewing session (restart).
-    if (record.play_time < lastProgress - 15) {
-      // For a new session, the increment is the current playtime.
-      // We also reset the progress baseline for this session.
-      watchTimeIncrement = record.play_time;
-      // By setting lastProgress to 0, the next update will calculate increment from 0.
-      localStorage.setItem(lastProgressKey, '0');
+    // 计算观看时间增量
+    let watchTimeIncrement = 0;
+    const currentTime = Date.now();
+
+    // 改进的观看时间计算逻辑
+    if (record.play_time > lastProgress) {
+      // 正常播放进度增加
+      watchTimeIncrement = record.play_time - lastProgress;
+    } else if (record.play_time < lastProgress) {
+      // 进度回退的情况（重新观看、跳转等）
+      // 如果是短时间内的回退（可能是用户快进快退），使用当前进度作为增量
+      // 如果是长时间后的回退（可能是重新开始观看），也使用当前进度作为增量
+      const timeSinceLastUpdate = currentTime - lastUpdateTime;
+      if (timeSinceLastUpdate > 1 * 60 * 1000) { // 1分钟以上认为是重新开始观看
+        watchTimeIncrement = record.play_time;
+        console.log(`检测到重新观看: ${record.title} 第${record.index}集 - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 时间间隔: ${Math.floor(timeSinceLastUpdate / 1000)}s`);
+      } else {
+        // 短时间内的回退，可能是快退操作，使用较小的增量
+        watchTimeIncrement = Math.max(0, Math.min(record.play_time, 30)); // 最多30秒
+        console.log(`检测到快退操作: ${record.title} 第${record.index}集 - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 使用增量: ${watchTimeIncrement}s`);
+      }
     } else {
-      // Otherwise, it's continuous playback.
-      watchTimeIncrement = Math.max(0, record.play_time - lastProgress);
+      // 进度相同，可能是暂停后继续，给予少量时间增量
+      const timeSinceLastUpdate = currentTime - lastUpdateTime;
+      if (timeSinceLastUpdate > 10 * 1000) { // 10秒以上认为有观看时间
+        watchTimeIncrement = Math.min(Math.floor(timeSinceLastUpdate / 1000), 60); // 最多1分钟
+        console.log(`检测到暂停后继续: ${record.title} 第${record.index}集 - 进度: ${record.play_time}s, 时间间隔: ${Math.floor(timeSinceLastUpdate / 1000)}s, 使用增量: ${watchTimeIncrement}s`);
+      }
     }
 
-    // Only update if there is a meaningful increment.
+    console.log(`观看时间增量计算: ${record.title} 第${record.index}集 - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 增量: ${watchTimeIncrement}s`);
+
+    // 只有当观看时间增量大于0时才更新统计数据
     if (watchTimeIncrement > 0) {
+      console.log(`发送统计数据更新请求: 增量 ${watchTimeIncrement}s, movieKey: ${movieKey}`);
+
+      // 发送到服务器更新
       const response = await fetchWithAuth('/api/user/stats', {
         method: 'POST',
         headers: {
@@ -2008,34 +1966,66 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
         body: JSON.stringify({
           watchTime: watchTimeIncrement,
           movieKey: movieKey,
-          timestamp: record.save_time,
+          timestamp: record.save_time
         }),
       });
 
+      console.log(`API响应状态: ${response.status}`);
+
       if (response.ok) {
         const responseData = await response.json();
-        
-        // Update the last known progress to the current time.
-        localStorage.setItem(lastProgressKey, record.play_time.toString());
+        console.log(`API响应数据:`, responseData);
 
-        // Update the user stats in the cache.
+        // 更新localStorage中的上次播放进度和更新时间
+        localStorage.setItem(lastProgressKey, record.play_time.toString());
+        localStorage.setItem(lastUpdateTimeKey, currentTime.toString());
+        console.log(`更新缓存: ${lastProgressKey} = ${record.play_time}, ${lastUpdateTimeKey} = ${currentTime}`);
+
+        // 立即更新缓存中的用户统计数据
         const authInfo = getAuthInfoFromBrowserCookie();
         if (authInfo?.username && responseData.userStats) {
           cacheManager.cacheUserStats(responseData.userStats);
+          console.log(`更新用户统计数据缓存:`, responseData.userStats);
+
+          // 触发用户统计数据更新事件
+          window.dispatchEvent(new CustomEvent('userStatsUpdated', {
+            detail: responseData.userStats
+          }));
+          console.log(`触发userStatsUpdated事件`);
         } else {
-          cacheManager.clearUserCache(authInfo?.username);
+          // 如果API没有返回userStats，强制重新获取最新数据
+          console.log(`API未返回userStats，强制重新获取`);
+          try {
+            const latestStats = await getUserStats();
+            window.dispatchEvent(new CustomEvent('userStatsUpdated', {
+              detail: latestStats
+            }));
+            console.log(`重新获取并触发userStatsUpdated事件:`, latestStats);
+          } catch (error) {
+            console.error('重新获取用户统计数据失败:', error);
+            // 清除缓存强制下次重新获取
+            cacheManager.clearUserCache(authInfo?.username);
+          }
         }
 
-        // Notify the application of the update.
-        window.dispatchEvent(new CustomEvent('userStatsUpdated', {
-          detail: responseData.userStats || record,
-        }));
+        console.log(`用户统计数据已更新: 增量 ${watchTimeIncrement}s`);
       } else {
-        console.error(`Failed to update user stats: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`更新用户统计数据失败: ${response.status} ${response.statusText}`, errorText);
+
+        // API调用失败时，仍然更新本地进度记录，避免重复计算
+        localStorage.setItem(lastProgressKey, record.play_time.toString());
+        localStorage.setItem(lastUpdateTimeKey, currentTime.toString());
       }
+    } else {
+      console.log(`无需更新用户统计数据: 增量为 ${watchTimeIncrement}s`);
+
+      // 即使没有增量，也要更新时间戳，避免下次计算错误
+      localStorage.setItem(lastUpdateTimeKey, currentTime.toString());
     }
   } catch (error) {
-    console.error('Failed to update user stats:', error);
+    console.error('更新用户统计数据失败:', error);
+    // 静默失败，不影响用户体验
   }
 }
 
@@ -2058,4 +2048,192 @@ export async function clearUserStats(): Promise<void> {
     console.error('清除用户统计数据失败:', error);
     throw error;
   }
+}
+
+/**
+ * 基于历史记录重新计算统计数据
+ * 用于新增统计功能后，为已有用户初始化统计数据
+ */
+export async function recalculateUserStatsFromHistory(): Promise<UserStats | null> {
+  const authInfo = getAuthInfoFromBrowserCookie();
+  if (!authInfo?.username) {
+    console.warn('用户未登录，无法重新计算统计数据');
+    return null;
+  }
+
+  try {
+    console.log('开始基于历史记录重新计算统计数据...');
+
+    // 获取所有播放记录
+    const playRecords = await getAllPlayRecords();
+    const records = Object.values(playRecords);
+
+    if (records.length === 0) {
+      console.log('没有播放记录，返回空统计数据');
+      return null;
+    }
+
+    // 计算统计数据
+    let totalWatchTime = 0;
+    const watchedMovies = new Set<string>();
+    let firstWatchDate = Date.now();
+
+    records.forEach(record => {
+      // 累计观看时长
+      totalWatchTime += record.play_time || 0;
+
+      // 记录观看的影片 - 使用title+source_name+year作为唯一标识
+      const movieKey = `${record.title}_${record.source_name}_${record.year}`;
+      watchedMovies.add(movieKey);
+
+      // 找到最早的观看时间
+      if (record.save_time < firstWatchDate) {
+        firstWatchDate = record.save_time;
+      }
+    });
+
+    const calculatedStats: UserStats = {
+      totalWatchTime: Math.round(totalWatchTime),
+      totalMovies: watchedMovies.size,
+      firstWatchDate,
+      lastUpdateTime: Date.now()
+    };
+
+    console.log('计算出的统计数据:', calculatedStats);
+
+    // 尝试从服务器获取现有统计数据
+    let existingStats: UserStats | null = null;
+    try {
+      const response = await fetchWithAuth('/api/user/stats');
+      if (response.ok) {
+        existingStats = await response.json();
+      }
+    } catch (error) {
+      console.log('获取现有统计数据失败，将创建新的统计数据');
+    }
+
+    // 如果服务器没有统计数据，或者计算出的数据更合理，则更新统计数据
+    const shouldUpdate = !existingStats ||
+      existingStats.totalWatchTime === 0 ||
+      existingStats.totalMovies === 0 ||
+      calculatedStats.totalWatchTime > existingStats.totalWatchTime ||
+      calculatedStats.totalMovies > existingStats.totalMovies;
+
+    if (shouldUpdate) {
+      console.log('更新统计数据到服务器...');
+
+      // 为了更新统计数据，我们需要发送一个虚拟的更新请求
+      // 使用最后一个播放记录的信息
+      const lastRecord = records.sort((a, b) => b.save_time - a.save_time)[0];
+
+      const response = await fetchWithAuth('/api/user/stats', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          watchTime: calculatedStats.totalWatchTime,
+          movieKey: `${lastRecord.title}_${lastRecord.source_name}_${lastRecord.year}`,
+          timestamp: calculatedStats.lastUpdateTime,
+          isRecalculation: true // 标记这是重新计算
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const finalStats = result.userStats || calculatedStats;
+
+        // 更新本地缓存
+        cacheManager.cacheUserStats(finalStats);
+
+        // 触发统计数据更新事件
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('userStatsUpdated', { detail: finalStats }));
+        }
+
+        console.log('统计数据重新计算完成:', finalStats);
+        return finalStats;
+      } else {
+        console.error('更新统计数据到服务器失败:', response.status);
+        // 即使服务器更新失败，也返回计算出的数据
+        return calculatedStats;
+      }
+    } else {
+      console.log('现有统计数据已经是最新的，无需更新');
+      return existingStats;
+    }
+  } catch (error) {
+    console.error('重新计算统计数据失败:', error);
+    return null;
+  }
+}
+
+/**
+ * 获取缓存状态信息
+ * 用于调试和监控缓存健康状态
+ */
+export function getCacheStatus(): {
+  hasPlayRecords: boolean;
+  hasFavorites: boolean;
+  hasSearchHistory: boolean;
+  hasSkipConfigs: boolean;
+  username: string | null;
+} {
+  if (STORAGE_TYPE === 'localstorage') {
+    return {
+      hasPlayRecords: false,
+      hasFavorites: false,
+      hasSearchHistory: false,
+      hasSkipConfigs: false,
+      username: null,
+    };
+  }
+
+  const authInfo = getAuthInfoFromBrowserCookie();
+  return {
+    hasPlayRecords: !!cacheManager.getCachedPlayRecords(),
+    hasFavorites: !!cacheManager.getCachedFavorites(),
+    hasSearchHistory: !!cacheManager.getCachedSearchHistory(),
+    hasSkipConfigs: !!cacheManager.getCachedSkipConfigs(),
+    username: authInfo?.username || null,
+  };
+}
+
+// ---------------- React Hook 辅助类型 ----------------
+
+export type CacheUpdateEvent =
+  | 'playRecordsUpdated'
+  | 'favoritesUpdated'
+  | 'searchHistoryUpdated'
+  | 'skipConfigsUpdated'
+  | 'userStatsUpdated';
+
+/**
+ * 用于 React 组件监听数据更新的事件监听器
+ * 使用方法：
+ *
+ * useEffect(() => {
+ *   const unsubscribe = subscribeToDataUpdates('playRecordsUpdated', (data) => {
+ *     setPlayRecords(data);
+ *   });
+ *   return unsubscribe;
+ * }, []);
+ */
+export function subscribeToDataUpdates<T>(
+  eventType: CacheUpdateEvent,
+  callback: (data: T) => void
+): () => void {
+  if (typeof window === 'undefined') {
+    return () => { };
+  }
+
+  const handleUpdate = (event: CustomEvent) => {
+    callback(event.detail);
+  };
+
+  window.addEventListener(eventType, handleUpdate as EventListener);
+
+  return () => {
+    window.removeEventListener(eventType, handleUpdate as EventListener);
+  };
 }
