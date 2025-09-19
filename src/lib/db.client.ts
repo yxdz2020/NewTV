@@ -42,6 +42,14 @@ export interface PlayRecord {
   search_title?: string; // 搜索时使用的标题
 }
 
+// ---- 用户统计数据类型 ----
+export interface UserStats {
+  totalWatchTime: number; // 总观看时长（秒）
+  totalMovies: number; // 观看影片总数
+  firstWatchDate: number; // 首次观看时间戳
+  lastUpdateTime: number; // 最后更新时间戳
+}
+
 // ---- 收藏类型 ----
 export interface Favorite {
   title: string;
@@ -66,6 +74,7 @@ interface UserCacheStore {
   favorites?: CacheData<Record<string, Favorite>>;
   searchHistory?: CacheData<string[]>;
   skipConfigs?: CacheData<Record<string, SkipConfig>>;
+  userStats?: CacheData<UserStats>; // 添加用户统计数据缓存
   // 新增豆瓣数据缓存
   doubanDetails?: CacheData<Record<string, any>>;
   doubanLists?: CacheData<Record<string, any>>;
@@ -75,8 +84,9 @@ interface UserCacheStore {
 const PLAY_RECORDS_KEY = 'moontv_play_records';
 const FAVORITES_KEY = 'moontv_favorites';
 const SEARCH_HISTORY_KEY = 'moontv_search_history';
+const USER_STATS_KEY = 'moontv_user_stats'; // 添加用户统计数据存储键
 
-// 缓存相关常量
+// ---- 缓存相关常量 ----
 const CACHE_PREFIX = 'moontv_cache_';
 const CACHE_VERSION = '1.0.0';
 const CACHE_EXPIRE_TIME = 60 * 60 * 1000; // 一小时缓存过期
@@ -356,6 +366,35 @@ class HybridCacheManager {
 
     const userCache = this.getUserCache(username);
     userCache.skipConfigs = this.createCacheData(data);
+    this.saveUserCache(username, userCache);
+  }
+
+  /**
+   * 获取缓存的用户统计数据
+   */
+  getCachedUserStats(): UserStats | null {
+    const username = this.getCurrentUsername();
+    if (!username) return null;
+
+    const userCache = this.getUserCache(username);
+    const cached = userCache.userStats;
+
+    if (cached && this.isCacheValid(cached)) {
+      return cached.data;
+    }
+
+    return null;
+  }
+
+  /**
+   * 缓存用户统计数据
+   */
+  cacheUserStats(data: UserStats): void {
+    const username = this.getCurrentUsername();
+    if (!username) return;
+
+    const userCache = this.getUserCache(username);
+    userCache.userStats = this.createCacheData(data);
     this.saveUserCache(username, userCache);
   }
 
@@ -728,6 +767,9 @@ export async function savePlayRecord(
         },
         body: JSON.stringify({ key, record }),
       });
+      
+      // 更新用户统计数据
+      await updateUserStats(record);
     } catch (err) {
       await handleDatabaseOperationFailure('playRecords', err);
       triggerGlobalError('保存播放记录失败');
@@ -751,6 +793,9 @@ export async function savePlayRecord(
         detail: allRecords,
       })
     );
+    
+    // 更新用户统计数据
+    await updateUserStats(record);
   } catch (err) {
     console.error('保存播放记录失败:', err);
     triggerGlobalError('保存播放记录失败');
@@ -1840,4 +1885,115 @@ export function setDoubanListCache(type: string, tag: string, pageStart: number,
  */
 export function clearDoubanCache(): void {
   cacheManager.clearDoubanCache();
+}
+
+/**
+ * 获取用户统计数据
+ */
+export async function getUserStats(): Promise<UserStats> {
+  try {
+    // 先尝试从缓存获取
+    const cached = cacheManager.getCachedUserStats();
+    if (cached) {
+      return cached;
+    }
+
+    // 从服务器获取
+    const response = await fetchWithAuth('/api/user/stats');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const stats = await response.json();
+    
+    // 缓存数据
+    cacheManager.cacheUserStats(stats);
+    
+    return stats;
+  } catch (error) {
+    console.error('获取用户统计数据失败:', error);
+    
+    // 如果服务器请求失败，基于本地观看记录计算统计数据
+    const playRecords = await getAllPlayRecords();
+    const records = Object.values(playRecords);
+    
+    if (records.length === 0) {
+      return {
+        totalWatchTime: 0,
+        totalMovies: 0,
+        firstWatchDate: Date.now(),
+        lastUpdateTime: Date.now()
+      };
+    }
+    
+    const totalWatchTime = records.reduce((sum, record) => sum + record.play_time, 0);
+    const totalMovies = new Set(records.map(r => `${r.source_name}-${r.title}`)).size;
+    const firstWatchDate = Math.min(...records.map(r => r.save_time));
+    
+    const stats: UserStats = {
+      totalWatchTime,
+      totalMovies,
+      firstWatchDate,
+      lastUpdateTime: Date.now()
+    };
+    
+    // 缓存计算结果
+    cacheManager.cacheUserStats(stats);
+    
+    return stats;
+  }
+}
+
+/**
+ * 更新用户统计数据
+ */
+export async function updateUserStats(record: PlayRecord): Promise<void> {
+  try {
+    // 发送到服务器更新
+    await fetchWithAuth('/api/user/stats', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        watchTime: record.play_time,
+        movieKey: `${record.source_name}-${record.title}`,
+        timestamp: record.save_time
+      }),
+    });
+    
+    // 清除缓存，下次获取时会重新从服务器拉取
+    const username = cacheManager.getCurrentUsername();
+    if (username) {
+      const userCache = cacheManager.getUserCache(username);
+      delete userCache.userStats;
+      cacheManager.saveUserCache(username, userCache);
+    }
+  } catch (error) {
+    console.error('更新用户统计数据失败:', error);
+    // 静默失败，不影响用户体验
+  }
+}
+
+/**
+ * 清除用户统计数据
+ */
+export async function clearUserStats(): Promise<void> {
+  try {
+    // 从服务器清除
+    await fetchWithAuth('/api/user/stats', {
+      method: 'DELETE',
+    });
+    
+    // 清除本地缓存
+    const username = cacheManager.getCurrentUsername();
+    if (username) {
+      const userCache = cacheManager.getUserCache(username);
+      delete userCache.userStats;
+      cacheManager.saveUserCache(username, userCache);
+    }
+  } catch (error) {
+    console.error('清除用户统计数据失败:', error);
+    throw error;
+  }
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Clock, Play, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-import { getAllPlayRecords, clearAllPlayRecords, PlayRecord } from '@/lib/db.client';
+import { getAllPlayRecords, clearAllPlayRecords, PlayRecord, getUserStats, clearUserStats, UserStats } from '@/lib/db.client';
 import VideoCard from '@/components/VideoCard';
 
 interface ExtendedPlayRecord extends PlayRecord {
@@ -17,38 +17,50 @@ export default function MyWatchingPage() {
   const [playRecords, setPlayRecords] = useState<ExtendedPlayRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showClearStatsConfirm, setShowClearStatsConfirm] = useState(false);
   const [updatedRecords, setUpdatedRecords] = useState<ExtendedPlayRecord[]>([]);
   const [historyRecords, setHistoryRecords] = useState<ExtendedPlayRecord[]>([]);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
 
   useEffect(() => {
     loadPlayRecords();
+    loadUserStats();
   }, []);
+
+  const loadUserStats = async () => {
+    try {
+      const stats = await getUserStats();
+      setUserStats(stats);
+    } catch (error) {
+      console.error('加载用户统计数据失败:', error);
+    }
+  };
 
   const loadPlayRecords = async () => {
     try {
       setLoading(true);
       const recordsObj = await getAllPlayRecords();
-      
+
       // 将Record转换为数组并按时间排序
       const records = Object.values(recordsObj).sort((a, b) => b.save_time - a.save_time);
-      
+
       // 检查剧集更新
       const recordsWithUpdates = await checkForUpdates(records);
-      
+
       // 实现更新剧集优先排序：有更新的剧集排在前面，然后按时间排序
       const sortedRecords = recordsWithUpdates.sort((a, b) => {
         // 首先按是否有更新排序（有更新的在前）
         if (a.hasUpdate && !b.hasUpdate) return -1;
         if (!a.hasUpdate && b.hasUpdate) return 1;
-        
+
         // 如果都有更新或都没有更新，则按保存时间排序（最新的在前）
         return b.save_time - a.save_time;
       });
-      
+
       // 分离有更新的记录和历史记录
       const updated = sortedRecords.filter(record => record.hasUpdate);
       const history = sortedRecords.filter(record => !record.hasUpdate);
-      
+
       setUpdatedRecords(updated);
       setHistoryRecords(history);
       setPlayRecords(sortedRecords);
@@ -62,9 +74,9 @@ export default function MyWatchingPage() {
   // 检查剧集更新的函数
   const checkForUpdates = async (records: PlayRecord[]): Promise<ExtendedPlayRecord[]> => {
     if (!records.length) return [];
-    
+
     const updatedRecords: ExtendedPlayRecord[] = [];
-    
+
     for (const record of records) {
       try {
         // 从记录的search_title或title中提取可能的ID信息
@@ -84,11 +96,34 @@ export default function MyWatchingPage() {
         });
       }
     }
-    
+
     return updatedRecords;
   };
 
   const handleClearAll = () => {
+    setShowClearStatsConfirm(true);
+  };
+
+  const handleConfirmClearStats = async () => {
+    try {
+      await clearUserStats();
+      setUserStats({
+        totalWatchTime: 0,
+        totalMovies: 0,
+        firstWatchDate: Date.now(),
+        lastUpdateTime: Date.now()
+      });
+      setShowClearStatsConfirm(false);
+    } catch (error) {
+      console.error('清空统计数据失败:', error);
+    }
+  };
+
+  const handleCancelClearStats = () => {
+    setShowClearStatsConfirm(false);
+  };
+
+  const handleClearPlayRecords = () => {
     setShowClearConfirm(true);
   };
 
@@ -116,7 +151,7 @@ export default function MyWatchingPage() {
       index: record.index?.toString() || '1',
       time: record.play_time?.toString() || '0'
     });
-    
+
     router.push(`/play?${params.toString()}`);
   };
 
@@ -140,19 +175,19 @@ export default function MyWatchingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <div className="glass-light rounded-xl p-4 text-center">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {Math.floor(playRecords.reduce((total, record) => total + (record.play_time || 0), 0) / 3600)}h
+                {userStats ? Math.floor(userStats.totalWatchTime / 3600) : 0} h
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">观看总时长</div>
             </div>
             <div className="glass-light rounded-xl p-4 text-center">
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {Math.floor((Date.now() - (playRecords[playRecords.length - 1]?.save_time || Date.now())) / (1000 * 60 * 60 * 24)) || 1}
+                {userStats ? Math.floor((Date.now() - userStats.firstWatchDate) / (1000 * 60 * 60 * 24)) || 1 : 1}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">登录天数</div>
             </div>
             <div className="glass-light rounded-xl p-4 text-center">
               <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {playRecords.length}
+                {userStats ? userStats.totalMovies : 0}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">观看影片</div>
             </div>
@@ -171,14 +206,14 @@ export default function MyWatchingPage() {
               我的观看
             </h1>
           </div>
-          
-          {playRecords.length > 0 && (
+
+          {userStats && userStats.totalMovies > 0 && (
             <button
               onClick={handleClearAll}
               className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
             >
               <Trash2 className="w-4 h-4" />
-              清空记录
+              清空统计
             </button>
           )}
         </div>
@@ -257,6 +292,19 @@ export default function MyWatchingPage() {
                   />
                 ))}
               </div>
+              
+              {/* 清除观看记录按钮 */}
+              {historyRecords.length > 0 && (
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={handleClearPlayRecords}
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors mx-auto"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    清除观看记录
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -278,11 +326,11 @@ export default function MyWatchingPage() {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              
+
               <p className="text-gray-600 dark:text-gray-300 mb-6">
                 确定要清空所有观看记录吗？此操作不可撤销，将删除您的所有观看历史和进度信息。
               </p>
-              
+
               <div className="flex gap-3 justify-end">
                 <button
                   onClick={handleCancelClear}
@@ -295,6 +343,46 @@ export default function MyWatchingPage() {
                   className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
                 >
                   确认删除
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 确认清除统计数据弹窗 */}
+      {showClearStatsConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="glass-strong rounded-xl shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  确认清除统计数据
+                </h3>
+                <button
+                  onClick={handleCancelClearStats}
+                  className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                确定要清空统计数据吗？此操作将重置您的观看时长、影片数量等统计信息，但不会影响观看记录。
+              </p>
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={handleCancelClearStats}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleConfirmClearStats}
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                >
+                  确认清除
                 </button>
               </div>
             </div>
