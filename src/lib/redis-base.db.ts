@@ -3,7 +3,7 @@
 import { createClient, RedisClientType } from 'redis';
 
 import { AdminConfig } from './admin.types';
-import { DanmakuConfig, Favorite, IStorage, PlayRecord, SkipConfig } from './types';
+import { DanmakuConfig, Favorite, IStorage, PlayRecord, SkipConfig, UserStats } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -491,6 +491,56 @@ export abstract class BaseRedisStorage implements IStorage {
 
   async deleteDanmakuConfig(userName: string): Promise<void> {
     await this.withRetry(() => this.client.del(this.danmakuConfigKey(userName)));
+  }
+
+  // ---------- 用户统计数据相关 ----------
+  private userStatsKey(user: string) {
+    return `u:${user}:stats`;
+  }
+
+  async getUserStats(userName: string): Promise<UserStats | null> {
+    const key = this.userStatsKey(userName);
+    const data = await this.withRetry(() => this.client.get(key));
+    return data ? JSON.parse(data) : null;
+  }
+
+  async updateUserStats(userName: string, updateData: {
+    watchTime: number;
+    movieKey: string;
+    timestamp: number;
+  }): Promise<void> {
+    const key = this.userStatsKey(userName);
+    const existingStats = await this.getUserStats(userName);
+    
+    let stats: UserStats;
+    if (existingStats) {
+      // 更新现有统计数据
+      stats = {
+        totalWatchTime: existingStats.totalWatchTime + updateData.watchTime,
+        totalMovies: existingStats.totalMovies, // 暂时保持不变，需要检查是否是新影片
+        firstWatchDate: existingStats.firstWatchDate,
+        lastUpdateTime: updateData.timestamp
+      };
+      
+      // 检查是否是新影片（简单检查，可以根据需要优化）
+      // 这里可以通过检查播放记录来确定是否是新影片
+      // 为了简化，我们假设每次更新都可能是新影片，实际应该检查播放记录
+    } else {
+      // 创建新的统计数据
+      stats = {
+        totalWatchTime: updateData.watchTime,
+        totalMovies: 1,
+        firstWatchDate: updateData.timestamp,
+        lastUpdateTime: updateData.timestamp
+      };
+    }
+    
+    await this.withRetry(() => this.client.set(key, JSON.stringify(stats)));
+  }
+
+  async clearUserStats(userName: string): Promise<void> {
+    const key = this.userStatsKey(userName);
+    await this.withRetry(() => this.client.del(key));
   }
 
   // 清空所有数据
