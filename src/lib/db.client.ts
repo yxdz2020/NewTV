@@ -2026,16 +2026,20 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
         localStorage.setItem(lastProgressKey, record.play_time.toString());
         console.log(`更新缓存: ${lastProgressKey} = ${record.play_time}`);
 
-        // 清除缓存，下次获取时会重新从服务器拉取
+        // 立即更新缓存中的用户统计数据，而不是清除缓存
         const authInfo = getAuthInfoFromBrowserCookie();
-        if (authInfo?.username) {
-          cacheManager.clearUserCache(authInfo.username);
-          console.log(`清除用户缓存: ${authInfo.username}`);
+        if (authInfo?.username && responseData.userStats) {
+          cacheManager.cacheUserStats(responseData.userStats);
+          console.log(`更新用户统计数据缓存:`, responseData.userStats);
+        } else {
+          // 如果API没有返回userStats，则清除缓存强制重新获取
+          cacheManager.clearUserCache(authInfo?.username);
+          console.log(`清除用户缓存，强制重新获取: ${authInfo?.username}`);
         }
         
         // 触发用户统计数据更新事件
         window.dispatchEvent(new CustomEvent('userStatsUpdated', { 
-          detail: record 
+          detail: responseData.userStats || record 
         }));
         console.log(`触发userStatsUpdated事件`);
         

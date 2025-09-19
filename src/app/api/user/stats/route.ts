@@ -74,7 +74,13 @@ export async function POST(request: NextRequest) {
       timestamp
     });
 
-    return NextResponse.json({ success: true });
+    // 获取更新后的用户统计数据并返回
+    const updatedStats = await db.getUserStats(authInfo.username);
+
+    return NextResponse.json({ 
+      success: true,
+      userStats: updatedStats
+    });
   } catch (error) {
     console.error('更新用户统计数据失败:', error);
     return NextResponse.json(
