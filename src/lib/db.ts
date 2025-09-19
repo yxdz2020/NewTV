@@ -50,7 +50,23 @@ export class DbManager {
   private storage: IStorage;
 
   constructor() {
+    console.log('DbManager 构造函数 - 存储类型:', STORAGE_TYPE);
     this.storage = getStorage();
+    console.log('DbManager 构造函数 - 存储实例创建完成:', this.storage?.constructor?.name);
+  }
+
+  // 测试数据库连接
+  async testConnection(): Promise<boolean> {
+    try {
+      console.log('测试数据库连接...');
+      // 尝试调用一个简单的方法来测试连接
+      const testResult = await this.storage.getAllUsers();
+      console.log('数据库连接测试成功，用户数量:', testResult.length);
+      return true;
+    } catch (error) {
+      console.error('数据库连接测试失败:', error);
+      return false;
+    }
   }
 
   // 播放记录相关方法
