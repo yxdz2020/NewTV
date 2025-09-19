@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import { getAllPlayRecords, clearAllPlayRecords, PlayRecord, getUserStats, clearUserStats, UserStats } from '@/lib/db.client';
 import VideoCard from '@/components/VideoCard';
+import ScrollableRow from '@/components/ScrollableRow';
 
 interface ExtendedPlayRecord extends PlayRecord {
   hasUpdate?: boolean;
@@ -244,9 +245,9 @@ export default function MyWatchingPage() {
                     </span>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                <ScrollableRow>
                   {updatedRecords.map((record, index) => (
-                    <div key={`updated-${index}`} className="relative">
+                    <div key={`updated-${index}`} className="relative min-w-[102px] w-[102px] sm:min-w-[180px] sm:w-44">
                       <VideoCard
                         title={record.title}
                         poster={record.cover}
@@ -268,7 +269,7 @@ export default function MyWatchingPage() {
                       )}
                     </div>
                   ))}
-                </div>
+                </ScrollableRow>
               </div>
             )}
 
@@ -277,21 +278,22 @@ export default function MyWatchingPage() {
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                 {updatedRecords.length > 0 ? '历史观看' : '观看记录'}
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              <ScrollableRow>
                 {historyRecords.map((record, index) => (
-                  <VideoCard
-                    key={`history-${index}`}
-                    title={record.title}
-                    poster={record.cover}
-                    year={record.year}
-                    from="playrecord"
-                    progress={record.total_time ? (record.play_time / record.total_time) * 100 : 0}
-                    currentEpisode={record.index}
-                    episodes={record.total_episodes}
-                    source_name={record.source_name}
-                  />
+                  <div key={`history-${index}`} className="min-w-[102px] w-[102px] sm:min-w-[180px] sm:w-44">
+                    <VideoCard
+                      title={record.title}
+                      poster={record.cover}
+                      year={record.year}
+                      from="playrecord"
+                      progress={record.total_time ? (record.play_time / record.total_time) * 100 : 0}
+                      currentEpisode={record.index}
+                      episodes={record.total_episodes}
+                      source_name={record.source_name}
+                    />
+                  </div>
                 ))}
-              </div>
+              </ScrollableRow>
               
               {/* 清除观看记录按钮 */}
               {historyRecords.length > 0 && (

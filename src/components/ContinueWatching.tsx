@@ -9,6 +9,7 @@ import {
   getAllPlayRecords,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
+import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 
 import ScrollableRow from '@/components/ScrollableRow';
 import VideoCard from '@/components/VideoCard';
@@ -44,12 +45,24 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
       try {
         setLoading(true);
 
+        // 检查用户是否已认证
+        const authInfo = getAuthInfoFromBrowserCookie();
+        if (!authInfo || !authInfo.username) {
+          // 用户未认证，清空播放记录
+          setPlayRecords([]);
+          setLoading(false);
+          return;
+        }
+
         // 从缓存或API获取所有播放记录
         const allRecords = await getAllPlayRecords();
         updatePlayRecords(allRecords);
       } catch (error) {
         console.error('获取播放记录失败:', error);
-        setPlayRecords([]);
+        // 如果是401错误，清空播放记录
+        if (error instanceof Error && error.message.includes('401')) {
+          setPlayRecords([]);
+        }
       } finally {
         setLoading(false);
       }

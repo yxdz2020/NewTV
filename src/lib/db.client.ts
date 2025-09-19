@@ -629,12 +629,26 @@ if (typeof window !== 'undefined') {
  */
 async function fetchWithAuth(
   url: string,
-  options?: RequestInit
+  options?: RequestInit,
+  retryCount = 0
 ): Promise<Response> {
   const res = await fetch(url, options);
   if (!res.ok) {
-    // 如果是 401 未授权，跳转到登录页面
+    // 如果是 401 未授权，先尝试重试一次（可能是新用户注册后的短暂认证延迟）
     if (res.status === 401) {
+      // 对于新用户，给一次重试机会，等待 500ms 后重试
+      if (retryCount === 0) {
+        console.log(`API ${url} 返回401，等待500ms后重试...`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return fetchWithAuth(url, options, 1);
+      }
+      
+      // 检查当前是否在注册或登录页面，如果是则不要跳转
+      const currentPath = window.location.pathname;
+      if (currentPath === '/login' || currentPath === '/register') {
+        throw new Error(`请求 ${url} 失败: ${res.status}`);
+      }
+      
       // 调用 logout 接口
       try {
         await fetch('/api/logout', {
@@ -1963,11 +1977,9 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
     });
     
     // 清除缓存，下次获取时会重新从服务器拉取
-    const username = cacheManager.getCurrentUsername();
-    if (username) {
-      const userCache = cacheManager.getUserCache(username);
-      delete userCache.userStats;
-      cacheManager.saveUserCache(username, userCache);
+    const authInfo = getAuthInfoFromBrowserCookie();
+    if (authInfo?.username) {
+      cacheManager.clearUserCache(authInfo.username);
     }
   } catch (error) {
     console.error('更新用户统计数据失败:', error);
@@ -1986,11 +1998,9 @@ export async function clearUserStats(): Promise<void> {
     });
     
     // 清除本地缓存
-    const username = cacheManager.getCurrentUsername();
-    if (username) {
-      const userCache = cacheManager.getUserCache(username);
-      delete userCache.userStats;
-      cacheManager.saveUserCache(username, userCache);
+    const authInfo = getAuthInfoFromBrowserCookie();
+    if (authInfo?.username) {
+      cacheManager.clearUserCache(authInfo.username);
     }
   } catch (error) {
     console.error('清除用户统计数据失败:', error);
