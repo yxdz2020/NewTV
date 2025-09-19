@@ -332,7 +332,7 @@ export default function MyWatchingPage() {
                     ))}
                   </div>
                 </div>
-                
+
                 {/* 桌面端保持原有的横向滚动布局 */}
                 <div className="hidden sm:block">
                   <ScrollableRow>
@@ -369,7 +369,7 @@ export default function MyWatchingPage() {
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                 {updatedRecords.length > 0 ? '历史观看' : '观看记录'}
               </h2>
-              
+
               {/* 移动端网格布局 */}
               <div className="sm:hidden">
                 <div className="grid grid-cols-2 gap-4">
@@ -389,7 +389,7 @@ export default function MyWatchingPage() {
                   ))}
                 </div>
               </div>
-              
+
               {/* 桌面端保持原有的横向滚动布局 */}
               <div className="hidden sm:block">
                 <ScrollableRow>

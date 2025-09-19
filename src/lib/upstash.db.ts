@@ -406,7 +406,7 @@ export class UpstashRedisStorage implements IStorage {
   }): Promise<void> {
     const key = this.userStatsKey(userName);
     const existingStats = await this.getUserStats(userName);
-    
+
     let stats: UserStats;
     if (existingStats) {
       // 更新现有统计数据
@@ -416,7 +416,7 @@ export class UpstashRedisStorage implements IStorage {
         firstWatchDate: existingStats.firstWatchDate,
         lastUpdateTime: updateData.timestamp
       };
-      
+
       // 检查是否是新影片（简单检查，可以根据需要优化）
       // 这里可以通过检查播放记录来确定是否是新影片
       // 为了简化，我们假设每次更新都可能是新影片，实际应该检查播放记录
@@ -429,7 +429,7 @@ export class UpstashRedisStorage implements IStorage {
         lastUpdateTime: updateData.timestamp
       };
     }
-    
+
     await withRetry(() => this.client.set(key, JSON.stringify(stats)));
   }
 

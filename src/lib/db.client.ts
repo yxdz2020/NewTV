@@ -784,6 +784,13 @@ export async function savePlayRecord(
 
       // 更新用户统计数据
       await updateUserStats(record);
+      
+      // 触发用户统计数据更新事件
+      window.dispatchEvent(
+        new CustomEvent('userStatsUpdated', {
+          detail: { record },
+        })
+      );
     } catch (err) {
       await handleDatabaseOperationFailure('playRecords', err);
       triggerGlobalError('保存播放记录失败');
@@ -1976,12 +1983,21 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
     // 使用包含集数信息的键来缓存每一集的播放进度
     const episodeKey = `${record.source_name}+${record.title}-${record.year}+${record.index}`;
     const lastProgressKey = `last_progress_${episodeKey}`;
+    
+    // 获取上次播放进度
     const lastProgress = parseInt(localStorage.getItem(lastProgressKey) || '0');
     
     // 计算观看时间增量：当前播放进度 - 上次记录的播放进度
-    const watchTimeIncrement = Math.max(0, record.play_time - lastProgress);
+    let watchTimeIncrement = Math.max(0, record.play_time - lastProgress);
     
-    console.log(`观看时间增量计算: ${record.title} 第${record.index}集 - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 增量: ${watchTimeIncrement}s`);
+    // 特殊处理：如果是电影（总集数为1）且当前进度小于上次进度，说明重新开始观看
+    // 这种情况下，我们应该累计整个观看时间，而不是计算增量
+    if (record.total_episodes === 1 && record.play_time < lastProgress) {
+      watchTimeIncrement = record.play_time;
+      console.log(`电影重新观看检测: ${record.title} - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 使用当前进度作为增量: ${watchTimeIncrement}s`);
+    } else {
+      console.log(`观看时间增量计算: ${record.title} 第${record.index}集 - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 增量: ${watchTimeIncrement}s`);
+    }
 
     // 只有当观看时间增量大于0时才更新统计数据
     if (watchTimeIncrement > 0) {
