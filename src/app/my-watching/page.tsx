@@ -118,14 +118,68 @@ export default function MyWatchingPage() {
 
     for (const record of records) {
       try {
-        // 从记录的search_title或title中提取可能的ID信息
-        // 由于PlayRecord没有直接的id字段，我们需要从其他字段推断
-        // 这里暂时跳过更新检查，直接返回原记录
+        // 只检查剧集类型的内容（总集数大于1）
+        if (record.total_episodes <= 1) {
+          updatedRecords.push({
+            ...record,
+            hasUpdate: false,
+            newEpisodes: 0
+          });
+          continue;
+        }
+
+        // 通过搜索API查找对应的视频ID
+        const searchQuery = record.search_title || record.title;
+        const searchResponse = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+        
+        if (!searchResponse.ok) {
+          throw new Error(`搜索请求失败: ${searchResponse.status}`);
+        }
+
+        const searchData = await searchResponse.json();
+        const searchResults = searchData.results || [];
+
+        // 查找匹配的结果（相同标题和播放源）
+        const matchedResult = searchResults.find((result: any) => 
+          result.title === record.title && 
+          result.source_name === record.source_name &&
+          result.year === record.year
+        );
+
+        if (!matchedResult) {
+          // 没有找到匹配的结果，可能是视频已下架
+          updatedRecords.push({
+            ...record,
+            hasUpdate: false,
+            newEpisodes: 0
+          });
+          continue;
+        }
+
+        // 获取详细信息以获取最新集数
+        const detailResponse = await fetch(`/api/detail?source=${matchedResult.source}&id=${matchedResult.id}`);
+        
+        if (!detailResponse.ok) {
+          throw new Error(`详情请求失败: ${detailResponse.status}`);
+        }
+
+        const detailData = await detailResponse.json();
+        const latestEpisodes = detailData.episodes ? detailData.episodes.length : 0;
+
+        // 比较集数
+        const hasUpdate = latestEpisodes > record.total_episodes;
+        const newEpisodes = hasUpdate ? latestEpisodes - record.total_episodes : 0;
+
+        console.log(`检查更新 - ${record.title}: 原集数=${record.total_episodes}, 最新集数=${latestEpisodes}, 有更新=${hasUpdate}, 新增=${newEpisodes}集`);
+
         updatedRecords.push({
           ...record,
-          hasUpdate: false,
-          newEpisodes: 0
+          hasUpdate,
+          newEpisodes,
+          // 更新总集数到最新值
+          total_episodes: latestEpisodes > record.total_episodes ? latestEpisodes : record.total_episodes
         });
+
       } catch (error) {
         console.error(`检查更新失败 - ${record.title}:`, error);
         updatedRecords.push({
@@ -232,9 +286,9 @@ export default function MyWatchingPage() {
           {userStats && userStats.totalMovies > 0 && (
             <button
               onClick={handleClearAll}
-              className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+              className="flex items-center gap-1 px-2 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded-md transition-colors sm:gap-2 sm:px-4 sm:py-2 sm:text-base sm:rounded-lg"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
               清空所有数据
             </button>
           )}

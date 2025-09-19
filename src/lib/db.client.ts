@@ -1924,37 +1924,47 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
     // 计算观看时间增量
     let watchTimeIncrement = 0;
     const currentTime = Date.now();
+    const timeSinceLastUpdate = currentTime - lastUpdateTime;
+
+    // 添加更严格的条件：避免在没有实际播放时频繁更新
+    // 如果距离上次更新时间太短（小于30秒），且进度没有明显变化，则跳过更新
+    if (timeSinceLastUpdate < 30 * 1000 && Math.abs(record.play_time - lastProgress) < 5) {
+      console.log(`跳过统计数据更新: 时间间隔过短 (${Math.floor(timeSinceLastUpdate / 1000)}s) 且进度变化不大 (${Math.abs(record.play_time - lastProgress)}s)`);
+      return;
+    }
 
     // 改进的观看时间计算逻辑
     if (record.play_time > lastProgress) {
       // 正常播放进度增加
       watchTimeIncrement = record.play_time - lastProgress;
+      
+      // 如果进度增加过大（可能是快进），限制增量
+      if (watchTimeIncrement > 300) { // 超过5分钟认为是快进
+        watchTimeIncrement = Math.min(watchTimeIncrement, Math.floor(timeSinceLastUpdate / 1000) + 60); // 最多比实际时间多1分钟
+        console.log(`检测到快进操作: ${record.title} 第${record.index}集 - 进度增加: ${record.play_time - lastProgress}s, 限制增量为: ${watchTimeIncrement}s`);
+      }
     } else if (record.play_time < lastProgress) {
       // 进度回退的情况（重新观看、跳转等）
-      // 如果是短时间内的回退（可能是用户快进快退），使用当前进度作为增量
-      // 如果是长时间后的回退（可能是重新开始观看），也使用当前进度作为增量
-      const timeSinceLastUpdate = currentTime - lastUpdateTime;
       if (timeSinceLastUpdate > 1 * 60 * 1000) { // 1分钟以上认为是重新开始观看
-        watchTimeIncrement = record.play_time;
+        watchTimeIncrement = Math.min(record.play_time, 60); // 重新观看最多给60秒增量
         console.log(`检测到重新观看: ${record.title} 第${record.index}集 - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 时间间隔: ${Math.floor(timeSinceLastUpdate / 1000)}s`);
       } else {
-        // 短时间内的回退，可能是快退操作，使用较小的增量
-        watchTimeIncrement = Math.max(0, Math.min(record.play_time, 30)); // 最多30秒
-        console.log(`检测到快退操作: ${record.title} 第${record.index}集 - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 使用增量: ${watchTimeIncrement}s`);
+        // 短时间内的回退，可能是快退操作，不给增量
+        watchTimeIncrement = 0;
+        console.log(`检测到快退操作: ${record.title} 第${record.index}集 - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 不计入观看时间`);
       }
     } else {
       // 进度相同，可能是暂停后继续，给予少量时间增量
-      const timeSinceLastUpdate = currentTime - lastUpdateTime;
-      if (timeSinceLastUpdate > 10 * 1000) { // 10秒以上认为有观看时间
-        watchTimeIncrement = Math.min(Math.floor(timeSinceLastUpdate / 1000), 60); // 最多1分钟
+      if (timeSinceLastUpdate > 60 * 1000) { // 1分钟以上认为有观看时间
+        watchTimeIncrement = Math.min(Math.floor(timeSinceLastUpdate / 1000), 120); // 最多2分钟
         console.log(`检测到暂停后继续: ${record.title} 第${record.index}集 - 进度: ${record.play_time}s, 时间间隔: ${Math.floor(timeSinceLastUpdate / 1000)}s, 使用增量: ${watchTimeIncrement}s`);
       }
     }
 
     console.log(`观看时间增量计算: ${record.title} 第${record.index}集 - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 增量: ${watchTimeIncrement}s`);
 
-    // 只有当观看时间增量大于0时才更新统计数据
-    if (watchTimeIncrement > 0) {
+    // 只有当观看时间增量大于5秒时才更新统计数据（避免频繁的小幅更新）
+    if (watchTimeIncrement > 5) {
       console.log(`发送统计数据更新请求: 增量 ${watchTimeIncrement}s, movieKey: ${movieKey}`);
 
       // 发送到服务器更新
@@ -2018,9 +2028,10 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
         localStorage.setItem(lastUpdateTimeKey, currentTime.toString());
       }
     } else {
-      console.log(`无需更新用户统计数据: 增量为 ${watchTimeIncrement}s`);
+      console.log(`无需更新用户统计数据: 增量为 ${watchTimeIncrement}s (小于5秒阈值)`);
 
-      // 即使没有增量，也要更新时间戳，避免下次计算错误
+      // 即使没有增量，也要更新时间戳和进度，避免下次计算错误
+      localStorage.setItem(lastProgressKey, record.play_time.toString());
       localStorage.setItem(lastUpdateTimeKey, currentTime.toString());
     }
   } catch (error) {
