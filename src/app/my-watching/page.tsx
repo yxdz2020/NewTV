@@ -394,9 +394,9 @@ export default function MyWatchingPage() {
                 </div>
                 {/* 移动端网格布局 */}
                 <div className="sm:hidden">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-8 pt-4 pb-6">
                     {updatedRecords.map((record, index) => (
-                      <div key={`updated-${index}`} className="relative">
+                      <div key={`updated-${index}`} className="relative w-full">
                         <VideoCard
                           title={record.title}
                           poster={record.cover}
@@ -408,24 +408,24 @@ export default function MyWatchingPage() {
                           source_name={record.source_name}
                         />
                         {record.hasUpdate && record.newEpisodes && record.newEpisodes > 0 && (
-                          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-bounce">
+                          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-bounce z-50">
                             +{record.newEpisodes}集
                           </div>
                         )}
                         {/* 新集数提示光环效果 */}
                         {record.hasUpdate && (
-                          <div className="absolute inset-0 rounded-lg ring-2 ring-red-400 ring-opacity-50 animate-pulse pointer-events-none"></div>
+                          <div className="absolute inset-0 rounded-lg ring-2 ring-red-400 ring-opacity-50 animate-pulse pointer-events-none z-40"></div>
                         )}
                       </div>
                     ))}
                   </div>
                 </div>
                 
-                {/* 桌面端保持原有的横向滚动布局 */}
+                {/* 桌面端网格布局 */}
                 <div className="hidden sm:block">
-                  <ScrollableRow>
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-x-6 gap-y-10 pt-6 pb-8">
                     {updatedRecords.map((record, index) => (
-                      <div key={`updated-${index}`} className="relative min-w-[180px] w-44">
+                      <div key={`updated-${index}`} className="relative w-full">
                         <VideoCard
                           title={record.title}
                           poster={record.cover}
@@ -437,17 +437,17 @@ export default function MyWatchingPage() {
                           source_name={record.source_name}
                         />
                         {record.hasUpdate && record.newEpisodes && record.newEpisodes > 0 && (
-                          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-bounce">
+                          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-bounce z-50">
                             +{record.newEpisodes}集
                           </div>
                         )}
                         {/* 新集数提示光环效果 */}
                         {record.hasUpdate && (
-                          <div className="absolute inset-0 rounded-lg ring-2 ring-red-400 ring-opacity-50 animate-pulse pointer-events-none"></div>
+                          <div className="absolute inset-0 rounded-lg ring-2 ring-red-400 ring-opacity-50 animate-pulse pointer-events-none z-40"></div>
                         )}
                       </div>
                     ))}
-                  </ScrollableRow>
+                  </div>
                 </div>
               </div>
             )}
@@ -458,44 +458,22 @@ export default function MyWatchingPage() {
                 {updatedRecords.length > 0 ? '历史观看' : '观看记录'}
               </h2>
               
-              {/* 移动端网格布局 */}
-              <div className="sm:hidden">
-                <div className="grid grid-cols-2 gap-4">
-                  {historyRecords.map((record, index) => (
-                    <div key={`history-${index}`} className="relative">
-                      <VideoCard
-                        title={record.title}
-                        poster={record.cover}
-                        year={record.year}
-                        from="playrecord"
-                        progress={record.total_time ? (record.play_time / record.total_time) * 100 : 0}
-                        currentEpisode={record.index}
-                        episodes={record.total_episodes}
-                        source_name={record.source_name}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* 桌面端保持原有的横向滚动布局 */}
-              <div className="hidden sm:block">
-                <ScrollableRow>
-                  {historyRecords.map((record, index) => (
-                    <div key={`history-${index}`} className="min-w-[180px] w-44">
-                      <VideoCard
-                        title={record.title}
-                        poster={record.cover}
-                        year={record.year}
-                        from="playrecord"
-                        progress={record.total_time ? (record.play_time / record.total_time) * 100 : 0}
-                        currentEpisode={record.index}
-                        episodes={record.total_episodes}
-                        source_name={record.source_name}
-                      />
-                    </div>
-                  ))}
-                </ScrollableRow>
+              {/* 统一使用网格布局 - 每行2部的竖向排列 */}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-8 pt-4 pb-6 sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] sm:gap-x-6 sm:gap-y-10 sm:pt-6 sm:pb-8">
+                {historyRecords.map((record, index) => (
+                  <div key={`history-${index}`} className="w-full">
+                    <VideoCard
+                      title={record.title}
+                      poster={record.cover}
+                      year={record.year}
+                      from="playrecord"
+                      progress={record.total_time ? (record.play_time / record.total_time) * 100 : 0}
+                      currentEpisode={record.index}
+                      episodes={record.total_episodes}
+                      source_name={record.source_name}
+                    />
+                  </div>
+                ))}
               </div>
 
               {/* 清除观看记录按钮 */}
