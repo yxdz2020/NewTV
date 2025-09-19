@@ -409,17 +409,29 @@ export class UpstashRedisStorage implements IStorage {
 
     let stats: UserStats;
     if (existingStats) {
+      // 检查是否是新影片
+      const watchedMoviesKey = `watched_movies:${userName}`;
+      const watchedMovies = await withRetry(() => this.client.get(watchedMoviesKey));
+      const movieSet = watchedMovies ? new Set(JSON.parse(watchedMovies as string)) : new Set();
+      
+      const isNewMovie = !movieSet.has(updateData.movieKey);
+      
       // 更新现有统计数据
       stats = {
         totalWatchTime: existingStats.totalWatchTime + updateData.watchTime,
-        totalMovies: existingStats.totalMovies, // 暂时保持不变，需要检查是否是新影片
+        totalMovies: isNewMovie ? existingStats.totalMovies + 1 : existingStats.totalMovies,
         firstWatchDate: existingStats.firstWatchDate,
         lastUpdateTime: updateData.timestamp
       };
 
-      // 检查是否是新影片（简单检查，可以根据需要优化）
-      // 这里可以通过检查播放记录来确定是否是新影片
-      // 为了简化，我们假设每次更新都可能是新影片，实际应该检查播放记录
+      // 如果是新影片，添加到已观看影片集合中
+      if (isNewMovie) {
+        movieSet.add(updateData.movieKey);
+        await withRetry(() => this.client.set(watchedMoviesKey, JSON.stringify(Array.from(movieSet))));
+        console.log(`新影片记录: ${updateData.movieKey}, 总影片数: ${stats.totalMovies}`);
+      } else {
+        console.log(`已观看影片: ${updateData.movieKey}, 总影片数保持: ${stats.totalMovies}`);
+      }
     } else {
       // 创建新的统计数据
       stats = {
@@ -428,6 +440,11 @@ export class UpstashRedisStorage implements IStorage {
         firstWatchDate: updateData.timestamp,
         lastUpdateTime: updateData.timestamp
       };
+
+      // 初始化已观看影片集合
+      const watchedMoviesKey = `watched_movies:${userName}`;
+      await withRetry(() => this.client.set(watchedMoviesKey, JSON.stringify([updateData.movieKey])));
+      console.log(`初始化用户统计: ${updateData.movieKey}, 总影片数: 1`);
     }
 
     await withRetry(() => this.client.set(key, JSON.stringify(stats)));
