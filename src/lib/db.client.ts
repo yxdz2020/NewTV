@@ -1973,7 +1973,7 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
   try {
     const movieKey = `${record.source_name}-${record.title}`;
     
-    // 使用剧集特定的键来缓存播放进度（包含集数信息）
+    // 使用包含集数信息的键来缓存每一集的播放进度
     const episodeKey = `${record.source_name}+${record.title}-${record.year}+${record.index}`;
     const lastProgressKey = `last_progress_${episodeKey}`;
     const lastProgress = parseInt(localStorage.getItem(lastProgressKey) || '0');
@@ -1985,6 +1985,8 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
 
     // 只有当观看时间增量大于0时才更新统计数据
     if (watchTimeIncrement > 0) {
+      console.log(`发送统计数据更新请求: 增量 ${watchTimeIncrement}s, movieKey: ${movieKey}`);
+      
       // 发送到服务器更新
       const response = await fetchWithAuth('/api/user/stats', {
         method: 'POST',
@@ -1998,19 +2000,33 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
         }),
       });
 
+      console.log(`API响应状态: ${response.status}`);
+      
       if (response.ok) {
+        const responseData = await response.json();
+        console.log(`API响应数据:`, responseData);
+        
         // 更新localStorage中的上次播放进度
         localStorage.setItem(lastProgressKey, record.play_time.toString());
+        console.log(`更新缓存: ${lastProgressKey} = ${record.play_time}`);
 
         // 清除缓存，下次获取时会重新从服务器拉取
         const authInfo = getAuthInfoFromBrowserCookie();
         if (authInfo?.username) {
           cacheManager.clearUserCache(authInfo.username);
+          console.log(`清除用户缓存: ${authInfo.username}`);
         }
+        
+        // 触发用户统计数据更新事件
+        window.dispatchEvent(new CustomEvent('userStatsUpdated', { 
+          detail: record 
+        }));
+        console.log(`触发userStatsUpdated事件`);
         
         console.log(`用户统计数据已更新: 增量 ${watchTimeIncrement}s`);
       } else {
-        console.error('更新用户统计数据失败:', await response.text());
+        const errorText = await response.text();
+        console.error(`更新用户统计数据失败: ${response.status} ${response.statusText}`, errorText);
       }
     } else {
       console.log(`无需更新用户统计数据: 增量为 ${watchTimeIncrement}s`);
