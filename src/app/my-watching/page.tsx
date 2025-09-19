@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Clock, Play, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-import { getAllPlayRecords, clearAllPlayRecords, PlayRecord, getUserStats, clearUserStats, UserStats, subscribeToDataUpdates, recalculateUserStatsFromHistory } from '@/lib/db.client';
+import { getAllPlayRecords, clearAllPlayRecords, PlayRecord, getUserStats, clearUserStats, UserStats, subscribeToDataUpdates, recalculateUserStatsFromHistory, generateStorageKey } from '@/lib/db.client';
 import { setupAutoSync } from '@/lib/force-sync-stats';
 import VideoCard from '@/components/VideoCard';
 import ScrollableRow from '@/components/ScrollableRow';
 
 interface ExtendedPlayRecord extends PlayRecord {
+  id: string; // 添加id属性，用于存储generateStorageKey生成的唯一标识符
   hasUpdate?: boolean;
   newEpisodes?: number;
 }
@@ -87,8 +88,11 @@ export default function MyWatchingPage() {
       setLoading(true);
       const recordsObj = await getAllPlayRecords();
 
-      // 将Record转换为数组并按时间排序
-      const records = Object.values(recordsObj).sort((a, b) => b.save_time - a.save_time);
+      // 将Record转换为数组并按时间排序，同时为每个记录添加id
+      const records = Object.entries(recordsObj).map(([key, record]) => ({
+        ...record,
+        id: key // 使用存储的key作为id
+      })).sort((a, b) => b.save_time - a.save_time);
 
       // 检查剧集更新
       const recordsWithUpdates = await checkForUpdates(records);
@@ -118,7 +122,7 @@ export default function MyWatchingPage() {
   };
 
   // 检查剧集更新的函数
-  const checkForUpdates = async (records: PlayRecord[]): Promise<ExtendedPlayRecord[]> => {
+  const checkForUpdates = async (records: (PlayRecord & { id: string })[]): Promise<ExtendedPlayRecord[]> => {
     if (!records.length) return [];
 
     const updatedRecords: ExtendedPlayRecord[] = [];
