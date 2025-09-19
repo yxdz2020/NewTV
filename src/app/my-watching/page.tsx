@@ -173,24 +173,53 @@ export default function MyWatchingPage() {
       <div className="container mx-auto px-4 py-8">
         {/* 观看统计信息 */}
         <div className="mb-8">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <div className="glass-light rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {userStats ? Math.floor(userStats.totalWatchTime / 3600) : 0} h
+          {/* 移动端横向布局 */}
+          <div className="sm:hidden">
+            <div className="glass-light rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-around">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {userStats ? Math.floor(userStats.totalWatchTime / 3600) : 0} h
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">观看总时长</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {userStats ? Math.floor((Date.now() - userStats.firstWatchDate) / (1000 * 60 * 60 * 24)) || 1 : 1}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">登录天数</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    {userStats ? userStats.totalMovies : 0}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">观看影片</div>
+                </div>
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">观看总时长</div>
             </div>
-            <div className="glass-light rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {userStats ? Math.floor((Date.now() - userStats.firstWatchDate) / (1000 * 60 * 60 * 24)) || 1 : 1}
+          </div>
+          
+          {/* 桌面端保持原有的网格布局 */}
+          <div className="hidden sm:block">
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="glass-light rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  {userStats ? Math.floor(userStats.totalWatchTime / 3600) : 0} h
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">观看总时长</div>
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">登录天数</div>
-            </div>
-            <div className="glass-light rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {userStats ? userStats.totalMovies : 0}
+              <div className="glass-light rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  {userStats ? Math.floor((Date.now() - userStats.firstWatchDate) / (1000 * 60 * 60 * 24)) || 1 : 1}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">登录天数</div>
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">观看影片</div>
+              <div className="glass-light rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                  {userStats ? userStats.totalMovies : 0}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">观看影片</div>
+              </div>
             </div>
           </div>
         </div>
