@@ -37,31 +37,27 @@ export default function MyWatchingPage() {
       }
     );
 
-    // 监听用户统计数据更新事件
-    const unsubscribeUserStats = subscribeToDataUpdates(
-      'userStatsUpdated',
-      () => {
-        console.log('用户统计数据已更新，重新加载数据');
-        loadUserStats();
-      }
-    );
+    // 不监听用户统计数据更新事件以避免无限循环
+    // 统计数据会在播放记录更新时自动重新计算
 
     return () => {
       unsubscribePlayRecords();
-      unsubscribeUserStats();
     };
   }, []);
 
   const loadUserStats = async () => {
     try {
-      // 首先尝试基于历史记录重新计算统计数据
-      const recalculatedStats = await recalculateUserStatsFromHistory();
-      if (recalculatedStats) {
-        setUserStats(recalculatedStats);
-      } else {
-        // 如果重新计算失败，则获取现有统计数据
-        const stats = await getUserStats();
-        setUserStats(stats);
+      // 首先尝试获取现有统计数据
+      const stats = await getUserStats();
+      setUserStats(stats);
+      
+      // 只有在统计数据为空或明显不准确时才重新计算
+      if (!stats || stats.totalWatchTime === 0 || stats.totalMovies === 0) {
+        console.log('统计数据为空或不准确，开始重新计算...');
+        const recalculatedStats = await recalculateUserStatsFromHistory();
+        if (recalculatedStats) {
+          setUserStats(recalculatedStats);
+        }
       }
     } catch (error) {
       console.error('加载用户统计数据失败:', error);
