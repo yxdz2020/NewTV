@@ -903,6 +903,49 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
                 </div>
+              ) : from === 'playrecord' && progress !== undefined ? (
+                // 观看记录显示百分比进度
+                <div className="flex flex-col items-center justify-center text-white">
+                  <div className="relative w-16 h-16 mb-2">
+                    {/* 圆形进度环 */}
+                    <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
+                      {/* 背景圆环 */}
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="28"
+                        stroke="rgba(255,255,255,0.2)"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      {/* 进度圆环 */}
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="28"
+                        stroke="white"
+                        strokeWidth="4"
+                        fill="none"
+                        strokeDasharray={`${2 * Math.PI * 28}`}
+                        strokeDashoffset={`${2 * Math.PI * 28 * (1 - progress / 100)}`}
+                        className="transition-all duration-500 ease-out"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    {/* 中心播放图标 */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <PlayCircleIcon
+                        size={24}
+                        strokeWidth={1}
+                        className='text-white fill-transparent'
+                      />
+                    </div>
+                  </div>
+                  {/* 百分比文字 */}
+                  <div className="text-sm font-semibold bg-black/50 px-2 py-1 rounded-full">
+                    {Math.round(progress)}%
+                  </div>
+                </div>
               ) : (
                 <PlayCircleIcon
                   size={50}

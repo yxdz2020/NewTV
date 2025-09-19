@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Clock, Play, Trash2 } from 'lucide-react';
+import { ArrowLeft, Clock, Play, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { getAllPlayRecords, clearAllPlayRecords, PlayRecord } from '@/lib/db.client';
@@ -16,6 +16,7 @@ export default function MyWatchingPage() {
   const router = useRouter();
   const [playRecords, setPlayRecords] = useState<ExtendedPlayRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [updatedRecords, setUpdatedRecords] = useState<ExtendedPlayRecord[]>([]);
   const [historyRecords, setHistoryRecords] = useState<ExtendedPlayRecord[]>([]);
 
@@ -87,17 +88,24 @@ export default function MyWatchingPage() {
     return updatedRecords;
   };
 
-  const handleClearAll = async () => {
-    if (confirm('确定要清空所有观看记录吗？此操作不可撤销。')) {
-      try {
-        await clearAllPlayRecords();
-        setPlayRecords([]);
-        setUpdatedRecords([]);
-        setHistoryRecords([]);
-      } catch (error) {
-        console.error('清空播放记录失败:', error);
-      }
+  const handleClearAll = () => {
+    setShowClearConfirm(true);
+  };
+
+  const handleConfirmClear = async () => {
+    try {
+      await clearAllPlayRecords();
+      setPlayRecords([]);
+      setUpdatedRecords([]);
+      setHistoryRecords([]);
+      setShowClearConfirm(false);
+    } catch (error) {
+      console.error('清空播放记录失败:', error);
     }
+  };
+
+  const handleCancelClear = () => {
+    setShowClearConfirm(false);
   };
 
   const handlePlayVideo = (record: PlayRecord) => {
@@ -114,7 +122,7 @@ export default function MyWatchingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20">
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="text-gray-500 dark:text-gray-400">加载中...</div>
@@ -125,8 +133,31 @@ export default function MyWatchingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20">
       <div className="container mx-auto px-4 py-8">
+        {/* 观看统计信息 */}
+        <div className="mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className="glass-light rounded-xl p-4 text-center">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {Math.floor(playRecords.reduce((total, record) => total + (record.play_time || 0), 0) / 3600)}h
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">观看总时长</div>
+            </div>
+            <div className="glass-light rounded-xl p-4 text-center">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {Math.floor((Date.now() - (playRecords[playRecords.length - 1]?.save_time || Date.now())) / (1000 * 60 * 60 * 24)) || 1}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">登录天数</div>
+            </div>
+            <div className="glass-light rounded-xl p-4 text-center">
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                {playRecords.length}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">观看影片</div>
+            </div>
+          </div>
+        </div>
         {/* 页面头部 */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
@@ -230,6 +261,46 @@ export default function MyWatchingPage() {
           </div>
         )}
       </div>
+
+      {/* 确认清除弹窗 */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="glass-strong rounded-xl shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  确认清除记录
+                </h3>
+                <button
+                  onClick={handleCancelClear}
+                  className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                确定要清空所有观看记录吗？此操作不可撤销，将删除您的所有观看历史和进度信息。
+              </p>
+              
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={handleCancelClear}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleConfirmClear}
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                >
+                  确认删除
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
