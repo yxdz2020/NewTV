@@ -1978,11 +1978,11 @@ export async function getUserStats(): Promise<UserStats> {
  */
 export async function updateUserStats(record: PlayRecord): Promise<void> {
   try {
-    const movieKey = `${record.source_name}-${record.title}`;
-    
-    // 使用包含集数信息的键来缓存每一集的播放进度
-    const episodeKey = `${record.source_name}+${record.title}-${record.year}+${record.index}`;
-    const lastProgressKey = `last_progress_${episodeKey}`;
+    // 修复：使用统一的键格式，确保movieKey和lastProgressKey一致
+    // 对于电影（总集数为1），使用简化的键；对于电视剧，包含集数信息
+    const baseKey = `${record.source_name}+${record.title}-${record.year}`;
+    const movieKey = record.total_episodes === 1 ? baseKey : `${baseKey}+${record.index}`;
+    const lastProgressKey = `last_progress_${movieKey}`;
     
     // 获取上次播放进度
     const lastProgress = parseInt(localStorage.getItem(lastProgressKey) || '0');
@@ -1990,13 +1990,30 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
     // 计算观看时间增量：当前播放进度 - 上次记录的播放进度
     let watchTimeIncrement = Math.max(0, record.play_time - lastProgress);
     
-    // 特殊处理：如果是电影（总集数为1）且当前进度小于上次进度，说明重新开始观看
+    console.log(`观看时间增量计算: ${record.title} ${record.total_episodes === 1 ? '(电影)' : `第${record.index}集`} - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 增量: ${watchTimeIncrement}s`);
+    
+    // 修复：对于新观看的内容，确保统计数据能够正确更新
+    // 如果增量为0但播放时间大于5秒，检查是否是新的观看会话
+    if (watchTimeIncrement === 0 && record.play_time >= 5) {
+      // 检查是否是新的观看会话（距离上次保存超过30分钟或者是不同的视频）
+      const sessionKey = `last_session_${movieKey}`;
+      const lastSessionTime = parseInt(localStorage.getItem(sessionKey) || '0');
+      const currentTime = Date.now();
+      
+      // 如果距离上次会话超过30分钟，或者没有会话记录，认为是新的观看会话
+      if (currentTime - lastSessionTime > 30 * 60 * 1000 || lastSessionTime === 0) {
+        watchTimeIncrement = record.play_time;
+        console.log(`检测到新观看会话: ${record.title} - 使用当前播放时间作为增量: ${watchTimeIncrement}s`);
+        // 更新会话时间
+        localStorage.setItem(sessionKey, currentTime.toString());
+      }
+    }
+    
+    // 特殊处理：如果当前进度小于上次进度，说明重新开始观看
     // 这种情况下，我们应该累计整个观看时间，而不是计算增量
-    if (record.total_episodes === 1 && record.play_time < lastProgress) {
+    if (record.play_time < lastProgress && record.play_time > 0) {
       watchTimeIncrement = record.play_time;
-      console.log(`电影重新观看检测: ${record.title} - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 使用当前进度作为增量: ${watchTimeIncrement}s`);
-    } else {
-      console.log(`观看时间增量计算: ${record.title} 第${record.index}集 - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 增量: ${watchTimeIncrement}s`);
+      console.log(`重新观看检测: ${record.title} - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 使用当前进度作为增量: ${watchTimeIncrement}s`);
     }
 
     // 只有当观看时间增量大于0时才更新统计数据
