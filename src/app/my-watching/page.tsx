@@ -5,6 +5,7 @@ import { ArrowLeft, Clock, Play, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { getAllPlayRecords, clearAllPlayRecords, PlayRecord, getUserStats, clearUserStats, UserStats, subscribeToDataUpdates, recalculateUserStatsFromHistory } from '@/lib/db.client';
+import { setupAutoSync } from '@/lib/force-sync-stats';
 import VideoCard from '@/components/VideoCard';
 import ScrollableRow from '@/components/ScrollableRow';
 
@@ -24,6 +25,9 @@ export default function MyWatchingPage() {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
 
   useEffect(() => {
+    // 设置自动同步
+    setupAutoSync();
+    
     loadPlayRecords();
     loadUserStats();
 
@@ -37,18 +41,25 @@ export default function MyWatchingPage() {
       }
     );
 
-    // 不监听用户统计数据更新事件以避免无限循环
-    // 统计数据会在播放记录更新时自动重新计算
+    // 监听用户统计数据更新事件
+    const unsubscribeUserStats = subscribeToDataUpdates(
+      'userStatsUpdated',
+      () => {
+        console.log('用户统计数据已更新，重新加载统计数据');
+        loadUserStats();
+      }
+    );
 
     return () => {
       unsubscribePlayRecords();
+      unsubscribeUserStats();
     };
   }, []);
 
   const loadUserStats = async () => {
     try {
-      // 首先尝试获取现有统计数据
-      const stats = await getUserStats();
+      // 首先尝试获取现有统计数据，在页面初始化时强制刷新以确保数据同步
+      const stats = await getUserStats(true);
       setUserStats(stats);
       
       // 只有在统计数据为空或明显不准确时才重新计算
@@ -406,6 +417,9 @@ export default function MyWatchingPage() {
                           currentEpisode={record.index}
                           episodes={record.total_episodes}
                           source_name={record.source_name}
+                          source={record.source}
+                          id={record.id}
+                          onDelete={loadUserStats}
                         />
                         {record.hasUpdate && record.newEpisodes && record.newEpisodes > 0 && (
                           <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-bounce z-50">
@@ -435,6 +449,9 @@ export default function MyWatchingPage() {
                           currentEpisode={record.index}
                           episodes={record.total_episodes}
                           source_name={record.source_name}
+                          source={record.source}
+                          id={record.id}
+                          onDelete={loadUserStats}
                         />
                         {record.hasUpdate && record.newEpisodes && record.newEpisodes > 0 && (
                           <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-bounce z-50">
@@ -471,6 +488,9 @@ export default function MyWatchingPage() {
                       currentEpisode={record.index}
                       episodes={record.total_episodes}
                       source_name={record.source_name}
+                      source={record.source}
+                      id={record.id}
+                      onDelete={loadUserStats}
                     />
                   </div>
                 ))}

@@ -1851,11 +1851,19 @@ export function clearDoubanCache(): void {
 /**
  * 获取用户统计数据
  */
-export async function getUserStats(): Promise<UserStats> {
+export async function getUserStats(forceRefresh = false): Promise<UserStats> {
   try {
+    // 如果强制刷新，清除缓存
+    if (forceRefresh) {
+      const authInfo = getAuthInfoFromBrowserCookie();
+      if (authInfo?.username) {
+        cacheManager.clearUserCache(authInfo.username);
+      }
+    }
+
     // 先尝试从缓存获取
     const cached = cacheManager.getCachedUserStats();
-    if (cached) {
+    if (cached && !forceRefresh) {
       return cached;
     }
 

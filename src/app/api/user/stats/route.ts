@@ -93,13 +93,13 @@ export async function POST(request: NextRequest) {
     console.log('用户统计数据更新成功');
 
     // 获取更新后的用户统计数据并返回
-    console.log('正在获取更新后的统计数据...');
+    console.log('正在获取更新后的用户统计数据...');
     const updatedStats = await db.getUserStats(authInfo.username);
-    console.log('获取统计数据成功:', updatedStats);
+    console.log('获取到的更新后统计数据:', updatedStats);
 
     return NextResponse.json({
       success: true,
-      stats: updatedStats || { totalWatchTime: 0, totalMovies: 0, firstWatchDate: 0, lastUpdateTime: 0 }
+      userStats: updatedStats || { totalWatchTime: 0, totalMovies: 0, firstWatchDate: 0, lastUpdateTime: 0 }
     });
   } catch (error) {
     console.error('POST /api/user/stats - 详细错误信息:');
