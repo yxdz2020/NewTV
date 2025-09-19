@@ -394,7 +394,7 @@ export abstract class BaseRedisStorage implements IStorage {
     await this.withRetry(() =>
       this.client.set(this.adminConfigKey(), JSON.stringify(config))
     );
-    
+
     // 确保管理员配置永不过期，移除TTL（kvrocks不支持KEEPTTL选项）
     try {
       await this.withRetry(() => this.client.persist(this.adminConfigKey()));
@@ -511,7 +511,7 @@ export abstract class BaseRedisStorage implements IStorage {
   }): Promise<void> {
     const key = this.userStatsKey(userName);
     const existingStats = await this.getUserStats(userName);
-    
+
     let stats: UserStats;
     if (existingStats) {
       // 更新现有统计数据
@@ -521,7 +521,7 @@ export abstract class BaseRedisStorage implements IStorage {
         firstWatchDate: existingStats.firstWatchDate,
         lastUpdateTime: updateData.timestamp
       };
-      
+
       // 检查是否是新影片（简单检查，可以根据需要优化）
       // 这里可以通过检查播放记录来确定是否是新影片
       // 为了简化，我们假设每次更新都可能是新影片，实际应该检查播放记录
@@ -534,7 +534,7 @@ export abstract class BaseRedisStorage implements IStorage {
         lastUpdateTime: updateData.timestamp
       };
     }
-    
+
     await this.withRetry(() => this.client.set(key, JSON.stringify(stats)));
   }
 

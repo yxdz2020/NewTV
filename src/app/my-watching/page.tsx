@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Clock, Play, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-import { getAllPlayRecords, clearAllPlayRecords, PlayRecord, getUserStats, clearUserStats, UserStats } from '@/lib/db.client';
+import { getAllPlayRecords, clearAllPlayRecords, PlayRecord, getUserStats, clearUserStats, UserStats, subscribeToDataUpdates } from '@/lib/db.client';
 import VideoCard from '@/components/VideoCard';
 import ScrollableRow from '@/components/ScrollableRow';
 
@@ -26,6 +26,18 @@ export default function MyWatchingPage() {
   useEffect(() => {
     loadPlayRecords();
     loadUserStats();
+
+    // 监听播放记录更新事件，当播放记录更新时重新加载用户统计数据
+    const unsubscribe = subscribeToDataUpdates(
+      'playRecordsUpdated',
+      async () => {
+        // 播放记录更新后，重新加载用户统计数据以获取最新的统计信息
+        await loadUserStats();
+        await loadPlayRecords();
+      }
+    );
+
+    return unsubscribe;
   }, []);
 
   const loadUserStats = async () => {
@@ -107,13 +119,18 @@ export default function MyWatchingPage() {
 
   const handleConfirmClearStats = async () => {
     try {
+      // 清空统计数据和播放记录（全部清除）
       await clearUserStats();
+      await clearAllPlayRecords();
       setUserStats({
         totalWatchTime: 0,
         totalMovies: 0,
         firstWatchDate: Date.now(),
         lastUpdateTime: Date.now()
       });
+      setPlayRecords([]);
+      setUpdatedRecords([]);
+      setHistoryRecords([]);
       setShowClearStatsConfirm(false);
     } catch (error) {
       console.error('清空统计数据失败:', error);
@@ -171,6 +188,31 @@ export default function MyWatchingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20">
       <div className="container mx-auto px-4 py-8">
+        {/* 页面头部 */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.back()}
+              className="p-2 rounded-lg bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            </button>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              我的观看
+            </h1>
+          </div>
+
+          {userStats && userStats.totalMovies > 0 && (
+            <button
+              onClick={handleClearAll}
+              className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              清空所有数据
+            </button>
+          )}
+        </div>
+
         {/* 观看统计信息 */}
         <div className="mb-8">
           {/* 移动端横向布局 */}
@@ -198,7 +240,7 @@ export default function MyWatchingPage() {
               </div>
             </div>
           </div>
-          
+
           {/* 桌面端保持原有的网格布局 */}
           <div className="hidden sm:block">
             <div className="grid grid-cols-3 gap-4 mb-6">
@@ -222,30 +264,6 @@ export default function MyWatchingPage() {
               </div>
             </div>
           </div>
-        </div>
-        {/* 页面头部 */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.back()}
-              className="p-2 rounded-lg bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            </button>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              我的观看
-            </h1>
-          </div>
-
-          {userStats && userStats.totalMovies > 0 && (
-            <button
-              onClick={handleClearAll}
-              className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
-            >
-              <Trash2 className="w-4 h-4" />
-              清空统计
-            </button>
-          )}
         </div>
 
         {playRecords.length === 0 ? (
@@ -274,9 +292,77 @@ export default function MyWatchingPage() {
                     </span>
                   </div>
                 </div>
-                <ScrollableRow>
-                  {updatedRecords.map((record, index) => (
-                    <div key={`updated-${index}`} className="relative min-w-[102px] w-[102px] sm:min-w-[180px] sm:w-44">
+                {/* 移动端网格布局 */}
+                <div className="sm:hidden">
+                  <div className="grid grid-cols-2 gap-4">
+                    {updatedRecords.map((record, index) => (
+                      <div key={`updated-${index}`} className="relative">
+                        <VideoCard
+                          title={record.title}
+                          poster={record.cover}
+                          year={record.year}
+                          from="playrecord"
+                          progress={record.total_time ? (record.play_time / record.total_time) * 100 : 0}
+                          currentEpisode={record.index}
+                          episodes={record.total_episodes}
+                          source_name={record.source_name}
+                        />
+                        {record.hasUpdate && record.newEpisodes && record.newEpisodes > 0 && (
+                          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-bounce">
+                            +{record.newEpisodes}集
+                          </div>
+                        )}
+                        {/* 新集数提示光环效果 */}
+                        {record.hasUpdate && (
+                          <div className="absolute inset-0 rounded-lg ring-2 ring-red-400 ring-opacity-50 animate-pulse pointer-events-none"></div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* 桌面端保持原有的横向滚动布局 */}
+                <div className="hidden sm:block">
+                  <ScrollableRow>
+                    {updatedRecords.map((record, index) => (
+                      <div key={`updated-${index}`} className="relative min-w-[180px] w-44">
+                        <VideoCard
+                          title={record.title}
+                          poster={record.cover}
+                          year={record.year}
+                          from="playrecord"
+                          progress={record.total_time ? (record.play_time / record.total_time) * 100 : 0}
+                          currentEpisode={record.index}
+                          episodes={record.total_episodes}
+                          source_name={record.source_name}
+                        />
+                        {record.hasUpdate && record.newEpisodes && record.newEpisodes > 0 && (
+                          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-bounce">
+                            +{record.newEpisodes}集
+                          </div>
+                        )}
+                        {/* 新集数提示光环效果 */}
+                        {record.hasUpdate && (
+                          <div className="absolute inset-0 rounded-lg ring-2 ring-red-400 ring-opacity-50 animate-pulse pointer-events-none"></div>
+                        )}
+                      </div>
+                    ))}
+                  </ScrollableRow>
+                </div>
+              </div>
+            )}
+
+            {/* 历史观看记录 */}
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                {updatedRecords.length > 0 ? '历史观看' : '观看记录'}
+              </h2>
+              
+              {/* 移动端网格布局 */}
+              <div className="sm:hidden">
+                <div className="grid grid-cols-2 gap-4">
+                  {historyRecords.map((record, index) => (
+                    <div key={`history-${index}`} className="relative">
                       <VideoCard
                         title={record.title}
                         poster={record.cover}
@@ -287,43 +373,31 @@ export default function MyWatchingPage() {
                         episodes={record.total_episodes}
                         source_name={record.source_name}
                       />
-                      {record.hasUpdate && record.newEpisodes && record.newEpisodes > 0 && (
-                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-bounce">
-                          +{record.newEpisodes}集
-                        </div>
-                      )}
-                      {/* 新集数提示光环效果 */}
-                      {record.hasUpdate && (
-                        <div className="absolute inset-0 rounded-lg ring-2 ring-red-400 ring-opacity-50 animate-pulse pointer-events-none"></div>
-                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* 桌面端保持原有的横向滚动布局 */}
+              <div className="hidden sm:block">
+                <ScrollableRow>
+                  {historyRecords.map((record, index) => (
+                    <div key={`history-${index}`} className="min-w-[180px] w-44">
+                      <VideoCard
+                        title={record.title}
+                        poster={record.cover}
+                        year={record.year}
+                        from="playrecord"
+                        progress={record.total_time ? (record.play_time / record.total_time) * 100 : 0}
+                        currentEpisode={record.index}
+                        episodes={record.total_episodes}
+                        source_name={record.source_name}
+                      />
                     </div>
                   ))}
                 </ScrollableRow>
               </div>
-            )}
 
-            {/* 历史观看记录 */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                {updatedRecords.length > 0 ? '历史观看' : '观看记录'}
-              </h2>
-              <ScrollableRow>
-                {historyRecords.map((record, index) => (
-                  <div key={`history-${index}`} className="min-w-[102px] w-[102px] sm:min-w-[180px] sm:w-44">
-                    <VideoCard
-                      title={record.title}
-                      poster={record.cover}
-                      year={record.year}
-                      from="playrecord"
-                      progress={record.total_time ? (record.play_time / record.total_time) * 100 : 0}
-                      currentEpisode={record.index}
-                      episodes={record.total_episodes}
-                      source_name={record.source_name}
-                    />
-                  </div>
-                ))}
-              </ScrollableRow>
-              
               {/* 清除观看记录按钮 */}
               {historyRecords.length > 0 && (
                 <div className="mt-6 text-center">
@@ -388,7 +462,7 @@ export default function MyWatchingPage() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  确认清除统计数据
+                  确认清空所有数据
                 </h3>
                 <button
                   onClick={handleCancelClearStats}
@@ -399,7 +473,7 @@ export default function MyWatchingPage() {
               </div>
 
               <p className="text-gray-600 dark:text-gray-300 mb-6">
-                确定要清空统计数据吗？此操作将重置您的观看时长、影片数量等统计信息，但不会影响观看记录。
+                确定要清空所有数据吗？此操作将删除您的观看统计数据和所有观看记录，不可撤销。
               </p>
 
               <div className="flex gap-3 justify-end">
@@ -413,7 +487,7 @@ export default function MyWatchingPage() {
                   onClick={handleConfirmClearStats}
                   className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
                 >
-                  确认清除
+                  确认清空
                 </button>
               </div>
             </div>

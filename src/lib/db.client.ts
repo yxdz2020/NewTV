@@ -474,7 +474,7 @@ class HybridCacheManager {
 
     const userCache = this.getUserCache(username);
     const cached = userCache.doubanDetails;
-    
+
     if (cached && this.isDoubanCacheValid(cached, 'details')) {
       return cached.data[id] || null;
     }
@@ -489,7 +489,7 @@ class HybridCacheManager {
     if (!username) return;
 
     const userCache = this.getUserCache(username);
-    
+
     if (!userCache.doubanDetails) {
       userCache.doubanDetails = {
         data: {},
@@ -500,7 +500,7 @@ class HybridCacheManager {
 
     userCache.doubanDetails.data[id] = data;
     userCache.doubanDetails.timestamp = Date.now();
-    
+
     this.saveUserCache(username, userCache);
   }
 
@@ -513,7 +513,7 @@ class HybridCacheManager {
 
     const userCache = this.getUserCache(username);
     const cached = userCache.doubanLists;
-    
+
     if (cached && this.isDoubanCacheValid(cached, 'lists')) {
       return cached.data[cacheKey] || null;
     }
@@ -528,7 +528,7 @@ class HybridCacheManager {
     if (!username) return;
 
     const userCache = this.getUserCache(username);
-    
+
     if (!userCache.doubanLists) {
       userCache.doubanLists = {
         data: {},
@@ -539,7 +539,7 @@ class HybridCacheManager {
 
     userCache.doubanLists.data[cacheKey] = data;
     userCache.doubanLists.timestamp = Date.now();
-    
+
     this.saveUserCache(username, userCache);
   }
 
@@ -560,7 +560,7 @@ class HybridCacheManager {
     const userCache = this.getUserCache(username);
     delete userCache.doubanDetails;
     delete userCache.doubanLists;
-    
+
     this.saveUserCache(username, userCache);
   }
 }
@@ -642,13 +642,13 @@ async function fetchWithAuth(
         await new Promise(resolve => setTimeout(resolve, 500));
         return fetchWithAuth(url, options, 1);
       }
-      
+
       // 检查当前是否在注册或登录页面，如果是则不要跳转
       const currentPath = window.location.pathname;
       if (currentPath === '/login' || currentPath === '/register') {
         throw new Error(`请求 ${url} 失败: ${res.status}`);
       }
-      
+
       // 调用 logout 接口
       try {
         await fetch('/api/logout', {
@@ -781,7 +781,7 @@ export async function savePlayRecord(
         },
         body: JSON.stringify({ key, record }),
       });
-      
+
       // 更新用户统计数据
       await updateUserStats(record);
     } catch (err) {
@@ -807,7 +807,7 @@ export async function savePlayRecord(
         detail: allRecords,
       })
     );
-    
+
     // 更新用户统计数据
     await updateUserStats(record);
   } catch (err) {
@@ -1917,20 +1917,20 @@ export async function getUserStats(): Promise<UserStats> {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const stats = await response.json();
-    
+
     // 缓存数据
     cacheManager.cacheUserStats(stats);
-    
+
     return stats;
   } catch (error) {
     console.error('获取用户统计数据失败:', error);
-    
+
     // 如果服务器请求失败，基于本地观看记录计算统计数据
     const playRecords = await getAllPlayRecords();
     const records = Object.values(playRecords);
-    
+
     if (records.length === 0) {
       return {
         totalWatchTime: 0,
@@ -1939,21 +1939,21 @@ export async function getUserStats(): Promise<UserStats> {
         lastUpdateTime: Date.now()
       };
     }
-    
+
     const totalWatchTime = records.reduce((sum, record) => sum + record.play_time, 0);
     const totalMovies = new Set(records.map(r => `${r.source_name}-${r.title}`)).size;
     const firstWatchDate = Math.min(...records.map(r => r.save_time));
-    
+
     const stats: UserStats = {
       totalWatchTime,
       totalMovies,
       firstWatchDate,
       lastUpdateTime: Date.now()
     };
-    
+
     // 缓存计算结果
     cacheManager.cacheUserStats(stats);
-    
+
     return stats;
   }
 }
@@ -1963,23 +1963,44 @@ export async function getUserStats(): Promise<UserStats> {
  */
 export async function updateUserStats(record: PlayRecord): Promise<void> {
   try {
-    // 发送到服务器更新
-    await fetchWithAuth('/api/user/stats', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        watchTime: record.play_time,
-        movieKey: `${record.source_name}-${record.title}`,
-        timestamp: record.save_time
-      }),
-    });
+    const movieKey = `${record.source_name}-${record.title}`;
     
-    // 清除缓存，下次获取时会重新从服务器拉取
-    const authInfo = getAuthInfoFromBrowserCookie();
-    if (authInfo?.username) {
-      cacheManager.clearUserCache(authInfo.username);
+    // 获取之前的播放记录来计算观看时间增量
+    let watchTimeIncrement = 0;
+    
+    // 从缓存或存储中获取之前的播放记录
+    const allRecords = await getAllPlayRecords();
+    const recordKey = generateStorageKey(record.source_name, `${record.title}-${record.year}`);
+    const previousRecord = allRecords[recordKey];
+    
+    if (previousRecord) {
+      // 计算观看时间增量：当前播放进度 - 之前的播放进度
+      watchTimeIncrement = Math.max(0, record.play_time - previousRecord.play_time);
+    } else {
+      // 如果是新记录，观看时间增量就是当前播放进度
+      watchTimeIncrement = record.play_time;
+    }
+
+    // 只有当观看时间增量大于0时才更新统计数据
+    if (watchTimeIncrement > 0) {
+      // 发送到服务器更新
+      await fetchWithAuth('/api/user/stats', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          watchTime: watchTimeIncrement,
+          movieKey: movieKey,
+          timestamp: record.save_time
+        }),
+      });
+
+      // 清除缓存，下次获取时会重新从服务器拉取
+      const authInfo = getAuthInfoFromBrowserCookie();
+      if (authInfo?.username) {
+        cacheManager.clearUserCache(authInfo.username);
+      }
     }
   } catch (error) {
     console.error('更新用户统计数据失败:', error);
@@ -1996,7 +2017,7 @@ export async function clearUserStats(): Promise<void> {
     await fetchWithAuth('/api/user/stats', {
       method: 'DELETE',
     });
-    
+
     // 清除本地缓存
     const authInfo = getAuthInfoFromBrowserCookie();
     if (authInfo?.username) {
