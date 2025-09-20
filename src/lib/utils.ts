@@ -340,30 +340,15 @@ export async function getVideoResolutionFromM3u8(m3u8Url: string): Promise<{
 }
 
 export function cleanHtmlTags(text: string): string {
-  return he.decode(text.replace(/<[^>]*>/g, ''));
-}
+  if (!text) return '';
 
-/**
- * 格式化观看时长显示
- * 小于60分钟时显示分钟，超过60分钟时显示小时
- * @param seconds 总秒数
- * @returns 格式化后的时长字符串
- */
-export function formatWatchTime(seconds: number): string {
-  if (seconds < 0) return '0 分钟';
-  
-  const minutes = Math.floor(seconds / 60);
-  
-  if (minutes < 60) {
-    return `${minutes} 分钟`;
-  }
-  
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  
-  if (remainingMinutes === 0) {
-    return `${hours} 小时`;
-  }
-  
-  return `${hours} 小时 ${remainingMinutes} 分钟`;
+  const cleanedText = text
+    .replace(/<[^>]+>/g, '\n') // 将 HTML 标签替换为换行
+    .replace(/\n+/g, '\n') // 将多个连续换行合并为一个
+    .replace(/[ \t]+/g, ' ') // 将多个连续空格和制表符合并为一个空格，但保留换行符
+    .replace(/^\n+|\n+$/g, '') // 去掉首尾换行
+    .trim(); // 去掉首尾空格
+
+  // 使用 he 库解码 HTML 实体
+  return he.decode(cleanedText);
 }

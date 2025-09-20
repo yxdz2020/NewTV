@@ -8,7 +8,6 @@ import { getAllPlayRecords, clearAllPlayRecords, PlayRecord, getUserStats, clear
 import { setupAutoSync } from '@/lib/force-sync-stats';
 import VideoCard from '@/components/VideoCard';
 import ScrollableRow from '@/components/ScrollableRow';
-import { formatWatchTime } from '@/lib/utils';
 
 interface ExtendedPlayRecord extends PlayRecord {
   id: string; // 添加id属性，用于存储generateStorageKey生成的唯一标识符
@@ -48,7 +47,7 @@ export default function MyWatchingPage() {
       'userStatsUpdated',
       () => {
         console.log('用户统计数据已更新，重新加载统计数据');
-        loadUserStatsFromCache();
+        loadUserStats();
       }
     );
 
@@ -57,16 +56,6 @@ export default function MyWatchingPage() {
       unsubscribeUserStats();
     };
   }, []);
-
-  const loadUserStatsFromCache = async () => {
-    try {
-      // 不强制刷新，直接从缓存获取最新数据
-      const stats = await getUserStats(false);
-      setUserStats(stats);
-    } catch (error) {
-      console.error('从缓存加载用户统计数据失败:', error);
-    }
-  };
 
   const loadUserStats = async () => {
     try {
@@ -347,7 +336,7 @@ export default function MyWatchingPage() {
               <div className="flex items-center justify-around">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {userStats ? formatWatchTime(userStats.totalWatchTime) : '0 分钟'}
+                    {userStats ? Math.floor(userStats.totalWatchTime / 3600) : 0} h
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">观看总时长</div>
                 </div>
@@ -372,7 +361,7 @@ export default function MyWatchingPage() {
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="glass-light rounded-xl p-4 text-center">
                 <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {userStats ? formatWatchTime(userStats.totalWatchTime) : '0 分钟'}
+                  {userStats ? Math.floor(userStats.totalWatchTime / 3600) : 0} h
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">观看总时长</div>
               </div>
