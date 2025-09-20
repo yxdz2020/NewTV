@@ -183,7 +183,7 @@ export async function POST(req: NextRequest) {
             await db.updateUserStats(username, {
               watchTime: 0,
               movieKey: 'init',
-              timestamp: Date.now(),
+              timestamp: Date.now(), // 设置为当前时间作为首次观看时间
               isFullReset: true
             });
           }
@@ -243,12 +243,12 @@ export async function POST(req: NextRequest) {
         )) {
           console.log(`为用户 ${username} 初始化统计数据`);
           // 使用正确的参数格式调用updateUserStats
-          await db.updateUserStats(username, {
-            watchTime: 0,
-            movieKey: 'init',
-            timestamp: Date.now(),
-            isFullReset: true
-          });
+            await db.updateUserStats(username, {
+              watchTime: 0,
+              movieKey: 'init',
+              timestamp: Date.now(), // 设置为当前时间作为首次观看时间
+              isFullReset: true
+            });
         }
       } catch (error) {
         console.error('初始化用户统计数据失败:', error);
