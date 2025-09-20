@@ -26,7 +26,16 @@ export async function GET(request: NextRequest) {
     }
 
     const stats = await db.getUserStats(authInfo.username);
-    return NextResponse.json(stats);
+    
+    // 如果新用户没有统计数据，返回默认值而不是null
+    const defaultStats = {
+      totalWatchTime: 0,
+      totalMovies: 0,
+      firstWatchDate: Date.now(),
+      lastUpdateTime: Date.now()
+    };
+    
+    return NextResponse.json(stats || defaultStats);
   } catch (error) {
     console.error('获取用户统计数据失败:', error);
     return NextResponse.json(

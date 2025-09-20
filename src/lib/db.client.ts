@@ -1886,30 +1886,39 @@ export async function getUserStats(forceRefresh = false): Promise<UserStats> {
     const playRecords = await getAllPlayRecords();
     const records = Object.values(playRecords);
 
+    // 为新用户或没有播放记录的用户返回默认统计数据
+    const defaultStats: UserStats = {
+      totalWatchTime: 0,
+      totalMovies: 0,
+      firstWatchDate: Date.now(),
+      lastUpdateTime: Date.now()
+    };
+
     if (records.length === 0) {
-      return {
-        totalWatchTime: 0,
-        totalMovies: 0,
-        firstWatchDate: Date.now(),
-        lastUpdateTime: Date.now()
-      };
+      console.log('新用户或无播放记录，返回默认统计数据');
+      // 缓存默认统计数据
+      cacheManager.cacheUserStats(defaultStats);
+      return defaultStats;
     }
 
+    // 基于本地记录计算统计数据
     const totalWatchTime = records.reduce((sum, record) => sum + record.play_time, 0);
     const totalMovies = new Set(records.map(r => `${r.title}_${r.source_name}_${r.year}`)).size;
     const firstWatchDate = Math.min(...records.map(r => r.save_time));
 
-    const stats: UserStats = {
+    const calculatedStats: UserStats = {
       totalWatchTime,
       totalMovies,
       firstWatchDate,
       lastUpdateTime: Date.now()
     };
 
-    // 缓存计算结果
-    cacheManager.cacheUserStats(stats);
+    console.log('基于本地记录计算统计数据:', calculatedStats);
 
-    return stats;
+    // 缓存计算结果
+    cacheManager.cacheUserStats(calculatedStats);
+
+    return calculatedStats;
   }
 }
 
