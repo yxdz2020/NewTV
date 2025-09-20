@@ -15,7 +15,8 @@
  */
 
 import { getAuthInfoFromBrowserCookie } from './auth';
-import { SkipConfig } from './types';
+import { DanmakuConfig, SkipConfig } from './types';
+import type { Favorite as FavoriteType, PlayRecord as PlayRecordType, UserStats as UserStatsType } from './types';
 
 // 全局错误触发函数
 function triggerGlobalError(message: string) {
@@ -102,13 +103,8 @@ const STORAGE_TYPE = (() => {
   const raw =
     (typeof window !== 'undefined' &&
       (window as any).RUNTIME_CONFIG?.STORAGE_TYPE) ||
-    (process.env.STORAGE_TYPE as
-      | 'localstorage'
-      | 'redis'
-      | 'upstash'
-      | undefined) ||
     'localstorage';
-  return raw;
+  return raw as 'localstorage' | 'redis' | 'upstash';
 })();
 
 // ---------------- 搜索历史相关常量 ----------------
@@ -1927,7 +1923,7 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
     // 添加更严格的条件：避免在没有实际播放时频繁更新
     // 如果距离上次更新时间太短（小于30秒），且进度没有明显变化，则跳过更新
     if (timeSinceLastUpdate < 30 * 1000 && Math.abs(record.play_time - lastProgress) < 5) {
-      console.log(`跳过统计数据更新: 时间间隔过短 (${Math.floor(timeSinceLastUpdate / 1000)}s) 且进度变化不大 (${Math.abs(record.play_time - lastProgress)}s)`);
+      console.log(`⏭️ 跳过统计数据更新: 时间间隔过短 (${Math.floor(timeSinceLastUpdate / 1000)}s) 且进度变化不大 (${Math.abs(record.play_time - lastProgress)}s)`);
       return;
     }
 
@@ -1935,35 +1931,35 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
     if (record.play_time > lastProgress) {
       // 正常播放进度增加
       watchTimeIncrement = record.play_time - lastProgress;
-      
+
       // 如果进度增加过大（可能是快进），限制增量
       if (watchTimeIncrement > 300) { // 超过5分钟认为是快进
         watchTimeIncrement = Math.min(watchTimeIncrement, Math.floor(timeSinceLastUpdate / 1000) + 60); // 最多比实际时间多1分钟
-        console.log(`检测到快进操作: ${record.title} 第${record.index}集 - 进度增加: ${record.play_time - lastProgress}s, 限制增量为: ${watchTimeIncrement}s`);
+        console.log(`⏩ 检测到快进操作: ${record.title} 第${record.index}集 - 进度增加: ${record.play_time - lastProgress}s, 限制增量为: ${watchTimeIncrement}s`);
       }
     } else if (record.play_time < lastProgress) {
       // 进度回退的情况（重新观看、跳转等）
       if (timeSinceLastUpdate > 1 * 60 * 1000) { // 1分钟以上认为是重新开始观看
         watchTimeIncrement = Math.min(record.play_time, 60); // 重新观看最多给60秒增量
-        console.log(`检测到重新观看: ${record.title} 第${record.index}集 - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 时间间隔: ${Math.floor(timeSinceLastUpdate / 1000)}s`);
+        console.log(`🔄 检测到重新观看: ${record.title} 第${record.index}集 - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 时间间隔: ${Math.floor(timeSinceLastUpdate / 1000)}s`);
       } else {
         // 短时间内的回退，可能是快退操作，不给增量
         watchTimeIncrement = 0;
-        console.log(`检测到快退操作: ${record.title} 第${record.index}集 - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 不计入观看时间`);
+        console.log(`⏪ 检测到快退操作: ${record.title} 第${record.index}集 - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 不计入观看时间`);
       }
     } else {
       // 进度相同，可能是暂停后继续，给予少量时间增量
       if (timeSinceLastUpdate > 60 * 1000) { // 1分钟以上认为有观看时间
         watchTimeIncrement = Math.min(Math.floor(timeSinceLastUpdate / 1000), 120); // 最多2分钟
-        console.log(`检测到暂停后继续: ${record.title} 第${record.index}集 - 进度: ${record.play_time}s, 时间间隔: ${Math.floor(timeSinceLastUpdate / 1000)}s, 使用增量: ${watchTimeIncrement}s`);
+        console.log(`⏸️ 检测到暂停后继续: ${record.title} 第${record.index}集 - 进度: ${record.play_time}s, 时间间隔: ${Math.floor(timeSinceLastUpdate / 1000)}s, 使用增量: ${watchTimeIncrement}s`);
       }
     }
 
-    console.log(`观看时间增量计算: ${record.title} 第${record.index}集 - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 增量: ${watchTimeIncrement}s`);
+    console.log(`📊 观看时间增量计算: ${record.title} 第${record.index}集 - 当前进度: ${record.play_time}s, 上次进度: ${lastProgress}s, 增量: ${watchTimeIncrement}s`);
 
     // 只有当观看时间增量大于5秒时才更新统计数据（避免频繁的小幅更新）
     if (watchTimeIncrement > 5) {
-      console.log(`发送统计数据更新请求: 增量 ${watchTimeIncrement}s, movieKey: ${movieKey}`);
+      console.log(`🚀 发送统计数据更新请求: 增量 ${watchTimeIncrement}s, movieKey: ${movieKey}`);
 
       // 发送到服务器更新
       const response = await fetchWithAuth('/api/user/stats', {
@@ -1978,55 +1974,55 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
         }),
       });
 
-      console.log(`API响应状态: ${response.status}`);
+      console.log(`📡 API响应状态: ${response.status}`);
 
       if (response.ok) {
         const responseData = await response.json();
-        console.log(`API响应数据:`, responseData);
+        console.log(`✅ API响应数据:`, responseData);
 
         // 更新localStorage中的上次播放进度和更新时间
         localStorage.setItem(lastProgressKey, record.play_time.toString());
         localStorage.setItem(lastUpdateTimeKey, currentTime.toString());
-        console.log(`更新缓存: ${lastProgressKey} = ${record.play_time}, ${lastUpdateTimeKey} = ${currentTime}`);
+        console.log(`💾 更新缓存: ${lastProgressKey} = ${record.play_time}, ${lastUpdateTimeKey} = ${currentTime}`);
 
         // 立即更新缓存中的用户统计数据
         const authInfo = getAuthInfoFromBrowserCookie();
         if (authInfo?.username && responseData.userStats) {
           cacheManager.cacheUserStats(responseData.userStats);
-          console.log(`更新用户统计数据缓存:`, responseData.userStats);
+          console.log(`📊 更新用户统计数据缓存:`, responseData.userStats);
 
           // 触发用户统计数据更新事件
           window.dispatchEvent(new CustomEvent('userStatsUpdated', {
             detail: responseData.userStats
           }));
-          console.log(`触发userStatsUpdated事件`);
+          console.log(`🔔 触发userStatsUpdated事件`);
         } else {
           // 如果API没有返回userStats，强制重新获取最新数据
-          console.log(`API未返回userStats，强制重新获取`);
+          console.log(`⚠️ API未返回userStats，强制重新获取`);
           try {
-            const latestStats = await getUserStats();
+            const latestStats = await getUserStats(true);
             window.dispatchEvent(new CustomEvent('userStatsUpdated', {
               detail: latestStats
             }));
-            console.log(`重新获取并触发userStatsUpdated事件:`, latestStats);
+            console.log(`🔄 重新获取并触发userStatsUpdated事件:`, latestStats);
           } catch (error) {
-            console.error('重新获取用户统计数据失败:', error);
+            console.error('❌ 重新获取用户统计数据失败:', error);
             // 清除缓存强制下次重新获取
             cacheManager.clearUserCache(authInfo?.username);
           }
         }
 
-        console.log(`用户统计数据已更新: 增量 ${watchTimeIncrement}s`);
+        console.log(`✅ 用户统计数据已更新: 增量 ${watchTimeIncrement}s`);
       } else {
         const errorText = await response.text();
-        console.error(`更新用户统计数据失败: ${response.status} ${response.statusText}`, errorText);
+        console.error(`❌ 更新用户统计数据失败: ${response.status} ${response.statusText}`, errorText);
 
         // API调用失败时，仍然更新本地进度记录，避免重复计算
         localStorage.setItem(lastProgressKey, record.play_time.toString());
         localStorage.setItem(lastUpdateTimeKey, currentTime.toString());
       }
     } else {
-      console.log(`无需更新用户统计数据: 增量为 ${watchTimeIncrement}s (小于5秒阈值)`);
+      console.log(`⏭️ 无需更新用户统计数据: 增量为 ${watchTimeIncrement}s (小于5秒阈值)`);
 
       // 即使没有增量，也要更新时间戳和进度，避免下次计算错误
       localStorage.setItem(lastProgressKey, record.play_time.toString());
@@ -2085,11 +2081,19 @@ export async function recalculateUserStatsFromHistory(): Promise<UserStats | nul
     // 计算统计数据
     let totalWatchTime = 0;
     const watchedMovies = new Set<string>();
+    const episodeMaxProgress = new Map<string, number>(); // 记录每一集的最大播放进度
     let firstWatchDate = Date.now();
 
     records.forEach(record => {
-      // 累计观看时长
-      totalWatchTime += record.play_time || 0;
+      // 为每一集创建唯一标识（包含集数）
+      const episodeKey = `${record.title}_${record.source_name}_${record.year}_${record.index}`;
+      
+      // 只记录每一集的最大播放进度，避免重复计算
+      const currentProgress = record.play_time || 0;
+      const maxProgress = episodeMaxProgress.get(episodeKey) || 0;
+      if (currentProgress > maxProgress) {
+        episodeMaxProgress.set(episodeKey, currentProgress);
+      }
 
       // 记录观看的影片 - 使用title+source_name+year作为唯一标识
       const movieKey = `${record.title}_${record.source_name}_${record.year}`;
@@ -2099,6 +2103,11 @@ export async function recalculateUserStatsFromHistory(): Promise<UserStats | nul
       if (record.save_time < firstWatchDate) {
         firstWatchDate = record.save_time;
       }
+    });
+
+    // 累计所有集数的最大播放进度作为总观看时长
+    episodeMaxProgress.forEach(progress => {
+      totalWatchTime += progress;
     });
 
     const calculatedStats: UserStats = {
@@ -2122,19 +2131,10 @@ export async function recalculateUserStatsFromHistory(): Promise<UserStats | nul
     }
 
     // 如果服务器没有统计数据，或者计算出的数据更合理，则更新统计数据
-    const shouldUpdate = !existingStats ||
-      existingStats.totalWatchTime === 0 ||
-      existingStats.totalMovies === 0 ||
-      calculatedStats.totalWatchTime > existingStats.totalWatchTime ||
-      calculatedStats.totalMovies > existingStats.totalMovies;
-
-    if (shouldUpdate) {
-      console.log('更新统计数据到服务器...');
-
-      // 为了更新统计数据，我们需要发送一个虚拟的更新请求
-      // 使用最后一个播放记录的信息
-      const lastRecord = records.sort((a, b) => b.save_time - a.save_time)[0];
-
+    if (!existingStats || calculatedStats.totalWatchTime > existingStats.totalWatchTime) {
+      console.log('🔄 更新服务器统计数据为计算出的数据');
+      
+      // 发送到服务器更新
       const response = await fetchWithAuth('/api/user/stats', {
         method: 'POST',
         headers: {
@@ -2142,37 +2142,39 @@ export async function recalculateUserStatsFromHistory(): Promise<UserStats | nul
         },
         body: JSON.stringify({
           watchTime: calculatedStats.totalWatchTime,
-          movieKey: `${lastRecord.title}_${lastRecord.source_name}_${lastRecord.year}`,
-          timestamp: calculatedStats.lastUpdateTime,
-          isRecalculation: true // 标记这是重新计算
+          movieKey: 'RECALCULATE_ALL', // 特殊标识，表示重新计算所有数据
+          timestamp: Date.now(),
+          forceUpdate: true // 强制更新标识
         }),
       });
 
       if (response.ok) {
-        const result = await response.json();
-        const finalStats = result.userStats || calculatedStats;
-
+        const updatedStats = await response.json();
+        console.log('✅ 统计数据重新计算完成:', updatedStats);
+        
         // 更新本地缓存
-        cacheManager.cacheUserStats(finalStats);
-
-        // 触发统计数据更新事件
+        cacheManager.cacheUserStats(updatedStats);
+        
+        // 触发更新事件
         if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('userStatsUpdated', { detail: finalStats }));
+          window.dispatchEvent(
+            new CustomEvent('userStatsUpdated', {
+              detail: updatedStats,
+            })
+          );
         }
-
-        console.log('统计数据重新计算完成:', finalStats);
-        return finalStats;
+        
+        return updatedStats;
       } else {
-        console.error('更新统计数据到服务器失败:', response.status);
-        // 即使服务器更新失败，也返回计算出的数据
+        console.error('❌ 更新统计数据失败:', response.status);
         return calculatedStats;
       }
     } else {
-      console.log('现有统计数据已经是最新的，无需更新');
+      console.log('📊 现有统计数据已是最新，无需更新');
       return existingStats;
     }
   } catch (error) {
-    console.error('重新计算统计数据失败:', error);
+    console.error('❌ 重新计算统计数据失败:', error);
     return null;
   }
 }

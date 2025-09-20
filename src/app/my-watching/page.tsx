@@ -59,13 +59,13 @@ export default function MyWatchingPage() {
 
   const loadUserStats = async () => {
     try {
-      // 首先尝试获取现有统计数据，在页面初始化时强制刷新以确保数据同步
-      const stats = await getUserStats(true);
+      // 首先尝试获取现有统计数据，不强制刷新以避免数据不稳定
+      const stats = await getUserStats(false);
       setUserStats(stats);
       
-      // 只有在统计数据为空或明显不准确时才重新计算
-      if (!stats || stats.totalWatchTime === 0 || stats.totalMovies === 0) {
-        console.log('统计数据为空或不准确，开始重新计算...');
+      // 只有在统计数据完全为空时才重新计算，避免不必要的重新计算
+      if (!stats || (stats.totalWatchTime === 0 && stats.totalMovies === 0 && stats.firstWatchDate === 0)) {
+        console.log('统计数据完全为空，开始重新计算...');
         const recalculatedStats = await recalculateUserStatsFromHistory();
         if (recalculatedStats) {
           setUserStats(recalculatedStats);
@@ -75,7 +75,7 @@ export default function MyWatchingPage() {
       console.error('加载用户统计数据失败:', error);
       // 出错时仍尝试获取现有数据
       try {
-        const stats = await getUserStats();
+        const stats = await getUserStats(false);
         setUserStats(stats);
       } catch (fallbackError) {
         console.error('获取统计数据失败:', fallbackError);
