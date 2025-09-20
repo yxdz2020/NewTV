@@ -44,7 +44,7 @@ export function getCachedWatchingUpdates(): boolean {
 }
 
 // 设置新集数更新状态到缓存
-function setCachedWatchingUpdates(hasUpdates: boolean, updatedCount: number = 0) {
+function setCachedWatchingUpdates(hasUpdates: boolean, updatedCount = 0) {
   try {
     const data: WatchingUpdatesCache = {
       hasUpdates,
@@ -165,7 +165,7 @@ export function subscribeToWatchingUpdates(callback: (hasUpdates: boolean, updat
 }
 
 // 设置定期检查新集数更新
-export function setupPeriodicUpdateCheck(intervalMinutes: number = 30): () => void {
+export function setupPeriodicUpdateCheck(intervalMinutes = 30): () => void {
   const intervalMs = intervalMinutes * 60 * 1000;
   
   const intervalId = setInterval(() => {
