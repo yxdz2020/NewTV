@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       // 直接设置统计数据
       const recalculatedStats = {
         totalWatchTime: watchTime,
-        totalMovies: movieKey.split(',').filter(k => k.trim()).length,
+        totalMovies: movieKey.split(',').filter((k: string) => k.trim()).length,
         firstWatchDate: timestamp,
         lastUpdateTime: Date.now()
       };
