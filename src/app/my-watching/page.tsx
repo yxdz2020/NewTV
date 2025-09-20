@@ -70,7 +70,7 @@ export default function MyWatchingPage() {
   const loadPlayRecords = async () => {
     try {
       setLoading(true);
-      
+
       // 并行加载播放记录和用户统计数据以提高加载速度
       const [recordsObj] = await Promise.all([
         getAllPlayRecords()

@@ -391,13 +391,19 @@ export class UpstashRedisStorage implements IStorage {
 
   // ---------- 用户统计数据 ----------
   private userStatsKey(user: string) {
-    return `user_stats:${user}`;
+    return `u:${user}:stats`;
   }
 
   async getUserStats(userName: string): Promise<UserStats | null> {
     try {
-      const result = await withRetry(() => this.client.get(this.userStatsKey(userName)));
+      const key = this.userStatsKey(userName);
+      console.log(`getUserStats: 查询用户 ${userName} 的统计数据，键: ${key}`);
+      
+      const result = await withRetry(() => this.client.get(key));
+      console.log(`getUserStats: 从数据库获取的原始结果:`, result, `类型: ${typeof result}`);
+      
       if (!result) {
+        console.log('getUserStats: 数据库中没有找到统计数据，返回null');
         return null;
       }
 
@@ -410,7 +416,9 @@ export class UpstashRedisStorage implements IStorage {
       // 检查是否是有效的JSON字符串
       if (typeof result === 'string') {
         try {
-          return JSON.parse(result);
+          const parsed = JSON.parse(result);
+          console.log('getUserStats: JSON解析成功，返回数据:', parsed);
+          return parsed;
         } catch (parseError) {
           console.error('getUserStats: JSON解析失败，原始数据:', result);
           console.error('getUserStats: 解析错误:', parseError);

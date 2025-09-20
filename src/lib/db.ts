@@ -2,7 +2,6 @@
 
 import { AdminConfig } from './admin.types';
 import { KvrocksStorage } from './kvrocks.db';
-import { LocalStorageStorage } from './localstorage.db';
 import { RedisStorage } from './redis.db';
 import { DanmakuConfig, Favorite, IStorage, PlayRecord, SkipConfig, UserStats } from './types';
 import { UpstashRedisStorage } from './upstash.db';
@@ -27,7 +26,7 @@ function createStorage(): IStorage {
       return new KvrocksStorage();
     case 'localstorage':
     default:
-      return new LocalStorageStorage();
+      return null as unknown as IStorage;
   }
 }
 

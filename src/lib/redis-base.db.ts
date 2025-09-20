@@ -500,8 +500,25 @@ export abstract class BaseRedisStorage implements IStorage {
 
   async getUserStats(userName: string): Promise<UserStats | null> {
     const key = this.userStatsKey(userName);
+    console.log(`getUserStats: 查询用户 ${userName} 的统计数据，键: ${key}`);
+    
     const data = await this.withRetry(() => this.client.get(key));
-    return data ? JSON.parse(data) : null;
+    console.log(`getUserStats: 从数据库获取的原始结果:`, data, `类型: ${typeof data}`);
+    
+    if (!data) {
+      console.log('getUserStats: 数据库中没有找到统计数据，返回null');
+      return null;
+    }
+    
+    try {
+      const parsed = JSON.parse(data);
+      console.log('getUserStats: JSON解析成功，返回数据:', parsed);
+      return parsed;
+    } catch (parseError) {
+      console.error('getUserStats: JSON解析失败，原始数据:', data);
+      console.error('getUserStats: 解析错误:', parseError);
+      return null;
+    }
   }
 
   async updateUserStats(userName: string, updateData: {
