@@ -636,19 +636,31 @@ async function fetchWithAuth(
   if (!res.ok) {
     // 如果是 401 未授权，先尝试重试一次（可能是新用户注册后的短暂认证延迟）
     if (res.status === 401) {
-      // 对于新用户，给一次重试机会，等待 500ms 后重试
-      if (retryCount === 0) {
-        console.log(`API ${url} 返回401，等待500ms后重试...`);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return fetchWithAuth(url, options, 1);
+      console.log(`API ${url} 返回401错误，当前重试次数: ${retryCount}`);
+      
+      // 对于新用户或临时认证问题，给更多重试机会
+      if (retryCount < 2) {
+        const waitTime = retryCount === 0 ? 500 : 1000; // 第一次重试等待500ms，第二次等待1000ms
+        console.log(`API ${url} 返回401，等待${waitTime}ms后重试...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        return fetchWithAuth(url, options, retryCount + 1);
       }
 
       // 检查当前是否在注册或登录页面，如果是则不要跳转
       const currentPath = window.location.pathname;
       if (currentPath === '/login' || currentPath === '/register') {
+        console.log(`在${currentPath}页面收到401错误，不执行自动登出`);
         throw new Error(`请求 ${url} 失败: ${res.status}`);
       }
 
+      // 检查是否是统计数据更新请求失败，如果是则不强制登出
+      if (url.includes('/api/user/stats') && options?.method === 'POST') {
+        console.warn(`统计数据更新请求失败 (${url})，但不强制登出用户`);
+        throw new Error(`统计数据更新失败: ${res.status}`);
+      }
+
+      console.log(`多次重试后仍然401，执行登出流程`);
+      
       // 调用 logout 接口
       try {
         await fetch('/api/logout', {
@@ -2018,66 +2030,77 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
     if (watchTimeIncrement > 0) {
       console.log(`发送统计数据更新请求: 增量 ${watchTimeIncrement}s, movieKey: ${movieKey}`);
 
-      // 发送到服务器更新
-      const response = await fetchWithAuth('/api/user/stats', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          watchTime: watchTimeIncrement,
-          movieKey: movieKey,
-          timestamp: currentTime // 使用当前时间戳而不是record.save_time
-        }),
-      });
+      try {
+        // 发送到服务器更新
+        const response = await fetchWithAuth('/api/user/stats', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            watchTime: watchTimeIncrement,
+            movieKey: movieKey,
+            timestamp: currentTime // 使用当前时间戳而不是record.save_time
+          }),
+        });
 
-      console.log(`API响应状态: ${response.status}`);
+        console.log(`API响应状态: ${response.status}`);
 
-      if (response.ok) {
-        const responseData = await response.json();
-        console.log(`API响应数据:`, responseData);
+        if (response.ok) {
+          const responseData = await response.json();
+          console.log(`API响应数据:`, responseData);
 
-        // 更新localStorage中的上次播放进度和更新时间
-        localStorage.setItem(lastProgressKey, record.play_time.toString());
-        localStorage.setItem(lastUpdateTimeKey, currentTime.toString());
-        console.log(`更新缓存: ${lastProgressKey} = ${record.play_time}, ${lastUpdateTimeKey} = ${currentTime}`);
+          // 更新localStorage中的上次播放进度和更新时间
+          localStorage.setItem(lastProgressKey, record.play_time.toString());
+          localStorage.setItem(lastUpdateTimeKey, currentTime.toString());
+          console.log(`更新缓存: ${lastProgressKey} = ${record.play_time}, ${lastUpdateTimeKey} = ${currentTime}`);
 
-        // 立即更新缓存中的用户统计数据
-        const authInfo = getAuthInfoFromBrowserCookie();
-        if (authInfo?.username && responseData.userStats) {
-          cacheManager.cacheUserStats(responseData.userStats);
-          console.log(`更新用户统计数据缓存:`, responseData.userStats);
+          // 立即更新缓存中的用户统计数据
+          const authInfo = getAuthInfoFromBrowserCookie();
+          if (authInfo?.username && responseData.userStats) {
+            cacheManager.cacheUserStats(responseData.userStats);
+            console.log(`更新用户统计数据缓存:`, responseData.userStats);
 
-          // 触发用户统计数据更新事件
-          window.dispatchEvent(new CustomEvent('userStatsUpdated', {
-            detail: responseData.userStats
-          }));
-          console.log(`触发userStatsUpdated事件`);
-        } else {
-          // 如果API没有返回userStats，强制重新获取最新数据
-          console.log(`API未返回userStats，强制重新获取`);
-          try {
-            const latestStats = await getUserStats();
+            // 触发用户统计数据更新事件
             window.dispatchEvent(new CustomEvent('userStatsUpdated', {
-              detail: latestStats
+              detail: responseData.userStats
             }));
-            console.log(`重新获取并触发userStatsUpdated事件:`, latestStats);
-          } catch (error) {
-            console.error('重新获取用户统计数据失败:', error);
-            // 不清除缓存，避免触发强制同步导致统计数据重置
-            // 保留现有缓存数据，确保统计数据的连续性
-            console.log('保留现有缓存数据，避免统计数据被重置');
+            console.log(`触发userStatsUpdated事件`);
+          } else {
+            // 如果API没有返回userStats，强制重新获取最新数据
+            console.log(`API未返回userStats，强制重新获取`);
+            try {
+              const latestStats = await getUserStats();
+              window.dispatchEvent(new CustomEvent('userStatsUpdated', {
+                detail: latestStats
+              }));
+              console.log(`重新获取并触发userStatsUpdated事件:`, latestStats);
+            } catch (error) {
+              console.error('重新获取用户统计数据失败:', error);
+              // 不清除缓存，避免触发强制同步导致统计数据重置
+              // 保留现有缓存数据，确保统计数据的连续性
+              console.log('保留现有缓存数据，避免统计数据被重置');
+            }
           }
+
+          console.log(`用户统计数据已更新: 增量 ${watchTimeIncrement}s`);
+        } else {
+          const errorText = await response.text();
+          console.error(`更新用户统计数据失败: ${response.status} ${response.statusText}`, errorText);
+
+          // API调用失败时，仍然更新本地进度记录，避免重复计算
+          localStorage.setItem(lastProgressKey, record.play_time.toString());
+          localStorage.setItem(lastUpdateTimeKey, currentTime.toString());
         }
-
-        console.log(`用户统计数据已更新: 增量 ${watchTimeIncrement}s`);
-      } else {
-        const errorText = await response.text();
-        console.error(`更新用户统计数据失败: ${response.status} ${response.statusText}`, errorText);
-
-        // API调用失败时，仍然更新本地进度记录，避免重复计算
+      } catch (error) {
+        console.error('统计数据更新请求异常:', error);
+        
+        // 即使API请求失败，也要更新本地进度记录，避免重复计算
         localStorage.setItem(lastProgressKey, record.play_time.toString());
         localStorage.setItem(lastUpdateTimeKey, currentTime.toString());
+        
+        // 不抛出错误，避免影响播放体验
+        console.log('统计数据更新失败，但不影响播放功能');
       }
     } else {
       console.log(`无需更新用户统计数据: 增量为 ${watchTimeIncrement}s`);
