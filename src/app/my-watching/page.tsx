@@ -441,7 +441,7 @@ export default function MyWatchingPage() {
                           source_name={record.source_name}
                           source={record.source_name}
                           id={record.id}
-                          onDelete={loadUserStats}
+                          onDelete={loadPlayRecords}
                         />
                         {record.hasUpdate && record.newEpisodes && record.newEpisodes > 0 && (
                           <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-bounce z-50">
@@ -473,7 +473,7 @@ export default function MyWatchingPage() {
                           source_name={record.source_name}
                           source={record.source_name}
                           id={record.id}
-                          onDelete={loadUserStats}
+                          onDelete={loadPlayRecords}
                         />
                         {record.hasUpdate && record.newEpisodes && record.newEpisodes > 0 && (
                           <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-bounce z-50">
@@ -512,7 +512,7 @@ export default function MyWatchingPage() {
                       source_name={record.source_name}
                       source={record.source_name}
                       id={record.id}
-                      onDelete={loadUserStats}
+                      onDelete={loadPlayRecords}
                     />
                   </div>
                 ))}
