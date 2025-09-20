@@ -1186,5 +1186,8 @@ export function subscribeToDataUpdates<T>(
     };
   }
   
-  return () => {};
+  // Return empty cleanup function for server-side rendering
+  return () => {
+    // No cleanup needed when window is not available
+  };
 }
