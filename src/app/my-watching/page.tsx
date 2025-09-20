@@ -36,7 +36,8 @@ export default function MyWatchingPage() {
     const unsubscribePlayRecords = subscribeToDataUpdates(
       'playRecordsUpdated',
       () => {
-        console.log('播放记录已更新，重新加载播放记录');
+        console.log('播放记录已更新，重新加载数据');
+        loadUserStats();
         loadPlayRecords();
       }
     );
@@ -252,7 +253,7 @@ export default function MyWatchingPage() {
       setHistoryRecords([]);
       setShowClearConfirm(false);
 
-      // 强制重新加载数据以确保清除完成
+      // 强制重新加载播放记录，但不重新加载统计数据
       setTimeout(() => {
         loadPlayRecords();
       }, 100);

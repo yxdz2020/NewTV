@@ -1882,19 +1882,21 @@ export async function getUserStats(forceRefresh = false): Promise<UserStats> {
   } catch (error) {
     console.error('获取用户统计数据失败:', error);
 
-    // 如果服务器请求失败，先尝试从缓存获取
-    const cached = cacheManager.getCachedUserStats();
-    if (cached) {
-      console.log('使用缓存的统计数据');
-      return cached;
+    // 如果服务器请求失败，先检查是否有缓存的统计数据
+    const cachedStats = cacheManager.getCachedUserStats();
+    
+    // 如果有缓存的统计数据，优先使用缓存数据而不是重新计算
+    if (cachedStats) {
+      console.log('使用缓存的统计数据:', cachedStats);
+      return cachedStats;
     }
 
-    // 如果缓存也没有，基于本地观看记录计算统计数据
+    // 基于本地观看记录计算统计数据
     const playRecords = await getAllPlayRecords();
     const records = Object.values(playRecords);
 
     if (records.length === 0) {
-      // 如果没有播放记录，返回默认数据但不缓存，避免覆盖真实的统计数据
+      // 如果没有播放记录且没有缓存数据，返回初始值
       return {
         totalWatchTime: 0,
         totalMovies: 0,

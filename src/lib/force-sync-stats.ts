@@ -12,67 +12,67 @@ import { getUserStats, clearUserStats, recalculateUserStatsFromHistory, UserStat
 export async function forceSyncUserStats(): Promise<UserStats | null> {
   try {
     console.log('开始强制同步用户统计数据...');
-    
+
     // 先尝试基于历史记录重新计算统计数据
     console.log('正在基于历史记录重新计算统计数据...');
     const recalculatedStats = await recalculateUserStatsFromHistory();
     console.log('重新计算的统计数据:', recalculatedStats);
-    
+
     if (recalculatedStats) {
       console.log('用户统计数据同步完成（重新计算）:', recalculatedStats);
-      
+
       // 触发全局更新事件
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('userStatsUpdated', {
           detail: recalculatedStats
         }));
       }
-      
+
       return recalculatedStats;
     }
-    
+
     // 如果重新计算失败，清除本地缓存并从服务器获取
     console.log('重新计算失败，清除本地缓存并从服务器获取...');
-    
+
     // 清除本地缓存
     await clearUserStats();
     console.log('本地缓存已清除');
-    
+
     // 从服务器重新获取最新数据
     console.log('正在从服务器获取最新统计数据...');
     const latestStats = await getUserStats(true);
     console.log('从服务器获取到的统计数据:', latestStats);
-    
+
     if (!latestStats || (latestStats.totalWatchTime === 0 && latestStats.totalMovies === 0 && latestStats.firstWatchDate === 0)) {
       console.warn('服务器返回的统计数据为空或无效');
       return null;
     }
-    
+
     console.log('用户统计数据同步完成:', latestStats);
-    
+
     // 触发全局更新事件
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('userStatsUpdated', {
         detail: latestStats
       }));
     }
-    
+
     return latestStats;
   } catch (error) {
     console.error('强制同步用户统计数据失败:', error);
-    
+
     // 如果同步失败，尝试重新计算
     try {
       console.log('同步失败，尝试重新计算统计数据...');
       const recalculatedStats = await recalculateUserStatsFromHistory();
       console.log('重新计算的统计数据:', recalculatedStats);
-      
+
       if (recalculatedStats && typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('userStatsUpdated', {
           detail: recalculatedStats
         }));
       }
-      
+
       return recalculatedStats;
     } catch (recalcError) {
       console.error('重新计算统计数据也失败:', recalcError);
