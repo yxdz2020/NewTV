@@ -840,13 +840,20 @@ export async function deletePlayRecord(
   id: string
 ): Promise<void> {
   const key = generateStorageKey(source, id);
+  console.log('开始删除播放记录:', { source, id, key });
 
   // 数据库存储模式：乐观更新策略（包括 redis 和 upstash）
   if (STORAGE_TYPE !== 'localstorage') {
+    console.log('使用数据库存储模式删除记录');
+    
     // 立即更新缓存
     const cachedRecords = cacheManager.getCachedPlayRecords() || {};
+    console.log('删除前缓存记录数量:', Object.keys(cachedRecords).length);
+    console.log('要删除的记录是否存在于缓存:', key in cachedRecords);
+    
     delete cachedRecords[key];
     cacheManager.cachePlayRecords(cachedRecords);
+    console.log('删除后缓存记录数量:', Object.keys(cachedRecords).length);
 
     // 触发立即更新事件
     window.dispatchEvent(
@@ -854,13 +861,27 @@ export async function deletePlayRecord(
         detail: cachedRecords,
       })
     );
+    console.log('已触发playRecordsUpdated事件');
 
     // 异步同步到数据库
     try {
-      await fetchWithAuth(`/api/playrecords?key=${encodeURIComponent(key)}`, {
+      const deleteUrl = `/api/playrecords?key=${encodeURIComponent(key)}`;
+      console.log('发送删除请求到:', deleteUrl);
+      
+      const response = await fetchWithAuth(deleteUrl, {
         method: 'DELETE',
       });
+      
+      console.log('删除请求响应状态:', response.status);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('删除请求失败:', errorText);
+        throw new Error(`删除请求失败: ${response.status} ${errorText}`);
+      }
+      
+      console.log('数据库删除操作成功完成');
     } catch (err) {
+      console.error('数据库删除操作失败:', err);
       await handleDatabaseOperationFailure('playRecords', err);
       triggerGlobalError('删除播放记录失败');
       throw err;
