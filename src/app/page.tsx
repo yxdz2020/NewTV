@@ -19,7 +19,6 @@ import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import { DoubanItem } from '@/lib/types';
 
 import CapsuleSwitch from '@/components/CapsuleSwitch';
-import ContinueWatching from '@/components/ContinueWatching';
 import PageLayout from '@/components/PageLayout';
 import ScrollableRow from '@/components/ScrollableRow';
 import { useSite } from '@/components/SiteProvider';
@@ -244,9 +243,6 @@ function HomeClient() {
           ) : (
             // 首页视图
             <>
-              {/* 继续观看 */}
-              <ContinueWatching />
-
               {/* 热门电影 */}
               <section className='mb-8'>
                 <div className='mb-4 flex items-center justify-between'>

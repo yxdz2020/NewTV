@@ -392,7 +392,7 @@ export default function MyWatchingPage() {
                     return daysDiff + 1;
                   })() : 0}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">登录天数</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">注册天数</div>
               </div>
               <div className="glass-light rounded-xl p-4 text-center">
                 <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
@@ -435,27 +435,29 @@ export default function MyWatchingPage() {
                   <div className="grid grid-cols-2 gap-x-4 gap-y-8 pt-4 pb-6">
                     {updatedRecords.map((record, index) => (
                       <div key={`updated-${index}`} className="relative w-full">
-                        <VideoCard
-                          title={record.title}
-                          poster={record.cover}
-                          year={record.year}
-                          from="playrecord"
-                          progress={record.total_time ? (record.play_time / record.total_time) * 100 : 0}
-                          currentEpisode={record.index}
-                          episodes={record.total_episodes}
-                          source_name={record.source_name}
-                          source={record.source_name}
-                          id={record.id}
-                          onDelete={loadPlayRecords}
-                        />
+                        <div className="relative">
+                          <VideoCard
+                            title={record.title}
+                            poster={record.cover}
+                            year={record.year}
+                            from="playrecord"
+                            progress={record.total_time ? (record.play_time / record.total_time) * 100 : 0}
+                            currentEpisode={record.index}
+                            episodes={record.total_episodes}
+                            source_name={record.source_name}
+                            source={record.source_name}
+                            id={record.id}
+                            onDelete={loadPlayRecords}
+                          />
+                          {/* 新集数提示光环效果 - 跟随VideoCard缩放 */}
+                          {record.hasUpdate && (
+                            <div className="absolute inset-0 rounded-lg ring-2 ring-red-400 ring-opacity-50 animate-pulse pointer-events-none z-10 transition-transform duration-200 ease-out group-hover:scale-105"></div>
+                          )}
+                        </div>
                         {record.hasUpdate && record.newEpisodes && record.newEpisodes > 0 && (
                           <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-bounce z-50">
                             +{record.newEpisodes}集
                           </div>
-                        )}
-                        {/* 新集数提示光环效果 */}
-                        {record.hasUpdate && (
-                          <div className="absolute inset-0 rounded-lg ring-2 ring-red-400 ring-opacity-50 animate-pulse pointer-events-none z-40"></div>
                         )}
                       </div>
                     ))}
@@ -467,27 +469,29 @@ export default function MyWatchingPage() {
                   <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-x-6 gap-y-10 pt-6 pb-8">
                     {updatedRecords.map((record, index) => (
                       <div key={`updated-${index}`} className="relative w-full">
-                        <VideoCard
-                          title={record.title}
-                          poster={record.cover}
-                          year={record.year}
-                          from="playrecord"
-                          progress={record.total_time ? (record.play_time / record.total_time) * 100 : 0}
-                          currentEpisode={record.index}
-                          episodes={record.total_episodes}
-                          source_name={record.source_name}
-                          source={record.source_name}
-                          id={record.id}
-                          onDelete={loadPlayRecords}
-                        />
+                        <div className="relative">
+                          <VideoCard
+                            title={record.title}
+                            poster={record.cover}
+                            year={record.year}
+                            from="playrecord"
+                            progress={record.total_time ? (record.play_time / record.total_time) * 100 : 0}
+                            currentEpisode={record.index}
+                            episodes={record.total_episodes}
+                            source_name={record.source_name}
+                            source={record.source_name}
+                            id={record.id}
+                            onDelete={loadPlayRecords}
+                          />
+                          {/* 新集数提示光环效果 - 跟随VideoCard缩放 */}
+                          {record.hasUpdate && (
+                            <div className="absolute inset-0 rounded-lg ring-2 ring-red-400 ring-opacity-50 animate-pulse pointer-events-none z-10 transition-transform duration-200 ease-out group-hover:scale-105"></div>
+                          )}
+                        </div>
                         {record.hasUpdate && record.newEpisodes && record.newEpisodes > 0 && (
                           <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-bounce z-50">
                             +{record.newEpisodes}集
                           </div>
-                        )}
-                        {/* 新集数提示光环效果 */}
-                        {record.hasUpdate && (
-                          <div className="absolute inset-0 rounded-lg ring-2 ring-red-400 ring-opacity-50 animate-pulse pointer-events-none z-40"></div>
                         )}
                       </div>
                     ))}
