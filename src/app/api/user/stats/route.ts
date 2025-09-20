@@ -18,9 +18,10 @@ export async function GET(request: NextRequest) {
         (u) => u.username === authInfo.username
       );
       if (!user) {
-        return NextResponse.json({ error: '用户不存在' }, { status: 401 });
-      }
-      if (user.banned) {
+        console.log(`用户 ${authInfo.username} 不在配置中，但允许访问统计数据（可能是新用户）`);
+        // 对于统计数据API，允许新用户访问，不立即返回401
+        // 这样可以避免新用户在初始化统计数据时被踢出登录
+      } else if (user.banned) {
         return NextResponse.json({ error: '用户已被封禁' }, { status: 401 });
       }
     }
@@ -75,10 +76,10 @@ export async function POST(request: NextRequest) {
         (u) => u.username === authInfo.username
       );
       if (!user) {
-        console.log('用户不存在:', authInfo.username);
-        return NextResponse.json({ error: '用户不存在' }, { status: 401 });
-      }
-      if (user.banned) {
+        console.log(`用户 ${authInfo.username} 不在配置中，但允许访问统计数据（可能是新用户）`);
+        // 对于统计数据API，允许新用户访问，不立即返回401
+        // 这样可以避免新用户在初始化统计数据时被踢出登录
+      } else if (user.banned) {
         console.log('用户已被封禁:', authInfo.username);
         return NextResponse.json({ error: '用户已被封禁' }, { status: 401 });
       }
@@ -179,9 +180,10 @@ export async function DELETE(request: NextRequest) {
         (u) => u.username === authInfo.username
       );
       if (!user) {
-        return NextResponse.json({ error: '用户不存在' }, { status: 401 });
-      }
-      if (user.banned) {
+        console.log(`用户 ${authInfo.username} 不在配置中，但允许访问统计数据（可能是新用户）`);
+        // 对于统计数据API，允许新用户访问，不立即返回401
+        // 这样可以避免新用户在初始化统计数据时被踢出登录
+      } else if (user.banned) {
         return NextResponse.json({ error: '用户已被封禁' }, { status: 401 });
       }
     }
