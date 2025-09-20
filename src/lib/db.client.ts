@@ -2134,6 +2134,20 @@ export async function clearUserStats(): Promise<void> {
     if (authInfo?.username) {
       cacheManager.clearUserCache(authInfo.username);
     }
+
+    // 触发用户统计数据更新事件
+    const emptyStats: UserStats = {
+      totalWatchTime: 0,
+      totalMovies: 0,
+      firstWatchDate: Date.now(),
+      lastUpdateTime: Date.now()
+    };
+    
+    window.dispatchEvent(
+      new CustomEvent('userStatsUpdated', {
+        detail: emptyStats,
+      })
+    );
   } catch (error) {
     console.error('清除用户统计数据失败:', error);
     throw error;
