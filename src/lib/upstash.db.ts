@@ -404,7 +404,7 @@ export class UpstashRedisStorage implements IStorage {
 
       if (!result) {
         console.log('getUserStats: 数据库中没有找到统计数据，为新用户初始化默认统计数据');
-        
+
         // 为新用户创建初始化统计数据
         const defaultStats: UserStats = {
           totalWatchTime: 0,
@@ -412,11 +412,11 @@ export class UpstashRedisStorage implements IStorage {
           firstWatchDate: 0, // 初始化为0，将在第一次观看时设置为实际时间
           lastUpdateTime: Date.now()
         };
-        
+
         // 将默认统计数据保存到数据库
         await withRetry(() => this.client.set(key, JSON.stringify(defaultStats)));
         console.log(`为新用户 ${userName} 初始化统计数据:`, defaultStats);
-        
+
         return defaultStats;
       }
 
@@ -435,7 +435,7 @@ export class UpstashRedisStorage implements IStorage {
         } catch (parseError) {
           console.error('getUserStats: JSON解析失败，原始数据:', result);
           console.error('getUserStats: 解析错误:', parseError);
-          
+
           // 如果解析失败，为用户重新初始化统计数据
           const defaultStats: UserStats = {
             totalWatchTime: 0,
@@ -443,16 +443,16 @@ export class UpstashRedisStorage implements IStorage {
             firstWatchDate: 0, // 初始化为0，将在第一次观看时设置为实际时间
             lastUpdateTime: Date.now()
           };
-          
+
           await withRetry(() => this.client.set(key, JSON.stringify(defaultStats)));
           console.log(`数据解析失败，为用户 ${userName} 重新初始化统计数据:`, defaultStats);
-          
+
           return defaultStats;
         }
       }
 
       console.error('getUserStats: 未知数据格式:', typeof result, result);
-      
+
       // 对于未知格式，也提供默认统计数据
       const defaultStats: UserStats = {
         totalWatchTime: 0,
@@ -460,14 +460,14 @@ export class UpstashRedisStorage implements IStorage {
         firstWatchDate: 0, // 初始化为0，将在第一次观看时设置为实际时间
         lastUpdateTime: Date.now()
       };
-      
+
       await withRetry(() => this.client.set(key, JSON.stringify(defaultStats)));
       console.log(`未知数据格式，为用户 ${userName} 重新初始化统计数据:`, defaultStats);
-      
+
       return defaultStats;
     } catch (error) {
       console.error('getUserStats: 获取用户统计数据失败:', error);
-      
+
       // 即使出现错误，也为用户提供默认统计数据
       const defaultStats: UserStats = {
         totalWatchTime: 0,
@@ -475,7 +475,7 @@ export class UpstashRedisStorage implements IStorage {
         firstWatchDate: 0, // 初始化为0，将在第一次观看时设置为实际时间
         lastUpdateTime: Date.now()
       };
-      
+
       try {
         const key = this.userStatsKey(userName);
         await withRetry(() => this.client.set(key, JSON.stringify(defaultStats)));
@@ -483,7 +483,7 @@ export class UpstashRedisStorage implements IStorage {
       } catch (initError) {
         console.error('初始化统计数据也失败:', initError);
       }
-      
+
       return defaultStats;
     }
   }

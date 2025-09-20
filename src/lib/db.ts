@@ -278,7 +278,7 @@ export class DbManager {
   async getUserStats(userName: string): Promise<UserStats | null> {
     if (typeof (this.storage as any).getUserStats === 'function') {
       const stats = await (this.storage as any).getUserStats(userName);
-      
+
       // 确保返回的统计数据不为null，为新用户提供默认值
       if (!stats) {
         const defaultStats: UserStats = {
@@ -287,14 +287,14 @@ export class DbManager {
           firstWatchDate: 0, // 初始化为0，将在第一次观看时设置为实际时间
           lastUpdateTime: Date.now()
         };
-        
+
         console.log(`数据库层为新用户 ${userName} 提供默认统计数据:`, defaultStats);
         return defaultStats;
       }
-      
+
       return stats;
     }
-    
+
     // 如果存储层不支持getUserStats，返回默认统计数据
     return {
       totalWatchTime: 0,
