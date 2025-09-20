@@ -246,7 +246,6 @@ export default function MyWatchingPage() {
                     poster={record.cover}
                     year={record.year}
                     source={record.source_name}
-                    from="playrecord"
                     onClick={() => handlePlayRecord(record)}
                     showProgress={true}
                     progress={(record.play_time / record.total_time) * 100}
