@@ -124,11 +124,11 @@ export const UserMenu: React.FC = () => {
 
     // 初始化新集数更新检测
     const cachedUpdates = getCachedWatchingUpdates();
-    setHasWatchingUpdates(cachedUpdates.hasUpdates);
+    setHasWatchingUpdates(cachedUpdates);
 
     // 监听新集数更新变化
-    const unsubscribeWatchingUpdates = subscribeToWatchingUpdates((update) => {
-      setHasWatchingUpdates(update.hasUpdates);
+    const unsubscribeWatchingUpdates = subscribeToWatchingUpdates((hasUpdates, updatedCount) => {
+      setHasWatchingUpdates(hasUpdates);
     });
 
     // 设置定期检查更新（每30分钟）
