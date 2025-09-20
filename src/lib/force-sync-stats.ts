@@ -3,21 +3,46 @@
  * 用于确保多设备间的数据同步
  */
 
-import { getUserStats, clearUserStats, recalculateUserStatsFromHistory } from './db.client';
+import { getUserStats, clearUserStats, recalculateUserStatsFromHistory, UserStats } from './db.client';
 
 /**
  * 强制同步用户统计数据
  * 清除本地缓存并从服务器重新获取最新数据
  */
-export async function forceSyncUserStats(): Promise<void> {
+export async function forceSyncUserStats(): Promise<UserStats | null> {
   try {
     console.log('开始强制同步用户统计数据...');
     
     // 清除本地缓存
     await clearUserStats();
+    console.log('本地缓存已清除');
     
     // 从服务器重新获取最新数据
+    console.log('正在从服务器获取最新统计数据...');
     const latestStats = await getUserStats(true);
+    console.log('从服务器获取到的统计数据:', latestStats);
+    
+    if (!latestStats) {
+      console.warn('服务器返回的统计数据为空，尝试重新计算...');
+      const recalculatedStats = await recalculateUserStatsFromHistory();
+      console.log('重新计算的统计数据:', recalculatedStats);
+      
+      if (recalculatedStats) {
+        console.log('用户统计数据同步完成（重新计算）:', recalculatedStats);
+        
+        // 触发全局更新事件
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('userStatsUpdated', {
+            detail: recalculatedStats
+          }));
+        }
+        
+        return recalculatedStats;
+      } else {
+        console.warn('重新计算统计数据也为空');
+        return null;
+      }
+    }
     
     console.log('用户统计数据同步完成:', latestStats);
     
@@ -27,6 +52,8 @@ export async function forceSyncUserStats(): Promise<void> {
         detail: latestStats
       }));
     }
+    
+    return latestStats;
   } catch (error) {
     console.error('强制同步用户统计数据失败:', error);
     
@@ -34,14 +61,18 @@ export async function forceSyncUserStats(): Promise<void> {
     try {
       console.log('同步失败，尝试重新计算统计数据...');
       const recalculatedStats = await recalculateUserStatsFromHistory();
+      console.log('重新计算的统计数据:', recalculatedStats);
       
       if (recalculatedStats && typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('userStatsUpdated', {
           detail: recalculatedStats
         }));
       }
+      
+      return recalculatedStats;
     } catch (recalcError) {
       console.error('重新计算统计数据也失败:', recalcError);
+      return null;
     }
   }
 }
