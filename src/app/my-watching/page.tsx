@@ -56,11 +56,19 @@ export default function MyWatchingPage() {
         records.map(async (record) => {
           try {
             // 这里可以添加检查更新的逻辑
-            // 暂时返回原记录
-            return record;
+            // 暂时返回原记录，设置默认的hasUpdate为false
+            return {
+              ...record,
+              hasUpdate: false, // 默认没有更新
+              newEpisodes: 0    // 默认没有新剧集
+            };
           } catch (error) {
             console.error(`检查更新失败: ${record.title}`, error);
-            return record;
+            return {
+              ...record,
+              hasUpdate: false,
+              newEpisodes: 0
+            };
           }
         })
       );
