@@ -286,6 +286,7 @@ export class DbManager {
     watchTime: number;
     movieKey: string;
     timestamp: number;
+    isFullReset?: boolean;
   }): Promise<void> {
     if (typeof (this.storage as any).updateUserStats === 'function') {
       await (this.storage as any).updateUserStats(userName, updateData);
