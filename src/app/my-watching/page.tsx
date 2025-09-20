@@ -103,7 +103,7 @@ export default function MyWatchingPage() {
           return b.save_time - a.save_time;
         });
 
-        // 分离有更新的记录和历史记录
+        // 分离有更新的记录和历史记录，只显示真正需要用户关注的更新
         const updated = sortedRecords.filter(record => record.hasUpdate);
         const history = sortedRecords.filter(record => !record.hasUpdate);
 
@@ -175,15 +175,20 @@ export default function MyWatchingPage() {
         const detailData = await detailResponse.json();
         const latestEpisodes = detailData.episodes ? detailData.episodes.length : 0;
 
-        // 比较集数
+        // 比较集数，如果用户已看到最新集且没有新增集数，则不计入更新
         const hasUpdate = latestEpisodes > record.total_episodes;
+        const userWatchedLatest = record.index >= record.total_episodes;
         const newEpisodes = hasUpdate ? latestEpisodes - record.total_episodes : 0;
 
-        console.log(`检查更新 - ${record.title}: 原集数=${record.total_episodes}, 最新集数=${latestEpisodes}, 有更新=${hasUpdate}, 新增=${newEpisodes}集`);
+        // 只有当有新集数且用户没有看到最新集时才算作更新
+        // 如果用户已经看到了当前记录的最新集，且总集数没有增加，则不显示更新
+        const shouldShowUpdate = hasUpdate && (!userWatchedLatest || latestEpisodes > record.total_episodes);
+
+        console.log(`检查更新 - ${record.title}: 原集数=${record.total_episodes}, 最新集数=${latestEpisodes}, 用户观看到第${record.index}集, 用户看到最新=${userWatchedLatest}, 有更新=${hasUpdate}, 应显示更新=${shouldShowUpdate}, 新增=${newEpisodes}集`);
 
         updatedRecords.push({
           ...record,
-          hasUpdate,
+          hasUpdate: shouldShowUpdate,
           newEpisodes,
           // 更新总集数到最新值
           total_episodes: latestEpisodes > record.total_episodes ? latestEpisodes : record.total_episodes
