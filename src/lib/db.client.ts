@@ -2157,6 +2157,9 @@ export async function recalculateUserStatsFromHistory(): Promise<UserStats | nul
       // 使用最后一个播放记录的信息
       const lastRecord = records.sort((a, b) => b.save_time - a.save_time)[0];
 
+      // 构建所有观看过的影片键
+      const allMovieKeys = Array.from(watchedMovies).join(',');
+
       const response = await fetchWithAuth('/api/user/stats', {
         method: 'POST',
         headers: {
@@ -2164,8 +2167,8 @@ export async function recalculateUserStatsFromHistory(): Promise<UserStats | nul
         },
         body: JSON.stringify({
           watchTime: calculatedStats.totalWatchTime,
-          movieKey: `${lastRecord.title}_${lastRecord.source_name}_${lastRecord.year}`,
-          timestamp: calculatedStats.lastUpdateTime,
+          movieKey: allMovieKeys, // 传递所有影片键
+          timestamp: calculatedStats.firstWatchDate,
           isRecalculation: true // 标记这是重新计算
         }),
       });

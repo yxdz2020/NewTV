@@ -525,8 +525,34 @@ export abstract class BaseRedisStorage implements IStorage {
     watchTime: number;
     movieKey: string;
     timestamp: number;
+    isFullReset?: boolean;
   }): Promise<void> {
     const key = this.userStatsKey(userName);
+    
+    if (updateData.isFullReset) {
+      // 处理重新计算的完整重置
+      console.log('执行完整重置统计数据...');
+      
+      // 解析movieKey中的所有影片
+      const movieKeys = updateData.movieKey.split(',').filter(k => k.trim());
+      
+      const stats: UserStats = {
+        totalWatchTime: updateData.watchTime,
+        totalMovies: movieKeys.length,
+        firstWatchDate: updateData.timestamp,
+        lastUpdateTime: Date.now()
+      };
+      
+      // 重置已观看影片集合
+      const watchedMoviesKey = `u:${userName}:watched_movies`;
+      await this.withRetry(() => this.client.set(watchedMoviesKey, JSON.stringify(movieKeys)));
+      
+      // 设置统计数据
+      await this.withRetry(() => this.client.set(key, JSON.stringify(stats)));
+      console.log('完整重置统计数据成功:', stats);
+      return;
+    }
+    
     const existingStats = await this.getUserStats(userName);
     
     let stats: UserStats;

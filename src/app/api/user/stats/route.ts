@@ -73,8 +73,8 @@ export async function POST(request: NextRequest) {
 
     console.log('正在解析请求体...');
     const body = await request.json();
-    const { watchTime, movieKey, timestamp } = body;
-    console.log('请求体数据:', { watchTime, movieKey, timestamp });
+    const { watchTime, movieKey, timestamp, isRecalculation } = body;
+    console.log('请求体数据:', { watchTime, movieKey, timestamp, isRecalculation });
 
     if (typeof watchTime !== 'number' || !movieKey || !timestamp) {
       console.log('参数验证失败');
@@ -84,12 +84,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('正在更新用户统计数据...');
-    await db.updateUserStats(authInfo.username, {
-      watchTime,
-      movieKey,
-      timestamp
-    });
+    if (isRecalculation) {
+      console.log('处理重新计算请求，直接设置统计数据...');
+      // 对于重新计算，我们需要直接设置统计数据而不是增量更新
+      
+      // 直接设置统计数据
+      const recalculatedStats = {
+        totalWatchTime: watchTime,
+        totalMovies: movieKey.split(',').filter(k => k.trim()).length,
+        firstWatchDate: timestamp,
+        lastUpdateTime: Date.now()
+      };
+      
+      console.log('设置重新计算的统计数据:', recalculatedStats);
+      
+      // 这里我们需要一个直接设置统计数据的方法
+      // 暂时先清除旧数据，然后设置新数据
+      await db.clearUserStats(authInfo.username);
+      
+      // 使用updateUserStats但传入特殊参数来表示这是完整设置
+      await db.updateUserStats(authInfo.username, {
+        watchTime: recalculatedStats.totalWatchTime,
+        movieKey: movieKey,
+        timestamp: recalculatedStats.firstWatchDate,
+        isFullReset: true
+      });
+    } else {
+      console.log('正在增量更新用户统计数据...');
+      await db.updateUserStats(authInfo.username, {
+        watchTime,
+        movieKey,
+        timestamp
+      });
+    }
     console.log('用户统计数据更新成功');
 
     // 获取更新后的用户统计数据并返回
