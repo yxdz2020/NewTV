@@ -581,8 +581,8 @@ export abstract class BaseRedisStorage implements IStorage {
     const existingStats = await this.getUserStats(userName);
 
     let stats: UserStats;
-    if (existingStats) {
-      // 检查是否是新影片
+    if (existingStats && existingStats.firstWatchDate > 0) {
+      // 用户已有观看记录，进行增量更新
       const watchedMoviesKey = `u:${userName}:watched_movies`;
       const watchedMovies = await this.withRetry(() => this.client.get(watchedMoviesKey));
       const movieSet = watchedMovies ? new Set(JSON.parse(watchedMovies)) : new Set();
@@ -593,7 +593,7 @@ export abstract class BaseRedisStorage implements IStorage {
       stats = {
         totalWatchTime: existingStats.totalWatchTime + updateData.watchTime,
         totalMovies: isNewMovie ? existingStats.totalMovies + 1 : existingStats.totalMovies,
-        firstWatchDate: existingStats.firstWatchDate === 0 ? updateData.timestamp : existingStats.firstWatchDate, // 如果是0则设置为实际观看时间
+        firstWatchDate: existingStats.firstWatchDate,
         lastUpdateTime: updateData.timestamp
       };
 
@@ -606,7 +606,7 @@ export abstract class BaseRedisStorage implements IStorage {
         console.log(`已观看影片: ${updateData.movieKey}, 总影片数保持: ${stats.totalMovies}`);
       }
     } else {
-      // 创建新的统计数据
+      // 新用户第一次观看，创建新的统计数据
       stats = {
         totalWatchTime: updateData.watchTime,
         totalMovies: 1,

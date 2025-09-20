@@ -1996,7 +1996,7 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
         body: JSON.stringify({
           watchTime: watchTimeIncrement,
           movieKey: movieKey,
-          timestamp: record.save_time
+          timestamp: currentTime // 使用当前时间戳而不是record.save_time
         }),
       });
 
