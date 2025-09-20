@@ -54,9 +54,6 @@ export interface VideoCardProps {
   isBangumi?: boolean;
   isAggregate?: boolean;
   origin?: 'vod' | 'live';
-  showProgress?: boolean;
-  totalEpisodes?: number;
-  className?: string;
 }
 
 export type VideoCardHandle = {
@@ -87,9 +84,6 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     isBangumi = false,
     isAggregate = false,
     origin = 'vod',
-    showProgress = false,
-    totalEpisodes,
-    className = '',
   }: VideoCardProps,
   ref
 ) {
@@ -797,7 +791,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   return (
     <>
       <div
-        className={`group relative w-full glass-card cursor-pointer transition-transform duration-200 ease-out hover:scale-105 hover:shadow-elevated hover:z-10 flex flex-col h-full ${className}`}
+        className='group relative w-full glass-card cursor-pointer transition-transform duration-200 ease-out hover:scale-105 hover:shadow-elevated hover:z-10 flex flex-col h-full'
         onClick={handleClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
