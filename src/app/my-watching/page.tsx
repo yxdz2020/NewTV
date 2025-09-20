@@ -36,8 +36,7 @@ export default function MyWatchingPage() {
     const unsubscribePlayRecords = subscribeToDataUpdates(
       'playRecordsUpdated',
       () => {
-        console.log('播放记录已更新，重新加载数据');
-        loadUserStats();
+        console.log('播放记录已更新，重新加载播放记录');
         loadPlayRecords();
       }
     );
