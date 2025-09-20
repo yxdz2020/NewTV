@@ -1406,7 +1406,7 @@ function PlayPageClient() {
 
       // 检查新集数更新
       try {
-        await checkVideoUpdate(detailData);
+        await checkVideoUpdate(detailData.source, detailData.id);
       } catch (error) {
         console.error('检查新集数更新失败:', error);
       }
@@ -1562,7 +1562,7 @@ function PlayPageClient() {
 
       // 检查新集数更新
       try {
-        await checkVideoUpdate(newDetail);
+        await checkVideoUpdate(newDetail.source, newDetail.id);
       } catch (error) {
         console.error('换源后检查新集数更新失败:', error);
       }
