@@ -3,7 +3,7 @@
 import { AdminConfig } from './admin.types';
 import { KvrocksStorage } from './kvrocks.db';
 import { RedisStorage } from './redis.db';
-import { DanmakuConfig, Favorite, IStorage, PlayRecord, SkipConfig } from './types';
+import { DanmakuConfig, Favorite, IStorage, PlayRecord, SkipConfig, UserStats } from './types';
 import { UpstashRedisStorage } from './upstash.db';
 
 // storage type 常量: 'localstorage' | 'redis' | 'upstash'，默认 'localstorage'
@@ -272,6 +272,30 @@ export class DbManager {
       throw new Error('Storage not available');
     }
     await this.storage.deleteDanmakuConfig(userName);
+  }
+
+  // ---------- 用户统计数据 ----------
+  async getUserStats(userName: string): Promise<UserStats | null> {
+    if (typeof (this.storage as any).getUserStats === 'function') {
+      return (this.storage as any).getUserStats(userName);
+    }
+    return null;
+  }
+
+  async updateUserStats(userName: string, updateData: {
+    watchTime: number;
+    movieKey: string;
+    timestamp: number;
+  }): Promise<void> {
+    if (typeof (this.storage as any).updateUserStats === 'function') {
+      await (this.storage as any).updateUserStats(userName, updateData);
+    }
+  }
+
+  async clearUserStats(userName: string): Promise<void> {
+    if (typeof (this.storage as any).clearUserStats === 'function') {
+      await (this.storage as any).clearUserStats(userName);
+    }
   }
 
   // ---------- 数据清理 ----------

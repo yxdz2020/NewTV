@@ -3,7 +3,7 @@
 import { createClient, RedisClientType } from 'redis';
 
 import { AdminConfig } from './admin.types';
-import { DanmakuConfig, Favorite, IStorage, PlayRecord, SkipConfig } from './types';
+import { DanmakuConfig, Favorite, IStorage, PlayRecord, SkipConfig, UserStats } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -493,7 +493,78 @@ export abstract class BaseRedisStorage implements IStorage {
     await this.withRetry(() => this.client.del(this.danmakuConfigKey(userName)));
   }
 
+  // ---------- 用户统计数据相关 ----------
+  private userStatsKey(user: string) {
+    return `u:${user}:stats`;
+  }
 
+  async getUserStats(userName: string): Promise<UserStats | null> {
+    const key = this.userStatsKey(userName);
+    const data = await this.withRetry(() => this.client.get(key));
+    return data ? JSON.parse(data) : null;
+  }
+
+  async updateUserStats(userName: string, updateData: {
+    watchTime: number;
+    movieKey: string;
+    timestamp: number;
+  }): Promise<void> {
+    const key = this.userStatsKey(userName);
+    const existingStats = await this.getUserStats(userName);
+    
+    let stats: UserStats;
+    if (existingStats) {
+      // 检查是否是新影片
+      const watchedMoviesKey = `u:${userName}:watched_movies`;
+      const watchedMovies = await this.withRetry(() => this.client.get(watchedMoviesKey));
+      const movieSet = watchedMovies ? new Set(JSON.parse(watchedMovies)) : new Set();
+      
+      const isNewMovie = !movieSet.has(updateData.movieKey);
+      
+      // 更新现有统计数据
+      stats = {
+        totalWatchTime: existingStats.totalWatchTime + updateData.watchTime,
+        totalMovies: isNewMovie ? existingStats.totalMovies + 1 : existingStats.totalMovies,
+        firstWatchDate: existingStats.firstWatchDate,
+        lastUpdateTime: updateData.timestamp
+      };
+      
+      // 如果是新影片，添加到已观看影片集合中
+      if (isNewMovie) {
+        movieSet.add(updateData.movieKey);
+        await this.withRetry(() => this.client.set(watchedMoviesKey, JSON.stringify(Array.from(movieSet))));
+        console.log(`新影片记录: ${updateData.movieKey}, 总影片数: ${stats.totalMovies}`);
+      } else {
+        console.log(`已观看影片: ${updateData.movieKey}, 总影片数保持: ${stats.totalMovies}`);
+      }
+    } else {
+      // 创建新的统计数据
+      stats = {
+        totalWatchTime: updateData.watchTime,
+        totalMovies: 1,
+        firstWatchDate: updateData.timestamp,
+        lastUpdateTime: updateData.timestamp
+      };
+
+      // 初始化已观看影片集合
+      const watchedMoviesKey = `u:${userName}:watched_movies`;
+      await this.withRetry(() => this.client.set(watchedMoviesKey, JSON.stringify([updateData.movieKey])));
+      console.log(`初始化用户统计: ${updateData.movieKey}, 总影片数: 1`);
+    }
+    
+    await this.withRetry(() => this.client.set(key, JSON.stringify(stats)));
+  }
+
+  async clearUserStats(userName: string): Promise<void> {
+    const key = this.userStatsKey(userName);
+    const watchedMoviesKey = `u:${userName}:watched_movies`;
+    
+    // 同时清空用户统计数据和已观看影片集合
+    await this.withRetry(() => this.client.del(key));
+    await this.withRetry(() => this.client.del(watchedMoviesKey));
+    
+    console.log(`已清空用户 ${userName} 的统计数据和已观看影片记录`);
+  }
 
   // 清空所有数据
   async clearAllData(): Promise<void> {
