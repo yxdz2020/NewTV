@@ -1917,9 +1917,20 @@ export async function getUserStats(forceRefresh = false): Promise<UserStats> {
  * 更新用户统计数据
  */
 export async function updateUserStats(record: PlayRecord): Promise<void> {
+  console.log('=== updateUserStats 开始执行 ===', {
+    title: record.title,
+    source: record.source_name,
+    year: record.year,
+    index: record.index,
+    playTime: record.play_time,
+    totalTime: record.total_time,
+    saveTime: new Date(record.save_time).toLocaleString()
+  });
+
   try {
     // 统一使用相同的movieKey格式，确保影片数量统计准确
     const movieKey = `${record.title}_${record.source_name}_${record.year}`;
+    console.log('生成的movieKey:', movieKey);
 
     // 使用包含集数信息的键来缓存每一集的播放进度
     const episodeKey = `${record.source_name}+${record.title}-${record.year}+${record.index}`;
