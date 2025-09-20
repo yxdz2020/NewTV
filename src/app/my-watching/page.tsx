@@ -28,7 +28,7 @@ export default function MyWatchingPage() {
   useEffect(() => {
     // 设置自动同步
     setupAutoSync();
-    
+
     loadPlayRecords();
     loadUserStats();
 
@@ -43,11 +43,11 @@ export default function MyWatchingPage() {
     );
 
     // 监听用户统计数据更新事件
-    const unsubscribeUserStats = subscribeToDataUpdates<UserStats>(
+    const unsubscribeUserStats = subscribeToDataUpdates(
       'userStatsUpdated',
-      (updatedStats) => {
-        console.log('用户统计数据已更新，直接更新状态:', updatedStats);
-        setUserStats(updatedStats);
+      () => {
+        console.log('用户统计数据已更新，重新加载统计数据');
+        loadUserStats();
       }
     );
 
@@ -59,34 +59,22 @@ export default function MyWatchingPage() {
 
   const loadUserStats = async () => {
     try {
-      // 首先尝试获取现有统计数据，不强制刷新以避免数据不稳定
+      // 使用缓存数据以提高加载速度
       const stats = await getUserStats(false);
       setUserStats(stats);
-      
-      // 只有在统计数据完全为空时才重新计算，避免不必要的重新计算
-      if (!stats || (stats.totalWatchTime === 0 && stats.totalMovies === 0 && stats.firstWatchDate === 0)) {
-        console.log('统计数据完全为空，开始重新计算...');
-        const recalculatedStats = await recalculateUserStatsFromHistory();
-        if (recalculatedStats) {
-          setUserStats(recalculatedStats);
-        }
-      }
     } catch (error) {
       console.error('加载用户统计数据失败:', error);
-      // 出错时仍尝试获取现有数据
-      try {
-        const stats = await getUserStats(false);
-        setUserStats(stats);
-      } catch (fallbackError) {
-        console.error('获取统计数据失败:', fallbackError);
-      }
     }
   };
 
   const loadPlayRecords = async () => {
     try {
       setLoading(true);
-      const recordsObj = await getAllPlayRecords();
+      
+      // 并行加载播放记录和用户统计数据以提高加载速度
+      const [recordsObj] = await Promise.all([
+        getAllPlayRecords()
+      ]);
 
       // 将Record转换为数组并按时间排序，同时为每个记录添加id
       const records = Object.entries(recordsObj).map(([key, record]) => ({
@@ -94,29 +82,35 @@ export default function MyWatchingPage() {
         id: key // 使用存储的key作为id
       })).sort((a, b) => b.save_time - a.save_time);
 
-      // 检查剧集更新
-      const recordsWithUpdates = await checkForUpdates(records);
+      // 异步检查剧集更新，不阻塞页面渲染
+      setPlayRecords(records);
+      setHistoryRecords(records);
+      setLoading(false);
 
-      // 实现更新剧集优先排序：有更新的剧集排在前面，然后按时间排序
-      const sortedRecords = recordsWithUpdates.sort((a, b) => {
-        // 首先按是否有更新排序（有更新的在前）
-        if (a.hasUpdate && !b.hasUpdate) return -1;
-        if (!a.hasUpdate && b.hasUpdate) return 1;
+      // 在后台检查更新
+      checkForUpdates(records).then(recordsWithUpdates => {
+        // 实现更新剧集优先排序：有更新的剧集排在前面，然后按时间排序
+        const sortedRecords = recordsWithUpdates.sort((a, b) => {
+          // 首先按是否有更新排序（有更新的在前）
+          if (a.hasUpdate && !b.hasUpdate) return -1;
+          if (!a.hasUpdate && b.hasUpdate) return 1;
 
-        // 如果都有更新或都没有更新，则按保存时间排序（最新的在前）
-        return b.save_time - a.save_time;
+          // 如果都有更新或都没有更新，则按保存时间排序（最新的在前）
+          return b.save_time - a.save_time;
+        });
+
+        // 分离有更新的记录和历史记录
+        const updated = sortedRecords.filter(record => record.hasUpdate);
+        const history = sortedRecords.filter(record => !record.hasUpdate);
+
+        setUpdatedRecords(updated);
+        setHistoryRecords(history);
+        setPlayRecords(sortedRecords);
+      }).catch(error => {
+        console.error('检查剧集更新失败:', error);
       });
-
-      // 分离有更新的记录和历史记录
-      const updated = sortedRecords.filter(record => record.hasUpdate);
-      const history = sortedRecords.filter(record => !record.hasUpdate);
-
-      setUpdatedRecords(updated);
-      setHistoryRecords(history);
-      setPlayRecords(sortedRecords);
     } catch (error) {
       console.error('加载播放记录失败:', error);
-    } finally {
       setLoading(false);
     }
   };
@@ -142,7 +136,7 @@ export default function MyWatchingPage() {
         // 通过搜索API查找对应的视频ID
         const searchQuery = record.search_title || record.title;
         const searchResponse = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
-        
+
         if (!searchResponse.ok) {
           throw new Error(`搜索请求失败: ${searchResponse.status}`);
         }
@@ -151,8 +145,8 @@ export default function MyWatchingPage() {
         const searchResults = searchData.results || [];
 
         // 查找匹配的结果（相同标题和播放源）
-        const matchedResult = searchResults.find((result: any) => 
-          result.title === record.title && 
+        const matchedResult = searchResults.find((result: any) =>
+          result.title === record.title &&
           result.source_name === record.source_name &&
           result.year === record.year
         );
@@ -169,7 +163,7 @@ export default function MyWatchingPage() {
 
         // 获取详细信息以获取最新集数
         const detailResponse = await fetch(`/api/detail?source=${matchedResult.source}&id=${matchedResult.id}`);
-        
+
         if (!detailResponse.ok) {
           throw new Error(`详情请求失败: ${detailResponse.status}`);
         }
@@ -215,7 +209,7 @@ export default function MyWatchingPage() {
         clearUserStats(),
         clearAllPlayRecords()
       ]);
-      
+
       // 确保所有状态都被重置
       setUserStats({
         totalWatchTime: 0,
@@ -227,7 +221,7 @@ export default function MyWatchingPage() {
       setUpdatedRecords([]);
       setHistoryRecords([]);
       setShowClearStatsConfirm(false);
-      
+
       // 强制重新加载数据以确保清除完成
       setTimeout(() => {
         loadPlayRecords();
@@ -258,7 +252,7 @@ export default function MyWatchingPage() {
       setUpdatedRecords([]);
       setHistoryRecords([]);
       setShowClearConfirm(false);
-      
+
       // 强制重新加载数据以确保清除完成
       setTimeout(() => {
         loadPlayRecords();
@@ -438,7 +432,7 @@ export default function MyWatchingPage() {
                     ))}
                   </div>
                 </div>
-                
+
                 {/* 桌面端网格布局 */}
                 <div className="hidden sm:block">
                   <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-x-6 gap-y-10 pt-6 pb-8">
@@ -478,7 +472,7 @@ export default function MyWatchingPage() {
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                 {updatedRecords.length > 0 ? '历史观看' : '观看记录'}
               </h2>
-              
+
               {/* 统一使用网格布局 - 每行2部的竖向排列 */}
               <div className="grid grid-cols-2 gap-x-4 gap-y-8 pt-4 pb-6 sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] sm:gap-x-6 sm:gap-y-10 sm:pt-6 sm:pb-8">
                 {historyRecords.map((record, index) => (

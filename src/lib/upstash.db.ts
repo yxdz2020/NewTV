@@ -476,9 +476,9 @@ export class UpstashRedisStorage implements IStorage {
         if (isNewMovie) {
           movieSet.add(updateData.movieKey);
           await withRetry(() => this.client.set(watchedMoviesKey, JSON.stringify(Array.from(movieSet))));
-          console.log(`✅ 新影片记录: ${updateData.movieKey}, 总影片数: ${stats.totalMovies}`);
+          console.log(`新影片记录: ${updateData.movieKey}, 总影片数: ${stats.totalMovies}`);
         } else {
-          console.log(`📺 已观看影片: ${updateData.movieKey}, 总影片数保持: ${stats.totalMovies}`);
+          console.log(`已观看影片: ${updateData.movieKey}, 总影片数保持: ${stats.totalMovies}`);
         }
       } else {
         // 创建新的统计数据
