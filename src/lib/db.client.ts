@@ -2043,8 +2043,9 @@ export async function updateUserStats(record: PlayRecord): Promise<void> {
             console.log(`重新获取并触发userStatsUpdated事件:`, latestStats);
           } catch (error) {
             console.error('重新获取用户统计数据失败:', error);
-            // 清除缓存强制下次重新获取
-            cacheManager.clearUserCache(authInfo?.username);
+            // 不清除缓存，避免触发强制同步导致统计数据重置
+            // 保留现有缓存数据，确保统计数据的连续性
+            console.log('保留现有缓存数据，避免统计数据被重置');
           }
         }
 
