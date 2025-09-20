@@ -659,6 +659,12 @@ async function fetchWithAuth(
         throw new Error(`统计数据更新失败: ${res.status}`);
       }
 
+      // 检查是否是获取播放记录请求失败（新用户可能没有记录），如果是则不强制登出
+      if (url.includes('/api/playrecords') && options?.method !== 'POST' && options?.method !== 'DELETE') {
+        console.warn(`获取播放记录请求失败 (${url})，可能是新用户，不强制登出`);
+        throw new Error(`获取播放记录失败: ${res.status}`);
+      }
+
       console.log(`多次重试后仍然401，执行登出流程`);
       
       // 调用 logout 接口
@@ -741,6 +747,11 @@ export async function getAllPlayRecords(): Promise<Record<string, PlayRecord>> {
         return freshData;
       } catch (err) {
         console.error('获取播放记录失败:', err);
+        // 对于新用户或网络问题，不显示全局错误提示，避免用户困惑
+        if (err instanceof Error && err.message.includes('获取播放记录失败: 401')) {
+          console.log('新用户或认证问题，返回空播放记录');
+          return {};
+        }
         triggerGlobalError('获取播放记录失败');
         return {};
       }
