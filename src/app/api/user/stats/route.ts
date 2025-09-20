@@ -27,15 +27,20 @@ export async function GET(request: NextRequest) {
 
     const stats = await db.getUserStats(authInfo.username);
     
-    // 如果新用户没有统计数据，返回默认值而不是null
-    const defaultStats = {
-      totalWatchTime: 0,
-      totalMovies: 0,
-      firstWatchDate: Date.now(),
-      lastUpdateTime: Date.now()
-    };
+    // 为新用户提供默认统计数据，避免返回null导致客户端错误
+    if (!stats) {
+      const defaultStats = {
+        totalWatchTime: 0,
+        totalMovies: 0,
+        firstWatchDate: Date.now(),
+        lastUpdateTime: Date.now()
+      };
+      
+      console.log(`为新用户 ${authInfo.username} 提供默认统计数据:`, defaultStats);
+      return NextResponse.json(defaultStats);
+    }
     
-    return NextResponse.json(stats || defaultStats);
+    return NextResponse.json(stats);
   } catch (error) {
     console.error('获取用户统计数据失败:', error);
     return NextResponse.json(
@@ -96,7 +101,7 @@ export async function POST(request: NextRequest) {
     if (isRecalculation) {
       console.log('处理重新计算请求，直接设置统计数据...');
       // 对于重新计算，我们需要直接设置统计数据而不是增量更新
-      
+
       // 直接设置统计数据
       const recalculatedStats = {
         totalWatchTime: watchTime,
@@ -104,13 +109,13 @@ export async function POST(request: NextRequest) {
         firstWatchDate: timestamp,
         lastUpdateTime: Date.now()
       };
-      
+
       console.log('设置重新计算的统计数据:', recalculatedStats);
-      
+
       // 这里我们需要一个直接设置统计数据的方法
       // 暂时先清除旧数据，然后设置新数据
       await db.clearUserStats(authInfo.username);
-      
+
       // 使用updateUserStats但传入特殊参数来表示这是完整设置
       await db.updateUserStats(authInfo.username, {
         watchTime: recalculatedStats.totalWatchTime,

@@ -64,14 +64,6 @@ export default function MyWatchingPage() {
       setUserStats(stats);
     } catch (error) {
       console.error('加载用户统计数据失败:', error);
-      // 为新用户设置默认统计数据，避免因统计数据问题导致页面异常
-      const defaultStats = {
-        totalWatchTime: 0,
-        totalMovies: 0,
-        firstWatchDate: Date.now(),
-        lastUpdateTime: Date.now()
-      };
-      setUserStats(defaultStats);
     }
   };
 

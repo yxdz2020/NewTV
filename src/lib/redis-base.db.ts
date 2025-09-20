@@ -394,7 +394,7 @@ export abstract class BaseRedisStorage implements IStorage {
     await this.withRetry(() =>
       this.client.set(this.adminConfigKey(), JSON.stringify(config))
     );
-    
+
     // 确保管理员配置永不过期，移除TTL（kvrocks不支持KEEPTTL选项）
     try {
       await this.withRetry(() => this.client.persist(this.adminConfigKey()));
@@ -501,15 +501,28 @@ export abstract class BaseRedisStorage implements IStorage {
   async getUserStats(userName: string): Promise<UserStats | null> {
     const key = this.userStatsKey(userName);
     console.log(`getUserStats: 查询用户 ${userName} 的统计数据，键: ${key}`);
-    
+
     const data = await this.withRetry(() => this.client.get(key));
     console.log(`getUserStats: 从数据库获取的原始结果:`, data, `类型: ${typeof data}`);
-    
+
     if (!data) {
-      console.log('getUserStats: 数据库中没有找到统计数据，返回null');
-      return null;
+      console.log('getUserStats: 数据库中没有找到统计数据，为新用户初始化默认统计数据');
+      
+      // 为新用户创建初始化统计数据
+      const defaultStats: UserStats = {
+        totalWatchTime: 0,
+        totalMovies: 0,
+        firstWatchDate: Date.now(),
+        lastUpdateTime: Date.now()
+      };
+      
+      // 将默认统计数据保存到数据库
+      await this.withRetry(() => this.client.set(key, JSON.stringify(defaultStats)));
+      console.log(`为新用户 ${userName} 初始化统计数据:`, defaultStats);
+      
+      return defaultStats;
     }
-    
+
     try {
       const parsed = JSON.parse(data);
       console.log('getUserStats: JSON解析成功，返回数据:', parsed);
@@ -517,7 +530,19 @@ export abstract class BaseRedisStorage implements IStorage {
     } catch (parseError) {
       console.error('getUserStats: JSON解析失败，原始数据:', data);
       console.error('getUserStats: 解析错误:', parseError);
-      return null;
+      
+      // 如果解析失败，为用户重新初始化统计数据
+      const defaultStats: UserStats = {
+        totalWatchTime: 0,
+        totalMovies: 0,
+        firstWatchDate: Date.now(),
+        lastUpdateTime: Date.now()
+      };
+      
+      await this.withRetry(() => this.client.set(key, JSON.stringify(defaultStats)));
+      console.log(`数据解析失败，为用户 ${userName} 重新初始化统计数据:`, defaultStats);
+      
+      return defaultStats;
     }
   }
 
@@ -528,42 +553,42 @@ export abstract class BaseRedisStorage implements IStorage {
     isFullReset?: boolean;
   }): Promise<void> {
     const key = this.userStatsKey(userName);
-    
+
     if (updateData.isFullReset) {
       // 处理重新计算的完整重置
       console.log('执行完整重置统计数据...');
-      
+
       // 解析movieKey中的所有影片
       const movieKeys = updateData.movieKey.split(',').filter(k => k.trim());
-      
+
       const stats: UserStats = {
         totalWatchTime: updateData.watchTime,
         totalMovies: movieKeys.length,
         firstWatchDate: updateData.timestamp,
         lastUpdateTime: Date.now()
       };
-      
+
       // 重置已观看影片集合
       const watchedMoviesKey = `u:${userName}:watched_movies`;
       await this.withRetry(() => this.client.set(watchedMoviesKey, JSON.stringify(movieKeys)));
-      
+
       // 设置统计数据
       await this.withRetry(() => this.client.set(key, JSON.stringify(stats)));
       console.log('完整重置统计数据成功:', stats);
       return;
     }
-    
+
     const existingStats = await this.getUserStats(userName);
-    
+
     let stats: UserStats;
     if (existingStats) {
       // 检查是否是新影片
       const watchedMoviesKey = `u:${userName}:watched_movies`;
       const watchedMovies = await this.withRetry(() => this.client.get(watchedMoviesKey));
       const movieSet = watchedMovies ? new Set(JSON.parse(watchedMovies)) : new Set();
-      
+
       const isNewMovie = !movieSet.has(updateData.movieKey);
-      
+
       // 更新现有统计数据
       stats = {
         totalWatchTime: existingStats.totalWatchTime + updateData.watchTime,
@@ -571,7 +596,7 @@ export abstract class BaseRedisStorage implements IStorage {
         firstWatchDate: existingStats.firstWatchDate,
         lastUpdateTime: updateData.timestamp
       };
-      
+
       // 如果是新影片，添加到已观看影片集合中
       if (isNewMovie) {
         movieSet.add(updateData.movieKey);
@@ -594,7 +619,7 @@ export abstract class BaseRedisStorage implements IStorage {
       await this.withRetry(() => this.client.set(watchedMoviesKey, JSON.stringify([updateData.movieKey])));
       console.log(`初始化用户统计: ${updateData.movieKey}, 总影片数: 1`);
     }
-    
+
     await this.withRetry(() => this.client.set(key, JSON.stringify(stats)));
   }
 

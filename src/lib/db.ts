@@ -277,9 +277,31 @@ export class DbManager {
   // ---------- 用户统计数据 ----------
   async getUserStats(userName: string): Promise<UserStats | null> {
     if (typeof (this.storage as any).getUserStats === 'function') {
-      return (this.storage as any).getUserStats(userName);
+      const stats = await (this.storage as any).getUserStats(userName);
+      
+      // 确保返回的统计数据不为null，为新用户提供默认值
+      if (!stats) {
+        const defaultStats: UserStats = {
+          totalWatchTime: 0,
+          totalMovies: 0,
+          firstWatchDate: Date.now(),
+          lastUpdateTime: Date.now()
+        };
+        
+        console.log(`数据库层为新用户 ${userName} 提供默认统计数据:`, defaultStats);
+        return defaultStats;
+      }
+      
+      return stats;
     }
-    return null;
+    
+    // 如果存储层不支持getUserStats，返回默认统计数据
+    return {
+      totalWatchTime: 0,
+      totalMovies: 0,
+      firstWatchDate: Date.now(),
+      lastUpdateTime: Date.now()
+    };
   }
 
   async updateUserStats(userName: string, updateData: {
