@@ -760,8 +760,14 @@ export async function savePlayRecord(
 
   // 数据库存储模式：乐观更新策略（包括 redis 和 upstash）
   if (STORAGE_TYPE !== 'localstorage') {
-    // 立即更新缓存
+    // 检查是否为新影片（基于title+source_name+year的唯一标识）
+    const movieKey = `${record.source_name}-${record.title}-${record.year}`;
     const cachedRecords = cacheManager.getCachedPlayRecords() || {};
+    const isNewMovie = !Object.values(cachedRecords).some(existingRecord => 
+      `${existingRecord.source_name}-${existingRecord.title}-${existingRecord.year}` === movieKey
+    );
+
+    // 立即更新缓存
     cachedRecords[key] = record;
     cacheManager.cachePlayRecords(cachedRecords);
 
@@ -782,7 +788,41 @@ export async function savePlayRecord(
         body: JSON.stringify({ key, record }),
       });
 
-      // 更新用户统计数据
+      // 如果是新影片，立即更新影片数量统计
+      if (isNewMovie) {
+        console.log(`检测到新影片: ${record.title} (${record.source_name}), 立即更新影片数量统计`);
+        try {
+          // 发送请求更新影片数量（不依赖观看时长）
+          const response = await fetchWithAuth('/api/user/stats', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              watchTime: 0, // 新影片时不增加观看时长
+              movieKey: movieKey,
+              timestamp: record.save_time,
+              isNewMovie: true // 标记这是新影片
+            }),
+          });
+
+          if (response.ok) {
+            const responseData = await response.json();
+            console.log(`新影片统计更新成功:`, responseData);
+            
+            // 更新本地缓存
+            if (responseData.userStats) {
+              cacheManager.cacheUserStats(responseData.userStats);
+            }
+          } else {
+            console.error('新影片统计更新失败:', response.status);
+          }
+        } catch (error) {
+          console.error('新影片统计更新请求失败:', error);
+        }
+      }
+
+      // 更新用户统计数据（基于观看时间增量）
       await updateUserStats(record);
 
       // 触发用户统计数据更新事件
@@ -807,6 +847,13 @@ export async function savePlayRecord(
 
   try {
     const allRecords = await getAllPlayRecords();
+    
+    // 检查是否为新影片（基于title+source_name+year的唯一标识）
+    const movieKey = `${record.source_name}-${record.title}-${record.year}`;
+    const isNewMovie = !Object.values(allRecords).some(existingRecord => 
+      `${existingRecord.source_name}-${existingRecord.title}-${existingRecord.year}` === movieKey
+    );
+    
     allRecords[key] = record;
     localStorage.setItem(PLAY_RECORDS_KEY, JSON.stringify(allRecords));
     window.dispatchEvent(
@@ -815,7 +862,31 @@ export async function savePlayRecord(
       })
     );
 
-    // 更新用户统计数据
+    // 如果是新影片，立即更新影片数量统计
+    if (isNewMovie) {
+      console.log(`检测到新影片: ${record.title} (${record.source_name}), 立即更新影片数量统计`);
+      // 在localStorage模式下，直接更新本地统计数据
+      const currentStats = await getUserStats();
+      const updatedStats: UserStats = {
+        totalWatchTime: currentStats.totalWatchTime,
+        totalMovies: currentStats.totalMovies + 1,
+        firstWatchDate: currentStats.firstWatchDate || record.save_time,
+        lastUpdateTime: record.save_time
+      };
+      
+      // 更新本地缓存
+      cacheManager.cacheUserStats(updatedStats);
+      localStorage.setItem(USER_STATS_KEY, JSON.stringify(updatedStats));
+      
+      // 触发统计数据更新事件
+      window.dispatchEvent(
+        new CustomEvent('userStatsUpdated', {
+          detail: updatedStats,
+        })
+      );
+    }
+
+    // 更新用户统计数据（基于观看时间增量）
     await updateUserStats(record);
 
     // 触发用户统计数据更新事件

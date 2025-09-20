@@ -557,7 +557,13 @@ export abstract class BaseRedisStorage implements IStorage {
 
   async clearUserStats(userName: string): Promise<void> {
     const key = this.userStatsKey(userName);
+    const watchedMoviesKey = `u:${userName}:watched_movies`;
+    
+    // 同时清空用户统计数据和已观看影片集合
     await this.withRetry(() => this.client.del(key));
+    await this.withRetry(() => this.client.del(watchedMoviesKey));
+    
+    console.log(`已清空用户 ${userName} 的统计数据和已观看影片记录`);
   }
 
   // 清空所有数据
