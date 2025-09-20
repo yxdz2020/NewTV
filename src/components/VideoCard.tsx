@@ -257,9 +257,18 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      if (from !== 'playrecord' || !actualSource || !actualId) return;
+      if (from !== 'playrecord' || !actualId) return;
       try {
-        await deletePlayRecord(actualSource, actualId);
+        // 对于观看记录页面，actualId是完整的存储key，需要解析出source和id
+        if (from === 'playrecord') {
+          const [source, id] = actualId.split('+');
+          if (source && id) {
+            await deletePlayRecord(source, id);
+          }
+        } else if (actualSource && actualId) {
+          // 对于其他页面，使用原有逻辑
+          await deletePlayRecord(actualSource, actualId);
+        }
         onDelete?.();
       } catch (err) {
         throw new Error('删除播放记录失败');
