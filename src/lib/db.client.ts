@@ -2110,7 +2110,13 @@ export async function recalculateUserStatsFromHistory(): Promise<UserStats | nul
     const records = Object.values(playRecords);
 
     if (records.length === 0) {
-      console.log('没有播放记录，返回空统计数据');
+      console.log('没有播放记录，检查缓存的统计数据');
+      const cachedStats = cacheManager.getCachedUserStats();
+      if (cachedStats && (cachedStats.totalMovies > 0 || cachedStats.totalWatchTime > 0)) {
+        console.log('使用缓存的统计数据，避免重置');
+        return cachedStats;
+      }
+      console.log('没有播放记录且无有效缓存，返回空统计数据');
       return null;
     }
 

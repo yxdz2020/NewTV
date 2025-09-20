@@ -26,8 +26,12 @@ export default function MyWatchingPage() {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
 
   useEffect(() => {
-    // 设置自动同步
-    setupAutoSync();
+    // 只在页面首次加载时设置自动同步
+    // 不要在清除播放记录后触发同步
+    const shouldSetupSync = !window.location.search.includes('skipSync');
+    if (shouldSetupSync) {
+      setupAutoSync();
+    }
 
     loadPlayRecords();
     loadUserStats();
@@ -254,6 +258,7 @@ export default function MyWatchingPage() {
       setShowClearConfirm(false);
 
       // 强制重新加载播放记录，但不重新加载统计数据
+      // 避免触发自动同步，防止统计数据被重置
       setTimeout(() => {
         loadPlayRecords();
       }, 100);
