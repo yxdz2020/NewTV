@@ -48,6 +48,7 @@ export interface VideoCardProps {
   currentEpisode?: number;
   douban_id?: number;
   onDelete?: () => void;
+  onClick?: () => void;
   rate?: string;
   type?: string;
   isBangumi?: boolean;
@@ -77,6 +78,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     currentEpisode,
     douban_id,
     onDelete,
+    onClick,
     rate,
     type = '',
     isBangumi = false,
@@ -485,6 +487,12 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   }, []);
 
   const handleClick = useCallback(() => {
+    // 如果传入了自定义onClick，优先使用
+    if (onClick) {
+      onClick();
+      return;
+    }
+    
     // 如果是豆瓣来源，展示豆瓣详情
     if (from === 'douban') {
       handleDoubanClick();
@@ -496,6 +504,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       navigateToPlay();
     }
   }, [
+    onClick,
     from,
     isAggregate,
     actualSource,
