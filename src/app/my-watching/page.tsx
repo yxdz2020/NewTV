@@ -43,7 +43,7 @@ export default function MyWatchingPage() {
     );
 
     // 监听用户统计数据更新事件
-    const unsubscribeUserStats = subscribeToDataUpdates(
+    const unsubscribeUserStats = subscribeToDataUpdates<UserStats>(
       'userStatsUpdated',
       (updatedStats) => {
         console.log('用户统计数据已更新，直接更新状态:', updatedStats);
