@@ -70,7 +70,7 @@ export default function MyWatchingPage() {
   const loadPlayRecords = async () => {
     try {
       setLoading(true);
-      
+
       // 并行加载播放记录和用户统计数据以提高加载速度
       const [recordsObj] = await Promise.all([
         getAllPlayRecords()
@@ -336,7 +336,7 @@ export default function MyWatchingPage() {
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {userStats ? Math.floor((Date.now() - userStats.firstWatchDate) / (1000 * 60 * 60 * 24)) || 1 : 1}
+                    {userStats && userStats.firstWatchDate > 0 ? Math.floor((Date.now() - userStats.firstWatchDate) / (1000 * 60 * 60 * 24)) + 1 : 0}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">登录天数</div>
                 </div>
@@ -361,7 +361,7 @@ export default function MyWatchingPage() {
               </div>
               <div className="glass-light rounded-xl p-4 text-center">
                 <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  {userStats ? Math.floor((Date.now() - userStats.firstWatchDate) / (1000 * 60 * 60 * 24)) || 1 : 1}
+                  {userStats && userStats.firstWatchDate > 0 ? Math.floor((Date.now() - userStats.firstWatchDate) / (1000 * 60 * 60 * 24)) + 1 : 0}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">登录天数</div>
               </div>

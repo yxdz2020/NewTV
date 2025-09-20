@@ -409,7 +409,7 @@ export class UpstashRedisStorage implements IStorage {
         const defaultStats: UserStats = {
           totalWatchTime: 0,
           totalMovies: 0,
-          firstWatchDate: Date.now(),
+          firstWatchDate: 0, // 初始化为0，将在第一次观看时设置为实际时间
           lastUpdateTime: Date.now()
         };
         
@@ -440,7 +440,7 @@ export class UpstashRedisStorage implements IStorage {
           const defaultStats: UserStats = {
             totalWatchTime: 0,
             totalMovies: 0,
-            firstWatchDate: Date.now(),
+            firstWatchDate: 0, // 初始化为0，将在第一次观看时设置为实际时间
             lastUpdateTime: Date.now()
           };
           
@@ -457,7 +457,7 @@ export class UpstashRedisStorage implements IStorage {
       const defaultStats: UserStats = {
         totalWatchTime: 0,
         totalMovies: 0,
-        firstWatchDate: Date.now(),
+        firstWatchDate: 0, // 初始化为0，将在第一次观看时设置为实际时间
         lastUpdateTime: Date.now()
       };
       
@@ -472,7 +472,7 @@ export class UpstashRedisStorage implements IStorage {
       const defaultStats: UserStats = {
         totalWatchTime: 0,
         totalMovies: 0,
-        firstWatchDate: Date.now(),
+        firstWatchDate: 0, // 初始化为0，将在第一次观看时设置为实际时间
         lastUpdateTime: Date.now()
       };
       
@@ -555,7 +555,7 @@ export class UpstashRedisStorage implements IStorage {
         stats = {
           totalWatchTime: existingStats.totalWatchTime + updateData.watchTime,
           totalMovies: isNewMovie ? existingStats.totalMovies + 1 : existingStats.totalMovies,
-          firstWatchDate: existingStats.firstWatchDate,
+          firstWatchDate: existingStats.firstWatchDate === 0 ? updateData.timestamp : existingStats.firstWatchDate, // 如果是0则设置为实际观看时间
           lastUpdateTime: updateData.timestamp
         };
 
@@ -572,7 +572,7 @@ export class UpstashRedisStorage implements IStorage {
         stats = {
           totalWatchTime: updateData.watchTime,
           totalMovies: 1,
-          firstWatchDate: updateData.timestamp,
+          firstWatchDate: updateData.timestamp, // 使用实际观看时间
           lastUpdateTime: updateData.timestamp
         };
 

@@ -284,7 +284,7 @@ export class DbManager {
         const defaultStats: UserStats = {
           totalWatchTime: 0,
           totalMovies: 0,
-          firstWatchDate: Date.now(),
+          firstWatchDate: 0, // 初始化为0，将在第一次观看时设置为实际时间
           lastUpdateTime: Date.now()
         };
         
@@ -299,7 +299,7 @@ export class DbManager {
     return {
       totalWatchTime: 0,
       totalMovies: 0,
-      firstWatchDate: Date.now(),
+      firstWatchDate: 0, // 初始化为0，将在第一次观看时设置为实际时间
       lastUpdateTime: Date.now()
     };
   }

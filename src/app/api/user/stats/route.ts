@@ -27,12 +27,12 @@ export async function GET(request: NextRequest) {
 
     const stats = await db.getUserStats(authInfo.username);
     
-    // 为新用户提供默认统计数据，避免返回null导致客户端错误
+    // 如果stats为null，返回默认统计数据
     if (!stats) {
       const defaultStats = {
         totalWatchTime: 0,
         totalMovies: 0,
-        firstWatchDate: Date.now(),
+        firstWatchDate: 0, // 初始化为0，将在第一次观看时设置为实际时间
         lastUpdateTime: Date.now()
       };
       
