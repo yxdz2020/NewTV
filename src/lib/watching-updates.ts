@@ -71,9 +71,9 @@ export function clearWatchingUpdates() {
 }
 
 // 检查单个剧集的更新状态
-async function checkSingleRecordUpdate(record: PlayRecord): Promise<{ hasUpdate: boolean; newEpisodes: number; latestEpisodes: number }> {
+async function checkSingleRecordUpdate(record: PlayRecord, videoId: string): Promise<{ hasUpdate: boolean; newEpisodes: number; latestEpisodes: number }> {
   try {
-    const response = await fetch(`/api/detail?source=${record.source_name}&id=${record.video_id}`);
+    const response = await fetch(`/api/detail?source=${record.source_name}&id=${videoId}`);
     if (!response.ok) {
       console.warn(`获取${record.title}详情失败:`, response.status);
       return { hasUpdate: false, newEpisodes: 0, latestEpisodes: record.total_episodes };
@@ -105,7 +105,12 @@ async function checkSingleRecordUpdate(record: PlayRecord): Promise<{ hasUpdate:
 // 检查所有观看记录的新集数更新
 export async function checkWatchingUpdates(): Promise<void> {
   try {
-    const records = await getAllPlayRecords();
+    const recordsObj = await getAllPlayRecords();
+    const records = Object.entries(recordsObj).map(([key, record]) => ({
+      ...record,
+      id: key
+    }));
+    
     if (records.length === 0) {
       setCachedWatchingUpdates(false, 0);
       window.dispatchEvent(new CustomEvent(WATCHING_UPDATES_EVENT, { 
@@ -119,8 +124,9 @@ export async function checkWatchingUpdates(): Promise<void> {
 
     // 并发检查所有记录的更新状态
     const updatePromises = records.map(async (record) => {
-      const id = generateStorageKey(record.source_name, record.video_id, record.index);
-      const updateInfo = await checkSingleRecordUpdate(record);
+      // 从存储key中解析出videoId
+      const [sourceName, videoId] = record.id.split('+');
+      const updateInfo = await checkSingleRecordUpdate(record, videoId);
       
       if (updateInfo.hasUpdate) {
         hasAnyUpdates = true;
@@ -129,7 +135,6 @@ export async function checkWatchingUpdates(): Promise<void> {
 
       return {
         ...record,
-        id,
         hasUpdate: updateInfo.hasUpdate,
         newEpisodes: updateInfo.newEpisodes,
         total_episodes: updateInfo.latestEpisodes > record.total_episodes ? updateInfo.latestEpisodes : record.total_episodes
@@ -180,16 +185,15 @@ export function setupPeriodicUpdateCheck(intervalMinutes = 30): () => void {
 // 检查特定视频的更新状态（用于视频详情页面）
 export async function checkVideoUpdate(sourceName: string, videoId: string): Promise<void> {
   try {
-    const records = await getAllPlayRecords();
-    const targetRecord = records.find(record => 
-      record.source_name === sourceName && record.video_id === videoId
-    );
+    const recordsObj = await getAllPlayRecords();
+    const storageKey = generateStorageKey(sourceName, videoId);
+    const targetRecord = recordsObj[storageKey];
 
     if (!targetRecord) {
       return;
     }
 
-    const updateInfo = await checkSingleRecordUpdate(targetRecord);
+    const updateInfo = await checkSingleRecordUpdate(targetRecord, videoId);
     
     if (updateInfo.hasUpdate) {
       // 如果发现这个视频有更新，重新检查所有更新状态
