@@ -239,28 +239,10 @@ export default function MyWatchingPage() {
       setHistoryRecords([]);
       setShowClearStatsConfirm(false);
       
-      // 触发数据更新事件，通知其他组件数据已清除
-      window.dispatchEvent(
-        new CustomEvent('userStatsUpdated', {
-          detail: {
-            totalWatchTime: 0,
-            totalMovies: 0,
-            firstWatchDate: Date.now(),
-            lastUpdateTime: Date.now()
-          },
-        })
-      );
-      
-      window.dispatchEvent(
-        new CustomEvent('playRecordsUpdated', {
-          detail: {},
-        })
-      );
-      
       // 强制重新加载数据以确保清除完成
       setTimeout(() => {
         loadPlayRecords();
-        loadUserStatsFromCache();
+        loadUserStats();
       }, 100);
     } catch (error) {
       console.error('清空所有数据失败:', error);
