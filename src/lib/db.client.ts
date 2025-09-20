@@ -785,12 +785,7 @@ export async function savePlayRecord(
       // 更新用户统计数据
       await updateUserStats(record);
 
-      // 触发用户统计数据更新事件
-      window.dispatchEvent(
-        new CustomEvent('userStatsUpdated', {
-          detail: { record },
-        })
-      );
+      console.log('播放记录保存成功，用户统计数据已更新');
     } catch (err) {
       await handleDatabaseOperationFailure('playRecords', err);
       triggerGlobalError('保存播放记录失败');
@@ -818,12 +813,7 @@ export async function savePlayRecord(
     // 更新用户统计数据
     await updateUserStats(record);
 
-    // 触发用户统计数据更新事件
-    window.dispatchEvent(
-      new CustomEvent('userStatsUpdated', {
-        detail: { record },
-      })
-    );
+    console.log('播放记录保存成功，用户统计数据已更新');
   } catch (err) {
     console.error('保存播放记录失败:', err);
     triggerGlobalError('保存播放记录失败');
@@ -1896,7 +1886,7 @@ export async function getUserStats(forceRefresh = false): Promise<UserStats> {
     }
 
     const totalWatchTime = records.reduce((sum, record) => sum + record.play_time, 0);
-    const totalMovies = new Set(records.map(r => `${r.source_name}-${r.title}`)).size;
+    const totalMovies = new Set(records.map(r => `${r.title}_${r.source_name}_${r.year}`)).size;
     const firstWatchDate = Math.min(...records.map(r => r.save_time));
 
     const stats: UserStats = {
@@ -1918,7 +1908,7 @@ export async function getUserStats(forceRefresh = false): Promise<UserStats> {
  */
 export async function updateUserStats(record: PlayRecord): Promise<void> {
   try {
-    const movieKey = `${record.source_name}-${record.title}`;
+    const movieKey = `${record.title}_${record.source_name}_${record.year}`;
 
     // 使用包含集数信息的键来缓存每一集的播放进度
     const episodeKey = `${record.source_name}+${record.title}-${record.year}+${record.index}`;

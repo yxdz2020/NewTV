@@ -45,9 +45,9 @@ export default function MyWatchingPage() {
     // 监听用户统计数据更新事件
     const unsubscribeUserStats = subscribeToDataUpdates(
       'userStatsUpdated',
-      () => {
-        console.log('用户统计数据已更新，重新加载统计数据');
-        loadUserStats();
+      (updatedStats) => {
+        console.log('用户统计数据已更新，直接更新状态:', updatedStats);
+        setUserStats(updatedStats);
       }
     );
 
