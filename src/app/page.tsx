@@ -15,10 +15,10 @@ import {
   subscribeToDataUpdates,
 } from '@/lib/db.client';
 import { getDoubanCategories, getDoubanRecommends } from '@/lib/douban.client';
+import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import { DoubanItem } from '@/lib/types';
 
 import CapsuleSwitch from '@/components/CapsuleSwitch';
-import ContinueWatching from '@/components/ContinueWatching';
 import PageLayout from '@/components/PageLayout';
 import ScrollableRow from '@/components/ScrollableRow';
 import { useSite } from '@/components/SiteProvider';
@@ -148,9 +148,25 @@ function HomeClient() {
   useEffect(() => {
     if (activeTab !== 'favorites') return;
 
+    // 检查用户是否已认证
+    const authInfo = getAuthInfoFromBrowserCookie();
+    if (!authInfo || !authInfo.username) {
+      // 用户未认证，清空收藏夹数据
+      setFavoriteItems([]);
+      return;
+    }
+
     const loadFavorites = async () => {
-      const allFavorites = await getAllFavorites();
-      await updateFavoriteItems(allFavorites);
+      try {
+        const allFavorites = await getAllFavorites();
+        await updateFavoriteItems(allFavorites);
+      } catch (error) {
+        console.error('加载收藏夹失败:', error);
+        // 如果是401错误，清空收藏夹数据
+        if (error instanceof Error && error.message.includes('401')) {
+          setFavoriteItems([]);
+        }
+      }
     };
 
     loadFavorites();
@@ -227,9 +243,6 @@ function HomeClient() {
           ) : (
             // 首页视图
             <>
-              {/* 继续观看 */}
-              <ContinueWatching />
-
               {/* 热门电影 */}
               <section className='mb-8'>
                 <div className='mb-4 flex items-center justify-between'>
