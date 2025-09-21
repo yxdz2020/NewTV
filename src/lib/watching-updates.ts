@@ -26,16 +26,16 @@ export function getCachedWatchingUpdates(): boolean {
   try {
     const cached = localStorage.getItem(WATCHING_UPDATES_CACHE_KEY);
     if (!cached) return false;
-    
+
     const data: WatchingUpdatesCache = JSON.parse(cached);
     const now = Date.now();
-    
+
     // 检查缓存是否过期
     if (now - data.timestamp > CACHE_DURATION) {
       localStorage.removeItem(WATCHING_UPDATES_CACHE_KEY);
       return false;
     }
-    
+
     return data.hasUpdates;
   } catch (error) {
     console.error('获取新集数更新缓存失败:', error);
@@ -62,8 +62,8 @@ export function clearWatchingUpdates() {
   try {
     localStorage.removeItem(WATCHING_UPDATES_CACHE_KEY);
     // 触发事件通知状态变化
-    window.dispatchEvent(new CustomEvent(WATCHING_UPDATES_EVENT, { 
-      detail: { hasUpdates: false, updatedCount: 0 } 
+    window.dispatchEvent(new CustomEvent(WATCHING_UPDATES_EVENT, {
+      detail: { hasUpdates: false, updatedCount: 0 }
     }));
   } catch (error) {
     console.error('清除新集数更新状态失败:', error);
@@ -81,7 +81,7 @@ async function checkSingleRecordUpdate(record: PlayRecord, videoId: string): Pro
 
     const detailData = await response.json();
     const latestEpisodes = detailData.episodes ? detailData.episodes.length : 0;
-    
+
     // 比较集数，如果用户已看到最新集且没有新增集数，则不计入更新
     const hasUpdate = latestEpisodes > record.total_episodes;
     const userWatchedLatest = record.index >= record.total_episodes;
@@ -91,10 +91,10 @@ async function checkSingleRecordUpdate(record: PlayRecord, videoId: string): Pro
     // 如果用户已经看到了当前记录的最新集，且总集数没有增加，则不显示更新
     const shouldShowUpdate = hasUpdate && (!userWatchedLatest || latestEpisodes > record.total_episodes);
 
-    return { 
-      hasUpdate: shouldShowUpdate, 
-      newEpisodes, 
-      latestEpisodes 
+    return {
+      hasUpdate: shouldShowUpdate,
+      newEpisodes,
+      latestEpisodes
     };
   } catch (error) {
     console.error(`检查${record.title}更新失败:`, error);
@@ -110,11 +110,11 @@ export async function checkWatchingUpdates(): Promise<void> {
       ...record,
       id: key
     }));
-    
+
     if (records.length === 0) {
       setCachedWatchingUpdates(false, 0);
-      window.dispatchEvent(new CustomEvent(WATCHING_UPDATES_EVENT, { 
-        detail: { hasUpdates: false, updatedCount: 0 } 
+      window.dispatchEvent(new CustomEvent(WATCHING_UPDATES_EVENT, {
+        detail: { hasUpdates: false, updatedCount: 0 }
       }));
       return;
     }
@@ -127,7 +127,7 @@ export async function checkWatchingUpdates(): Promise<void> {
       // 从存储key中解析出videoId
       const [sourceName, videoId] = record.id.split('+');
       const updateInfo = await checkSingleRecordUpdate(record, videoId);
-      
+
       if (updateInfo.hasUpdate) {
         hasAnyUpdates = true;
         updatedCount++;
@@ -145,8 +145,8 @@ export async function checkWatchingUpdates(): Promise<void> {
 
     // 更新缓存和触发事件
     setCachedWatchingUpdates(hasAnyUpdates, updatedCount);
-    window.dispatchEvent(new CustomEvent(WATCHING_UPDATES_EVENT, { 
-      detail: { hasUpdates: hasAnyUpdates, updatedCount } 
+    window.dispatchEvent(new CustomEvent(WATCHING_UPDATES_EVENT, {
+      detail: { hasUpdates: hasAnyUpdates, updatedCount }
     }));
 
     console.log(`新集数检查完成: ${hasAnyUpdates ? `发现${updatedCount}部剧集有更新` : '暂无更新'}`);
@@ -163,7 +163,7 @@ export function subscribeToWatchingUpdates(callback: (hasUpdates: boolean, updat
   };
 
   window.addEventListener(WATCHING_UPDATES_EVENT, handleUpdate as EventListener);
-  
+
   return () => {
     window.removeEventListener(WATCHING_UPDATES_EVENT, handleUpdate as EventListener);
   };
@@ -172,7 +172,7 @@ export function subscribeToWatchingUpdates(callback: (hasUpdates: boolean, updat
 // 设置定期检查新集数更新
 export function setupPeriodicUpdateCheck(intervalMinutes = 30): () => void {
   const intervalMs = intervalMinutes * 60 * 1000;
-  
+
   const intervalId = setInterval(() => {
     checkWatchingUpdates();
   }, intervalMs);
@@ -194,7 +194,7 @@ export async function checkVideoUpdate(sourceName: string, videoId: string): Pro
     }
 
     const updateInfo = await checkSingleRecordUpdate(targetRecord, videoId);
-    
+
     if (updateInfo.hasUpdate) {
       // 如果发现这个视频有更新，重新检查所有更新状态
       await checkWatchingUpdates();
