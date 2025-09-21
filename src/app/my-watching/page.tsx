@@ -119,6 +119,25 @@ export default function MyWatchingPage() {
     }
   };
 
+  // 处理单个记录删除的回调函数
+  const handleRecordDelete = async () => {
+    try {
+      // 重新加载播放记录，但不检查更新（避免触发检查更新日志）
+      const recordsObj = await getAllPlayRecords();
+      const records = Object.entries(recordsObj).map(([key, record]) => ({
+        ...record,
+        id: key
+      })).sort((a, b) => b.save_time - a.save_time);
+
+      // 直接更新状态，不触发更新检查
+      setPlayRecords(records);
+      setHistoryRecords(records);
+      setUpdatedRecords([]); // 清空更新记录，因为删除后需要重新检查
+    } catch (error) {
+      console.error('删除记录后重新加载失败:', error);
+    }
+  };
+
   // 检查剧集更新的函数
   const checkForUpdates = async (records: (PlayRecord & { id: string })[]): Promise<ExtendedPlayRecord[]> => {
     if (!records.length) return [];
@@ -452,7 +471,7 @@ export default function MyWatchingPage() {
                             source_name={record.source_name}
                             source={record.source_name}
                             id={record.id}
-                            onDelete={loadPlayRecords}
+                            onDelete={handleRecordDelete}
                           />
                           {/* 新集数提示光环效果 - 跟随VideoCard缩放 */}
                           {record.hasUpdate && (
@@ -486,7 +505,7 @@ export default function MyWatchingPage() {
                             source_name={record.source_name}
                             source={record.source_name}
                             id={record.id}
-                            onDelete={loadPlayRecords}
+                            onDelete={handleRecordDelete}
                           />
                           {/* 新集数提示光环效果 - 跟随VideoCard缩放 */}
                           {record.hasUpdate && (
@@ -526,7 +545,7 @@ export default function MyWatchingPage() {
                       source_name={record.source_name}
                       source={record.source_name}
                       id={record.id}
-                      onDelete={loadPlayRecords}
+                      onDelete={handleRecordDelete}
                     />
                   </div>
                 ))}
