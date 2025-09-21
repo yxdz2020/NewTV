@@ -359,17 +359,17 @@ export default function MyWatchingPage() {
                       // 按自然日计算登录天数
                       const firstDate = new Date(userStats.firstWatchDate);
                       const currentDate = new Date();
-                      
+
                       // 获取注册日期的年月日（忽略时分秒）
                       const firstDay = new Date(firstDate.getFullYear(), firstDate.getMonth(), firstDate.getDate());
                       const currentDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-                      
+
                       // 计算自然日差值并加1
                       const daysDiff = Math.floor((currentDay.getTime() - firstDay.getTime()) / (1000 * 60 * 60 * 24));
                       return daysDiff + 1;
                     })() : 0}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">登录天数</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">注册天数</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
@@ -396,11 +396,11 @@ export default function MyWatchingPage() {
                     // 按自然日计算登录天数
                     const firstDate = new Date(userStats.firstWatchDate);
                     const currentDate = new Date();
-                    
+
                     // 获取注册日期的年月日（忽略时分秒）
                     const firstDay = new Date(firstDate.getFullYear(), firstDate.getMonth(), firstDate.getDate());
                     const currentDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-                    
+
                     // 计算自然日差值并加1
                     const daysDiff = Math.floor((currentDay.getTime() - firstDay.getTime()) / (1000 * 60 * 60 * 24));
                     return daysDiff + 1;
