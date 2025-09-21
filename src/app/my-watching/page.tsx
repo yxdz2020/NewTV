@@ -71,7 +71,7 @@ export default function MyWatchingPage() {
     }
   };
 
-  const loadPlayRecords = async () => {
+  const loadPlayRecords = async (skipUpdateCheck = false) => {
     try {
       setLoading(true);
 
@@ -85,6 +85,15 @@ export default function MyWatchingPage() {
         ...record,
         id: key // 使用存储的key作为id
       })).sort((a, b) => b.save_time - a.save_time);
+
+      // 如果是删除操作触发的重新加载，跳过更新检查
+      if (skipUpdateCheck) {
+        setPlayRecords(records);
+        setHistoryRecords(records);
+        setUpdatedRecords([]);
+        setLoading(false);
+        return;
+      }
 
       // 异步检查剧集更新，不阻塞页面渲染
       setPlayRecords(records);
@@ -116,25 +125,6 @@ export default function MyWatchingPage() {
     } catch (error) {
       console.error('加载播放记录失败:', error);
       setLoading(false);
-    }
-  };
-
-  // 处理单个记录删除的回调函数
-  const handleRecordDelete = async () => {
-    try {
-      // 重新加载播放记录，但不检查更新（避免触发检查更新日志）
-      const recordsObj = await getAllPlayRecords();
-      const records = Object.entries(recordsObj).map(([key, record]) => ({
-        ...record,
-        id: key
-      })).sort((a, b) => b.save_time - a.save_time);
-
-      // 直接更新状态，不触发更新检查
-      setPlayRecords(records);
-      setHistoryRecords(records);
-      setUpdatedRecords([]); // 清空更新记录，因为删除后需要重新检查
-    } catch (error) {
-      console.error('删除记录后重新加载失败:', error);
     }
   };
 
@@ -471,7 +461,7 @@ export default function MyWatchingPage() {
                             source_name={record.source_name}
                             source={record.source_name}
                             id={record.id}
-                            onDelete={handleRecordDelete}
+                            onDelete={() => loadPlayRecords(true)}
                           />
                           {/* 新集数提示光环效果 - 跟随VideoCard缩放 */}
                           {record.hasUpdate && (
@@ -505,7 +495,7 @@ export default function MyWatchingPage() {
                             source_name={record.source_name}
                             source={record.source_name}
                             id={record.id}
-                            onDelete={handleRecordDelete}
+                            onDelete={() => loadPlayRecords(true)}
                           />
                           {/* 新集数提示光环效果 - 跟随VideoCard缩放 */}
                           {record.hasUpdate && (
@@ -545,7 +535,7 @@ export default function MyWatchingPage() {
                       source_name={record.source_name}
                       source={record.source_name}
                       id={record.id}
-                      onDelete={handleRecordDelete}
+                      onDelete={loadPlayRecords}
                     />
                   </div>
                 ))}
