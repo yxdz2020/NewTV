@@ -71,7 +71,7 @@ export default function MyWatchingPage() {
     }
   };
 
-  const loadPlayRecords = async () => {
+  const loadPlayRecords = async (skipUpdateCheck = false) => {
     try {
       setLoading(true);
 
@@ -85,6 +85,15 @@ export default function MyWatchingPage() {
         ...record,
         id: key // 使用存储的key作为id
       })).sort((a, b) => b.save_time - a.save_time);
+
+      // 如果是删除操作触发的重新加载，跳过更新检查
+      if (skipUpdateCheck) {
+        setPlayRecords(records);
+        setHistoryRecords(records);
+        setUpdatedRecords([]);
+        setLoading(false);
+        return;
+      }
 
       // 异步检查剧集更新，不阻塞页面渲染
       setPlayRecords(records);
@@ -452,7 +461,7 @@ export default function MyWatchingPage() {
                             source_name={record.source_name}
                             source={record.source_name}
                             id={record.id}
-                            onDelete={loadPlayRecords}
+                            onDelete={() => loadPlayRecords(true)}
                           />
                           {/* 新集数提示光环效果 - 跟随VideoCard缩放 */}
                           {record.hasUpdate && (
@@ -486,7 +495,7 @@ export default function MyWatchingPage() {
                             source_name={record.source_name}
                             source={record.source_name}
                             id={record.id}
-                            onDelete={loadPlayRecords}
+                            onDelete={() => loadPlayRecords(true)}
                           />
                           {/* 新集数提示光环效果 - 跟随VideoCard缩放 */}
                           {record.hasUpdate && (

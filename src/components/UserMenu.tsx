@@ -21,9 +21,9 @@ import { createPortal } from 'react-dom';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import { CURRENT_VERSION } from '@/lib/version';
 import { checkForUpdates, UpdateStatus } from '@/lib/version_check';
-import { 
-  getCachedWatchingUpdates, 
-  clearWatchingUpdates, 
+import {
+  getCachedWatchingUpdates,
+  clearWatchingUpdates,
   subscribeToWatchingUpdates,
   checkWatchingUpdates,
   setupPeriodicUpdateCheck
