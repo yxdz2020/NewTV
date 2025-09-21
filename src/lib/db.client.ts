@@ -747,11 +747,13 @@ export async function getAllPlayRecords(): Promise<Record<string, PlayRecord>> {
         return freshData;
       } catch (err) {
         console.error('获取播放记录失败:', err);
-        // 对于新用户或网络问题，不显示全局错误提示，避免用户困惑
-        if (err instanceof Error && err.message.includes('获取播放记录失败: 401')) {
-          console.log('新用户或认证问题，返回空播放记录');
+        // 现在API已修复，新用户会返回200状态码和空对象，不再需要特殊处理401错误
+        // 只有真正的网络错误或服务器错误才会触发全局错误提示
+        if (err instanceof Error && (err.message.includes('获取播放记录失败: 401') || err.message.includes('获取播放记录失败: 500'))) {
+          console.log('网络错误或服务器错误，返回空播放记录');
           return {};
         }
+        // 对于其他错误，显示全局错误提示
         triggerGlobalError('获取播放记录失败');
         return {};
       }
