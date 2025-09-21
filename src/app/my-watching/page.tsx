@@ -446,9 +446,9 @@ export default function MyWatchingPage() {
                 </div>
                 {/* 移动端网格布局 */}
                 <div className="sm:hidden">
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-8 pt-4 pb-6">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-8 pt-4 pb-6 scale-[0.8] origin-top">
                     {updatedRecords.map((record, index) => (
-                      <div key={`updated-${index}`} className="relative w-full">
+                      <div key={`updated-${index}`} className="relative w-full group">
                         <div className="relative">
                           <VideoCard
                             title={record.title}
@@ -482,7 +482,7 @@ export default function MyWatchingPage() {
                 <div className="hidden sm:block">
                   <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-x-6 gap-y-10 pt-6 pb-8">
                     {updatedRecords.map((record, index) => (
-                      <div key={`updated-${index}`} className="relative w-full">
+                      <div key={`updated-${index}`} className="relative w-full group">
                         <div className="relative">
                           <VideoCard
                             title={record.title}
@@ -521,7 +521,7 @@ export default function MyWatchingPage() {
               </h2>
 
               {/* 统一使用网格布局 - 每行2部的竖向排列 */}
-              <div className="grid grid-cols-2 gap-x-4 gap-y-8 pt-4 pb-6 sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] sm:gap-x-6 sm:gap-y-10 sm:pt-6 sm:pb-8">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-8 pt-4 pb-6 scale-[0.8] origin-top sm:scale-100 sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] sm:gap-x-6 sm:gap-y-10 sm:pt-6 sm:pb-8">
                 {historyRecords.map((record, index) => (
                   <div key={`history-${index}`} className="w-full">
                     <VideoCard
