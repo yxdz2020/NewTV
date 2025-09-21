@@ -448,7 +448,7 @@ export default function MyWatchingPage() {
                 <div className="sm:hidden">
                   <div className="grid grid-cols-2 gap-x-4 gap-y-8 pt-4 pb-6">
                     {updatedRecords.map((record, index) => (
-                      <div key={`updated-${index}`} className="relative w-full">
+                      <div key={`updated-${index}`} className="relative w-full group">
                         <div className="relative">
                           <VideoCard
                             title={record.title}
@@ -482,7 +482,7 @@ export default function MyWatchingPage() {
                 <div className="hidden sm:block">
                   <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-x-6 gap-y-10 pt-6 pb-8">
                     {updatedRecords.map((record, index) => (
-                      <div key={`updated-${index}`} className="relative w-full">
+                      <div key={`updated-${index}`} className="relative w-full group">
                         <div className="relative">
                           <VideoCard
                             title={record.title}
