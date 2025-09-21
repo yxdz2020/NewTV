@@ -163,11 +163,11 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const actualTitle = title;
   const actualPoster = poster;
   // 对于播放记录，id是完整的存储key（source+id格式），需要解析
-  const actualSource = from === 'playrecord' && id?.includes('+')
-    ? id.split('+')[0]
+  const actualSource = from === 'playrecord' && id?.includes('+') 
+    ? id.split('+')[0] 
     : source;
-  const actualId = from === 'playrecord' && id?.includes('+')
-    ? id.split('+')[1]
+  const actualId = from === 'playrecord' && id?.includes('+') 
+    ? id.split('+')[1] 
     : id;
   const actualDoubanId = dynamicDoubanId;
   const actualEpisodes = dynamicEpisodes;
@@ -262,13 +262,13 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      if (from !== 'playrecord' || !actualId) return;
+      if (from !== 'playrecord' || !id) return;
       try {
-        // 对于观看记录页面，actualId是完整的存储key，需要解析出source和id
+        // 对于观看记录页面，id是完整的存储key，需要解析出source和id
         if (from === 'playrecord') {
-          const [source, id] = actualId.split('+');
-          if (source && id) {
-            await deletePlayRecord(source, id);
+          const [source, videoId] = id.split('+');
+          if (source && videoId) {
+            await deletePlayRecord(source, videoId);
           }
         } else if (actualSource && actualId) {
           // 对于其他页面，使用原有逻辑
@@ -279,7 +279,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         throw new Error('删除播放记录失败');
       }
     },
-    [from, actualSource, actualId, onDelete]
+    [from, actualSource, actualId, id, onDelete]
   );
 
   // 悬停AI功能事件处理（仅豆瓣卡片）
