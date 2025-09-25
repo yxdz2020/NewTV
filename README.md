@@ -1,4 +1,4 @@
-# MoonTV
+# NewTV
 
 <div align="center">
   <img src="logo.png" alt="MoonTV Logo" width="120">
